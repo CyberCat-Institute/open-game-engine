@@ -6,9 +6,12 @@ module OpenGames.Engine.BayesianOpenGames where
 -- All numbers are rational
 -- Generic over a monoid of truth-values, which can be used to return debugging information about a strategy profile
 
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 import Numeric.Probability.Distribution hiding (map)
 
 import OpenGames.Engine.OpenGamesClass
+import OpenGames.Engine.Diagnostics
 
 -- Probability monad
 
@@ -90,4 +93,23 @@ bayesianDecision ys = BayesianOpenGame {
   equilibrium = \(C h k) a -> all (\x -> let u y = expected (do {t <- bayes h x; k t y})
                                           in expected (fmap u (a x)) >= maximum [u y | y <- ys])
                                   (map snd (support h))}
+
+bayesianDecision1 :: [y] -> BayesianOpenGame Bool (D y) () () y Rational
+bayesianDecision1 = reindex const . bayesianDecision
+
+bayesianDecisionDiagnostic :: (Eq x, Show x, Ord y, Show y) => String -> [y] -> BayesianOpenGame [DiagnosticInfo] (x -> D y) x () y Rational
+bayesianDecisionDiagnostic name ys = BayesianOpenGame {
+  play = \a -> L (\x -> do {y <- a x; return ((), y)}) (\() _ -> return ()),
+  equilibrium = \(C h k) a -> concat [ let u y = expected (do {t <- bayes h x; k t y})
+                                           strategy                     = a x
+                                           strategicPayoff              = expected (fmap u strategy)
+                                           (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
+                                        in if strategicPayoff >= optimalPayoff then []
+                                                                               else [DiagnosticInfo {player        = name,
+                                                                                                     state         = show x,
+                                                                                                     strategy      = show strategy,
+                                                                                                     payoff        = show strategicPayoff,
+                                                                                                     optimalMove   = show optimalPlay,
+                                                                                                     optimalPayoff = show optimalPayoff}]
+                                     | (theta, x) <- support h ]}
 

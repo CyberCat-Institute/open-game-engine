@@ -71,7 +71,7 @@ data FreeOpenGame = Atom AtomExpression
 
 instance Show FreeOpenGame where
   show (Atom e)           = show e
-  show (Lens v u)         = concat ["fromUncurriedLens (", show v, ") (", show u, ")"]
+  show (Lens v u)         = concat ["fromLens (", show v, ") (", show u, ")"]
   show (Function f g)     = concat ["fromFunctions (", show f, ") (", show g, ")"]
   show Counit             = "counit"
   show (Sequential g h)   = concat ["(", show g, ") >>> (", show h, ")"]
