@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames, OpenGames.Engine.BayesianOpenGames
+  exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames, OpenGames.Engine.BayesianOpenGames,
+                       OpenGames.Preprocessor.AbstractSyntax, OpenGames.Preprocessor.FreeOpenGames, OpenGames.Preprocessor.Preprocessor
   build-depends:       base >= 4.7 && < 5, probability
   default-language:    Haskell2010
 

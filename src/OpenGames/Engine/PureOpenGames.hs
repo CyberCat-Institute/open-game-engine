@@ -28,11 +28,6 @@ instance (Monoid m) => OG (PureOpenGame m) where
     coplay      = \(a, b) (x1, x2) (r1, r2) -> (coplay g1 a x1 r1, coplay g2 b x2 r2),
     equilibrium = \(h1, h2) k (a, b) -> equilibrium g1 h1 (\y1 -> fst (k (y1, play g2 b h2))) a `mappend` equilibrium g2 h2 (\y2 -> snd (k (play g1 a h1, y2))) b}
 
--- Apparently Bool doesn't have an existing Monoid instance. Luckily the conjunctive one is the more natural one
-
-instance Semigroup Bool where (<>) = (&&)
-instance Monoid Bool where mempty  = True
-
 pureDecision :: (Ord r) => [y] -> PureOpenGame Bool (x -> y) x () y r
 pureDecision ys = PureOpenGame
   {play = \a -> a,
