@@ -1,7 +1,5 @@
 module OpenGames.Examples.Bimatrix where
 
-import Numeric.Probability.Distribution
-
 import OpenGames.Engine.BayesianDiagnostics
 
 -- Matching pennies
