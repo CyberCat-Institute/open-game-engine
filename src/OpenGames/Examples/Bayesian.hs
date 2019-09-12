@@ -29,6 +29,18 @@ bayesianPD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (
 
 bayesianPDEquilibrium = equilibrium bayesianPD trivialContext
 
+-----------------
+-- Eq. strategies
+
+{--
+bayesianPDEquilibrium ((), certainly Confess, strategyPD2)
+
+strategyPD2 :: PDNature -> OpenGames.Engine.BayesianOpenGames.D PDMove
+strategyPD2 Rat =  certainly Confess
+strategyPD2 Omerta = certainly DontConfess
+--}
+
+
 -- Battle of sexes with asymmetric uncertainty, from https://sites.duke.edu/niou/files/2011/05/Lecture-7-Bayesian-Games1.pdf
 
 data BOSType = BOSType1 | BOSType2 deriving (Eq, Ord, Show)

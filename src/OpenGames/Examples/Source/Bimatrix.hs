@@ -1,6 +1,7 @@
 module OpenGames.Examples.Source.Bimatrix where
 
 import OpenGames.Preprocessor.AbstractSyntax
+import OpenGames.Preprocessor.Preprocessor
 
 -- Matching pennies with mixed Nash equilibrium, expressed as a Bayesian game
 

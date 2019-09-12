@@ -1,15 +1,28 @@
 module OpenGames.Examples.Source.SimpleAuction where
 
 import OpenGames.Preprocessor.AbstractSyntax
+import OpenGames.Preprocessor.Preprocessor
+
+-- First-price sealed bid auction
+
+firstPriceAuction = Block [] []
+                           [Line [] [] "nature (uniform [0..6])" ["t1"] [],
+                            Line [] [] "nature (uniform [0..6])" ["t2"] [],
+                            Line ["t1"] [] "decision \"player1\" [0..12]" ["x"] ["playerOneUtility t1 x y"],
+                            Line ["t2"] [] "decision \"player2\" [0..12]" ["y"] ["playerTwoUtility t2 x y"]]
+                           [] []
 
 -- Second-price sealed bid auction
 
 secondPriceAuction = Block [] []
                            [Line [] [] "nature (uniform [0..6])" ["t1"] [],
                             Line [] [] "nature (uniform [0..6])" ["t2"] [],
-                            Line ["t1"] [] "decision \"player1\" [0..12]" ["x"] ["playerOneUtility t1 x y"],
-                            Line ["t2"] [] "decision \"player2\" [0..12]" ["y"] ["playerTwoUtility t2 x y"]]
+                            Line ["t1"] [] "decision \"player1\" [0..12]" ["x"] ["playerOneUtility2nd t1 x y"],
+                            Line ["t2"] [] "decision \"player2\" [0..12]" ["y"] ["playerTwoUtility2nd t2 x y"]]
                            [] []
+
+
+
 
 -- First-price sealed bid auction with common valuation
 
