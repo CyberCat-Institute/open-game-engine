@@ -29,6 +29,7 @@ firstPriceAuctionEquilibrium = equilibrium firstPriceAuction trivialContext
 -----------------
 -- Eq. strategies
 
+{--
 strategyAuction :: Num prob => SimpleAuctionType -> T prob SimpleAuctionBid
 strategyAuction t = certainly $ t/2
 
