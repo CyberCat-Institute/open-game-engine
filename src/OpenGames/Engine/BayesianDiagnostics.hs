@@ -77,6 +77,9 @@ fromFunctions f g = fromLens f (const g)
 counit :: BayesianDiagnosticOpenGame () x x () ()
 counit = fromLens (const ()) const
 
+counitFunction :: (x -> y) -> BayesianDiagnosticOpenGame () x y () ()
+counitFunction f = fromLens (const ()) (const . f)
+
 nature :: D x -> BayesianDiagnosticOpenGame () () () x ()
 nature a = BayesianDiagnosticOpenGame {
   play = \() -> L (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),

@@ -1,6 +1,7 @@
 module OpenGames.Examples.Bimatrix where
 
 import OpenGames.Engine.BayesianDiagnostics
+import qualified OpenGames.Engine.BayesianDiagnosticsTLL as TLL
 
 -- Matching pennies
 
