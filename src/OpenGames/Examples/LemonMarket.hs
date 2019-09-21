@@ -28,13 +28,19 @@ lemonMarket = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions 
 
 lemonMarketEquilibrium = equilibrium lemonMarket trivialContext
 
--- Eq. strategies
+-- Eq. strategies for eq. distribution fromFrequs [(Good, 1), (Bad, 4)]
 strategySeller :: Num prob => LemonQuality -> T prob LemonPrice 
 strategySeller = (\ _ -> certainly $ High)
 
 strategyBuyer :: Num prob => LemonPrice -> T prob LemonBuy
 strategyBuyer = (\ _ -> certainly $ NotBuy)
 
+-- Eq. strategies for eq. distribution fromFrequs [(Good, 11), (Bad, 1)]
+strategySeller' :: Num prob => LemonQuality -> T prob LemonPrice 
+strategySeller' = (\ _ -> certainly $ High)
+
+strategyBuyer' :: Num prob => LemonPrice -> T prob LemonBuy
+strategyBuyer' = (\ _ -> certainly $ Buy)
 
 
 -- Generated from the Statebox KD compiler
