@@ -1,7 +1,7 @@
 module OpenGames.Examples.Bimatrix where
 
 import OpenGames.Engine.BayesianDiagnostics
-
+import Numeric.Probability.Distribution
 -- Matching pennies
 
 data Coin = Heads | Tails deriving (Eq, Ord, Show)
@@ -32,4 +32,5 @@ meetingInNYMatrix3 :: Coordination -> Coordination -> Coordination -> Rational
 meetingInNYMatrix3 x y z = if x == y && x == z then 1 else 0
 
 meetingInNY3 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y, z) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y, z), ()) -> (x, y, z))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [GCT, ES]))))))) >>> (fromFunctions (\((), x) -> x) (\(x, y, z) -> ((x, y, z), meetingInNYMatrix3 x y z))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> (x, ())) (\((x, y, z), ()) -> (x, y, z))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player2" [GCT, ES]))))))) >>> (fromFunctions (\(x, y) -> (x, y)) (\(x, y, z) -> ((x, y, z), meetingInNYMatrix3 x y z)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(x, y) -> ((x, y), ())) (\((x, y, z), ()) -> (x, y, z))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player3" [GCT, ES]))))))) >>> (fromFunctions (\((x, y), z) -> (x, y, z)) (\(x, y, z) -> ((x, y, z), meetingInNYMatrix3 x y z))))))))) >>> (fromLens (\(x, y, z) -> ()) (curry (\((x, y, z), ()) -> (x, y, z)))))
+
 meetingInNYEquilibrium3 = equilibrium meetingInNY3 trivialContext
