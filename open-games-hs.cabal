@@ -17,12 +17,14 @@ library
   hs-source-dirs:      src
   exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames,
                        OpenGames.Engine.BayesianOpenGames, OpenGames.Engine.BayesianDiagnostics,
+                       OpenGames.Engine.BayesianDiagnosticsTLL,
                        OpenGames.Preprocessor.AbstractSyntax, OpenGames.Preprocessor.FreeOpenGames, OpenGames.Preprocessor.Preprocessor,
                        OpenGames.Examples.Source.Bimatrix, OpenGames.Examples.Bimatrix, OpenGames.Examples.Source.Sequential, OpenGames.Examples.Sequential,
                        OpenGames.Examples.Source.Bayesian, OpenGames.Examples.Bayesian, OpenGames.Examples.Source.Signalling, OpenGames.Examples.Signalling,
                        OpenGames.Examples.SimpleAuction, OpenGames.Examples.Source.SimpleAuction,
                        OpenGames.Examples.Source.LemonMarket, OpenGames.Examples.LemonMarket,
-                       OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket
+                       OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket,
+                       OpenGames.Examples.BimatrixKD, OpenGames.Examples.LemonMarketKD
   build-depends:       base >= 4.7 && < 5, probability
   default-language:    Haskell2010
 

@@ -14,3 +14,6 @@ fromFunctions f g = fromLens f (const g)
 
 counit :: (OG g) => g () x x () ()
 counit = fromLens (const ()) const
+
+counitFunction :: (OG g) => (x -> y) -> g () x y () ()
+counitFunction f = fromLens (const ()) (const . f)

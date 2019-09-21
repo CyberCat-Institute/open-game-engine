@@ -1,7 +1,12 @@
 module OpenGames.Examples.Bimatrix where
 
 import OpenGames.Engine.BayesianDiagnostics
+<<<<<<< HEAD
 import Numeric.Probability.Distribution
+=======
+import qualified OpenGames.Engine.BayesianDiagnosticsTLL as TLL
+
+>>>>>>> 7030dc1387479b659010f68b6bc50179832b18d3
 -- Matching pennies
 
 data Coin = Heads | Tails deriving (Eq, Ord, Show)
