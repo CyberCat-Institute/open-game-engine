@@ -1,13 +1,13 @@
 name:                open-games-hs
 version:             0.1.0.0
--- synopsis:
+synopsis:            Haskell implementation of open games
 -- description:
 homepage:            https://github.com/githubuser/open-games-hs#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2019 Author name here
+author:              Jules Hedges & other contributors
+maintainer:          juleshedges.invariant@gmail.com
+copyright:           2019 Jules Hedges & other contributors
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
@@ -24,7 +24,7 @@ library
                        OpenGames.Examples.SimpleAuction, OpenGames.Examples.Source.SimpleAuction,
                        OpenGames.Examples.Source.LemonMarket, OpenGames.Examples.LemonMarket,
                        OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket,
-                       OpenGames.Examples.BimatrixKD, OpenGames.Examples.LemonMarketKD
+                       OpenGames.Examples.KD.Bimatrix, OpenGames.Examples.KD.Sequential, OpenGames.Examples.KD.LemonMarket
   build-depends:       base >= 4.7 && < 5, probability
   default-language:    Haskell2010
 

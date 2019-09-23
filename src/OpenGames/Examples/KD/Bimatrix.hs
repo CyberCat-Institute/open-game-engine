@@ -1,4 +1,4 @@
-module OpenGames.Examples.BimatrixKD where
+module OpenGames.Examples.KD.Bimatrix where
 
 -- Bimatrix with code generated from the KD editor
 
