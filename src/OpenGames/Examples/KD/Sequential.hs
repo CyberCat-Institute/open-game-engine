@@ -5,7 +5,7 @@ import OpenGames.Engine.BayesianDiagnosticsTLL
 import OpenGames.Examples.Sequential
 import OpenGames.Engine.BayesianOpenGames
 
--- https://kdmoncatog.glitch.me/#pixels=PxXUPxQUPrrU&context=P%20:%20->%20X%20rQ%20:%20X%20->%20Y%20rU%20:%20X%20Y%20r%20r%20->x%20:%20X%20->%20X%20X
+-- https://kdmoncatog.glitch.me/#pixels=PxXU%0APxQU%0APrrU&context=P%20:%20-%3E%20X%20r%0AQ%20:%20X%20-%3E%20Y%20r%0AU%20:%20X%20Y%20r%20r%20-%3E%0Ax%20:%20X%20-%3E%20X%20X%20
 
 sequentialKD :: BayesianDiagnosticOpenGameTLL 
   '[ () -> D SequentialMove, SequentialMove -> D SequentialMove ] () () () ()
