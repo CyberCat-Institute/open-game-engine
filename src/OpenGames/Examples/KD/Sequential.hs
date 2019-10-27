@@ -13,3 +13,4 @@ sequentialKD = let p = decision "player1" [GoLeft, GoRight]
                    u = counitFunction (\(x, y) -> (sequentialMatrix2 x y, sequentialMatrix1 x y)) 
   in (p >>> (fromFunctions (\(x0_0, a0_1) -> (x0_0, a0_1)) (\((), ()) -> ()) >>> (x &&& (fromFunctions (\a0 -> a0) (\() -> ()))) >>> fromFunctions (\((x0_0, x1_0), a0_1) -> (x0_0, x1_0, a0_1)) (\() -> ((), ()))) >>> (fromFunctions (\(a0_0, x0_1, a0_2) -> ((a0_0, x0_1), a0_2)) (\(((), ()), ()) -> ()) >>> (((fromFunctions (\a0 -> a0) (\() -> ())) &&& q) &&& (fromFunctions (\a0 -> a0) (\() -> ()))) >>> fromFunctions (\((a0_0, y0_1), a0_2) -> (a0_0, y0_1, a0_2)) (\r1_1 -> (((), r1_1), ()))) >>> u)
 -}
+
