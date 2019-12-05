@@ -1,0 +1,31 @@
+name:                open-games-hs
+version:             0.1.0.0
+synopsis:            Haskell implementation of open games
+-- description:
+homepage:            https://github.com/jules-hedges/open-games-hs#readme
+license:             AGPL
+license-file:        LICENSE
+author:              Jules Hedges & other contributors
+maintainer:          juleshedges.invariant@gmail.com
+copyright:           2019 Jules Hedges & other contributors
+category:            Math
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames,
+                       OpenGames.Engine.BayesianOpenGames, OpenGames.Engine.BayesianDiagnostics, OpenGames.Engine.BayesianDiagnosticsTLL,
+                       OpenGames.Preprocessor.AbstractSyntax, OpenGames.Preprocessor.FreeOpenGames, OpenGames.Preprocessor.Preprocessor,
+                       OpenGames.Examples.Source.Bimatrix, OpenGames.Examples.Bimatrix, OpenGames.Examples.Source.Sequential, OpenGames.Examples.Sequential,
+                       OpenGames.Examples.Source.Bayesian, OpenGames.Examples.Bayesian, OpenGames.Examples.Source.Signalling, OpenGames.Examples.Signalling,
+                       OpenGames.Examples.SimpleAuction, OpenGames.Examples.Source.SimpleAuction,
+                       OpenGames.Examples.Source.LemonMarket, OpenGames.Examples.LemonMarket,
+                       OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket
+  build-depends:       base >= 4.7 && < 5, probability
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/jules-hedges/open-games-hs
