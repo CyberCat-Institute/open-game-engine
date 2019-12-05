@@ -18,12 +18,13 @@ library
   exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames,
                        OpenGames.Engine.BayesianOpenGames, OpenGames.Engine.BayesianDiagnostics, OpenGames.Engine.BayesianDiagnosticsTLL,
                        OpenGames.Preprocessor.AbstractSyntax, OpenGames.Preprocessor.FreeOpenGames, OpenGames.Preprocessor.Preprocessor,
+                       OpenGames.Preprocessor.Parser,
                        OpenGames.Examples.Source.Bimatrix, OpenGames.Examples.Bimatrix, OpenGames.Examples.Source.Sequential, OpenGames.Examples.Sequential,
                        OpenGames.Examples.Source.Bayesian, OpenGames.Examples.Bayesian, OpenGames.Examples.Source.Signalling, OpenGames.Examples.Signalling,
                        OpenGames.Examples.SimpleAuction, OpenGames.Examples.Source.SimpleAuction,
                        OpenGames.Examples.Source.LemonMarket, OpenGames.Examples.LemonMarket,
                        OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket
-  build-depends:       base >= 4.7 && < 5, probability
+  build-depends:       base >= 4.7 && < 5, probability, megaparsec
   default-language:    Haskell2010
 
 source-repository head
