@@ -52,7 +52,7 @@ commaSeparatedList p = ((:) <$> p <*> many (tok "," >> p)) <|> pure []
 tok :: String -> Parser ()
 tok t = string t >> space >> pure ()
 
--- | Parse the @cni, cvi'@
+-- | Parse the @<- matrix -<@
 lineMatrixParser :: Parser String
 lineMatrixParser = do
   tok "<-"
@@ -87,5 +87,4 @@ exprTokenParser =
     not (isSpace c)
     && not (c == '(')
     && not (c == ')'))
-
 
