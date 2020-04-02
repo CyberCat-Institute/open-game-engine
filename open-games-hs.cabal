@@ -18,14 +18,16 @@ library
   exposed-modules:     OpenGames.Engine.OpenGamesClass, OpenGames.Engine.Diagnostics, OpenGames.Engine.PureOpenGames,
                        OpenGames.Engine.BayesianOpenGames, OpenGames.Engine.BayesianDiagnostics,
                        OpenGames.Engine.BayesianDiagnosticsTLL,
-                       OpenGames.Engine.PureNumerical, OpenGames.Engine.PureNumerical2, OpenGames.Engine.PolyNumerical,
+                       OpenGames.Engine.PureNumerical, OpenGames.Engine.PureNumerical2, OpenGames.Engine.PureNumerical3, OpenGames.Engine.PolyNumerical,
                        OpenGames.Preprocessor.AbstractSyntax, OpenGames.Preprocessor.FreeOpenGames, OpenGames.Preprocessor.Preprocessor,
                        OpenGames.Examples.Source.Bimatrix, OpenGames.Examples.Bimatrix, OpenGames.Examples.Source.Sequential, OpenGames.Examples.Sequential,
                        OpenGames.Examples.Source.Bayesian, OpenGames.Examples.Bayesian, OpenGames.Examples.Source.Signalling, OpenGames.Examples.Signalling,
                        OpenGames.Examples.SimpleAuction, OpenGames.Examples.Source.SimpleAuction,
                        OpenGames.Examples.Source.LemonMarket, OpenGames.Examples.LemonMarket,
                        OpenGames.Examples.Source.ResaleMarket, OpenGames.Examples.ResaleMarket,
-                       OpenGames.Examples.KD.Bimatrix, OpenGames.Examples.KD.Sequential, OpenGames.Examples.KD.LemonMarket
+                       OpenGames.Examples.KD.Bimatrix, OpenGames.Examples.KD.Sequential, OpenGames.Examples.KD.LemonMarket,
+                       OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood,
+                       OpenGames.Examples.Monitoring
   build-depends:       base >= 4.7 && < 5, probability, ad, poly
   default-language:    Haskell2010
 

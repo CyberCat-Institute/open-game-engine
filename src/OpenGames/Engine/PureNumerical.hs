@@ -122,3 +122,4 @@ trivialContext = SmoothContext (\() -> ((), \() -> ())) (\((), ()) -> ((), \() -
 eq1, eq2 :: Smooth ((), ((Double, Double), ())) Double
 eq1 = (eq stackelberg trivialContext)!!0
 eq2 = (eq stackelberg trivialContext)!!1
+

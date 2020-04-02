@@ -32,8 +32,8 @@ append Nil bs = bs
 append (a :- as) bs = a :- append as bs
 
 data BayesianDiagnosticOpenGameTLL as x s y r = BayesianDiagnosticOpenGameTLL {
-  play :: List as -> L x s y r,
-  equilibrium :: C x s y r -> List as -> [DiagnosticInfo]}
+  play :: List as -> L Rational x s y r,
+  equilibrium :: C Rational x s y r -> List as -> [DiagnosticInfo]}
 
 fromLens :: (x -> y) -> (x -> r -> s) -> BayesianDiagnosticOpenGameTLL '[] x s y r
 fromLens v u = BayesianDiagnosticOpenGameTLL {
@@ -78,7 +78,7 @@ decision name ys = BayesianDiagnosticOpenGameTLL {
                                                                                                               observedState   = show x,
                                                                                                               unobservedState = show theta,
                                                                                                               strategy        = show strategy,
-                                                                                                              payoff          = strategicPayoff,
+                                                                                                              payoff          = show strategicPayoff,
                                                                                                               optimalMove     = show optimalPlay,
-                                                                                                              optimalPayoff   = optimalPayoff}]
+                                                                                                              optimalPayoff   = show optimalPayoff}]
                                               | (theta, x) <- support h ]}

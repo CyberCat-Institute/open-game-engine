@@ -17,47 +17,47 @@ import OpenGames.Engine.Diagnostics
 
 type D = T Rational
 
-support :: D x -> [x]
+support :: T prob x -> [x]
 support = map fst . decons
 
-bayes :: (Eq y) => D (x, y) -> y -> D x
+bayes :: (Eq y, Fractional prob) => T prob (x, y) -> y -> T prob x
 bayes a y = mapMaybe (\(x, y') -> if y' == y then Just x else Nothing) a
 
 -- Riley lenses over the kleisli category of D
 
-data L x s y r where L :: (x -> D (a, y)) -> (a -> r -> D s) -> L x s y r
+data L prob x s y r where L :: (x -> T prob (a, y)) -> (a -> r -> T prob s) -> L prob x s y r
 
-iso :: (x -> y) -> (r -> s) -> L x s y r
+iso :: (Num prob) => (x -> y) -> (r -> s) -> L prob x s y r
 iso f g = L (\x -> return ((), f x)) (\() r -> return (g r))
 
-(>>>>) :: L x s y r -> L y r z q -> L x s z q
+(>>>>) :: (Num prob) => L prob x s y r -> L prob y r z q -> L prob x s z q
 (>>>>) (L vl ul) (L vm um) = L v u where
   v x = do {(a, y) <- vl x; (b, z) <- vm y; return ((a, b), z)}
   u (a, b) q = do {r <- um b q; ul a r}
 
-(&&&&) :: L x s y r -> L x' s' y' r' -> L (x, x') (s, s') (y, y') (r, r')
+(&&&&) :: (Num prob) => L prob x s y r -> L prob x' s' y' r' -> L prob (x, x') (s, s') (y, y') (r, r')
 (&&&&) (L vl ul) (L vm um) = L v u where
   v (x, x') = do {(a, y) <- vl x; (b, y') <- vm x'; return ((a, b), (y, y'))}
   u (a, b) (r, r') = do {s <- ul a r; s' <- um b r'; return (s, s')}
 
 -- Contexts
 
-data C x s y r where C :: D (a, x) -> (a -> y -> D r) -> C x s y r
+data C prob x s y r where C :: T prob (a, x) -> (a -> y -> T prob r) -> C prob x s y r
 
-trivialContext :: C () () () ()
+trivialContext :: (Num prob) => C prob () () () ()
 trivialContext = C (return ((), ())) (\() () -> return ())
 
-cmap :: L x s x' s' -> L y' r' y r -> C x s y r -> C x' s' y' r'
+cmap :: (Num prob) => L prob x s x' s' -> L prob y' r' y r -> C prob x s y r -> C prob x' s' y' r'
 cmap (L vl ul) (L vm um) (C h k) = C h' k' where
   h' = do {(a, x) <- h; (_, x') <- vl x; return (a, x')}
   k' a y' = do {(b, y) <- vm y'; r <- k a y; um b r}
 
-lcancel :: L x s y r -> C (x, x') (s, s') (y, y') (r, r') -> C x' s' y' r'
+lcancel :: (Num prob) => L prob x s y r -> C prob (x, x') (s, s') (y, y') (r, r') -> C prob x' s' y' r'
 lcancel (L v u) (C h k) = C h' k' where
   h' = do {(a, (x, x')) <- h; return ((a, x), x')}
   k' (a, x) y' = do {(_, y) <- v x; (_, r') <- k a (y, y'); return r'}
 
-rcancel :: L x' s' y' r' -> C (x, x') (s, s') (y, y') (r, r') -> C x s y r
+rcancel :: (Num prob) => L prob x' s' y' r' -> C prob (x, x') (s, s') (y, y') (r, r') -> C prob x s y r
 rcancel (L v u) (C h k) = C h' k' where
   h' = do {(a, (x, x')) <- h; return ((a, x'), x)}
   k' (a, x') y = do {(_, y') <- v x'; (r, _) <- k a (y, y'); return r}
@@ -65,8 +65,8 @@ rcancel (L v u) (C h k) = C h' k' where
 -- Bayesian open games
 
 data BayesianOpenGame m a x s y r = BayesianOpenGame {
-  play :: a -> L x s y r,
-  equilibrium :: C x s y r -> a -> m}
+  play :: a -> L Rational x s y r,
+  equilibrium :: C Rational x s y r -> a -> m}
 
 instance (Monoid m) => OG (BayesianOpenGame m) where
   fromLens v u = BayesianOpenGame {

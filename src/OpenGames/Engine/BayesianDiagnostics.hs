@@ -13,22 +13,22 @@ import Numeric.Probability.Distribution
 
 import OpenGames.Engine.BayesianOpenGames hiding (C, trivialContext, cmap, lcancel, rcancel, play, equilibrium)
 
-data C x s y r where C :: (Show a) => D (a, x) -> (a -> y -> D r) -> C x s y r
+data C prob x s y r where C :: (Show a) => T prob (a, x) -> (a -> y -> T prob r) -> C prob x s y r
 
-trivialContext :: C () () () ()
+trivialContext :: (Num prob) => C prob () () () ()
 trivialContext = C (return ((), ())) (\() () -> return ())
 
-cmap :: L x s x' s' -> L y' r' y r -> C x s y r -> C x' s' y' r'
+cmap :: (Num prob) => L prob x s x' s' -> L prob y' r' y r -> C prob x s y r -> C prob x' s' y' r'
 cmap (L vl ul) (L vm um) (C h k) = C h' k' where
   h' = do {(a, x) <- h; (_, x') <- vl x; return (a, x')}
   k' a y' = do {(b, y) <- vm y'; r <- k a y; um b r}
 
-lcancel :: (Show x) => L x s y r -> C (x, x') (s, s') (y, y') (r, r') -> C x' s' y' r'
+lcancel :: (Show x, Num prob) => L prob x s y r -> C prob (x, x') (s, s') (y, y') (r, r') -> C prob x' s' y' r'
 lcancel (L v u) (C h k) = C h' k' where
   h' = do {(a, (x, x')) <- h; return ((a, x), x')}
   k' (a, x) y' = do {(_, y) <- v x; (_, r') <- k a (y, y'); return r'}
 
-rcancel :: (Show x') => L x' s' y' r' -> C (x, x') (s, s') (y, y') (r, r') -> C x s y r
+rcancel :: (Show x', Num prob) => L prob x' s' y' r' -> C prob (x, x') (s, s') (y, y') (r, r') -> C prob x s y r
 rcancel (L v u) (C h k) = C h' k' where
   h' = do {(a, (x, x')) <- h; return ((a, x'), x)}
   k' (a, x') y = do {(_, y') <- v x'; (r, _) <- k a (y, y'); return r}
@@ -40,52 +40,57 @@ data DiagnosticInfo = DiagnosticInfo {
   observedState   :: String,
   unobservedState :: String,
   strategy        :: String,
-  payoff          :: Rational,
+  payoff          :: String,
   optimalMove     :: String,
-  optimalPayoff   :: Rational}
+  optimalPayoff   :: String}
   deriving (Show)
 
-data BayesianDiagnosticOpenGame a x s y r = BayesianDiagnosticOpenGame {
-  play :: a -> L x s y r,
-  equilibrium :: C x s y r -> a -> [DiagnosticInfo]}
+data BayesianDiagnosticOpenGame prob a x s y r = BayesianDiagnosticOpenGame {
+  play :: a -> L prob x s y r,
+  equilibrium :: C prob x s y r -> a -> [DiagnosticInfo]}
 
-fromLens :: (x -> y) -> (x -> r -> s) -> BayesianDiagnosticOpenGame () x s y r
+fromLens :: (Num prob) => (x -> y) -> (x -> r -> s) -> BayesianDiagnosticOpenGame prob () x s y r
 fromLens v u = BayesianDiagnosticOpenGame {
   play = \() -> L (\x -> return (x, v x)) (\x r -> return (u x r)),
   equilibrium = \_ () -> []}
 
-reindex :: (a -> b) -> BayesianDiagnosticOpenGame b x s y r -> BayesianDiagnosticOpenGame a x s y r
+reindex :: (a -> b) -> BayesianDiagnosticOpenGame prob b x s y r -> BayesianDiagnosticOpenGame prob a x s y r
 reindex f g = BayesianDiagnosticOpenGame {
   play = \a -> play g (f a),
   equilibrium = \c a -> equilibrium g c (f a)}
 
-(>>>) :: BayesianDiagnosticOpenGame a x s y r -> BayesianDiagnosticOpenGame b y r z q -> BayesianDiagnosticOpenGame (a, b) x s z q
+(>>>) :: (Num prob) => BayesianDiagnosticOpenGame prob a x s y r -> BayesianDiagnosticOpenGame prob b y r z q -> BayesianDiagnosticOpenGame prob (a, b) x s z q
 (>>>) g1 g2 = BayesianDiagnosticOpenGame {
   play = \(a, b) -> play g1 a >>>> play g2 b,
   equilibrium = \c (a, b) -> equilibrium g1 (cmap (iso id id) (play g2 b) c) a ++ equilibrium g2 (cmap (play g1 a) (iso id id) c) b}
 
 -- Nb. (&&&) is the only thing whose type genuinely changes, we had to abandon the OG class because of it
 
-(&&&) :: (Show x1, Show x2) => BayesianDiagnosticOpenGame a x1 s1 y1 r1 -> BayesianDiagnosticOpenGame b x2 s2 y2 r2 -> BayesianDiagnosticOpenGame (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
+(&&&) :: (Show x1, Show x2, Num prob) => BayesianDiagnosticOpenGame prob a x1 s1 y1 r1 -> BayesianDiagnosticOpenGame prob b x2 s2 y2 r2 -> BayesianDiagnosticOpenGame prob (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
 (&&&) g1 g2 = BayesianDiagnosticOpenGame {
   play = \(a, b) -> play g1 a &&&& play g2 b,
   equilibrium = \c (a, b) -> equilibrium g1 (rcancel (play g2 b) c) a ++ equilibrium g2 (lcancel (play g1 a) c) b}
 
-fromFunctions :: (x -> y) -> (r -> s) -> BayesianDiagnosticOpenGame () x s y r
+fromFunctions :: (Num prob) => (x -> y) -> (r -> s) -> BayesianDiagnosticOpenGame prob () x s y r
 fromFunctions f g = fromLens f (const g)
 
-counit :: BayesianDiagnosticOpenGame () x x () ()
+counit :: (Num prob) => BayesianDiagnosticOpenGame prob () x x () ()
 counit = fromLens (const ()) const
 
-counitFunction :: (x -> y) -> BayesianDiagnosticOpenGame () x y () ()
+counitFunction :: (Num prob) => (x -> y) -> BayesianDiagnosticOpenGame prob () x y () ()
 counitFunction f = fromLens (const ()) (const . f)
 
-nature :: D x -> BayesianDiagnosticOpenGame () () () x ()
+nature :: (Num prob) => T prob x -> BayesianDiagnosticOpenGame prob () () () x ()
 nature a = BayesianDiagnosticOpenGame {
   play = \() -> L (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),
   equilibrium = \_ () -> []}
 
-decision :: (Eq x, Show x, Ord y, Show y) => String -> [y] -> BayesianDiagnosticOpenGame (x -> D y) x () y Rational
+liftStochastic :: (Num prob) => (x -> T prob y) -> BayesianDiagnosticOpenGame prob () x () y ()
+liftStochastic f = BayesianDiagnosticOpenGame {
+  play = \() -> L (\x -> do {y <- f x; return ((), y)}) (\() () -> return ()),
+  equilibrium = \_ _ -> []}
+
+decision :: (Eq x, Show x, Ord y, Show y, Ord prob, Fractional prob, Show prob) => String -> [y] -> BayesianDiagnosticOpenGame prob (x -> T prob y) x () y prob
 decision name ys = BayesianDiagnosticOpenGame {
   play = \a -> L (\x -> do {y <- a x; return ((), y)}) (\() _ -> return ()),
   equilibrium = \(C h k) a -> concat [ let u y = expected (do {t <- bayes h x; k t y})
@@ -97,7 +102,7 @@ decision name ys = BayesianDiagnosticOpenGame {
                                                                                                      observedState   = show x,
                                                                                                      unobservedState = show theta,
                                                                                                      strategy        = show strategy,
-                                                                                                     payoff          = strategicPayoff,
+                                                                                                     payoff          = show strategicPayoff,
                                                                                                      optimalMove     = show optimalPlay,
-                                                                                                     optimalPayoff   = optimalPayoff}]
+                                                                                                     optimalPayoff   = show optimalPayoff}]
                                      | (theta, x) <- support h ]}
