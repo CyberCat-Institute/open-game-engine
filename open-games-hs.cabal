@@ -2,13 +2,13 @@ name:                open-games-hs
 version:             0.1.0.0
 synopsis:            Haskell implementation of open games
 -- description:
-homepage:            https://github.com/githubuser/open-games-hs#readme
-license:             BSD3
+homepage:            https://github.com/jules-hedges/open-games-hs#readme
+license:             AGPL
 license-file:        LICENSE
 author:              Jules Hedges & other contributors
 maintainer:          juleshedges.invariant@gmail.com
-copyright:           2019 Jules Hedges & other contributors
-category:            Web
+copyright:           2020 Jules Hedges & other contributors
+category:            Math
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
@@ -33,4 +33,4 @@ library
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/open-games-hs
+  location: https://github.com/jules-hedges/open-games-hs

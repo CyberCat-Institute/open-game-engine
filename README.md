@@ -18,6 +18,8 @@ Feel free to [contact me](mailto:juleshedges.invariant@gmail.com) (ie. [Jules He
 
 Also contact me if you'd like to contribute! A concrete syntax and parser for blocks is an example of something that would be easy to add for a better programmer than me.
 
+Other contributions not recorded by GitHub (because this is a copy of a private repository): Philipp Zahn, Sjoerd Visscher
+
 ## The preprocessor
 
 In order to use the preprocessor, create a value of type `OpenGames.Preprocessor.AbstractSyntax.Block`, and then interactively (in GHCi) apply the function `OpenGames.Preprocessor.Preprocessor.compileBlock`. The resulting `Show` instance will result in a string containing Haskell code. Copy this code from the terminal into a file that makes the appropriate imports from `OpenGames.Engine`.
