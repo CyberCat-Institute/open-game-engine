@@ -27,6 +27,10 @@ instance (Monoid m) => OG (PureOpenGame m) where
     play        = \(a, b) (x1, x2) -> (play g1 a x1, play g2 b x2),
     coplay      = \(a, b) (x1, x2) (r1, r2) -> (coplay g1 a x1 r1, coplay g2 b x2 r2),
     equilibrium = \(h1, h2) k (a, b) -> equilibrium g1 h1 (\y1 -> fst (k (y1, play g2 b h2))) a `mappend` equilibrium g2 h2 (\y2 -> snd (k (play g1 a h1, y2))) b}
+  (+++) g1 g2 = PureOpenGame {
+    play        = \(a, b) x -> case x of {Left x1 -> Left (play g1 a x1); Right x2 -> Right (play g2 b x2)},
+    coplay      = \(a, b) x r -> case x of {Left x1 -> coplay g1 a x1 r; Right x2 -> coplay g2 b x2 r},
+    equilibrium = \h k (a, b) -> case h of {Left h1 -> equilibrium g1 h1 (k . Left) a; Right h2 -> equilibrium g2 h2 (k . Right) b}}
 
 pureDecision :: (Ord r) => [y] -> PureOpenGame Bool (x -> y) x () y r
 pureDecision ys = PureOpenGame

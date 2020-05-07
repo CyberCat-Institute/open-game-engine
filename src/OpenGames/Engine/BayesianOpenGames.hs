@@ -81,6 +81,7 @@ instance (Monoid m) => OG (BayesianOpenGame m) where
   (&&&) g1 g2 = BayesianOpenGame {
     play = \(a, b) -> play g1 a &&&& play g2 b,
     equilibrium = \c (a, b) -> equilibrium g1 (rcancel (play g2 b) c) a `mappend` equilibrium g2 (lcancel (play g1 a) c) b}
+  (+++) = error "Not implemented yet"
 
 nature :: (Monoid m) => D x -> BayesianOpenGame m () () () x ()
 nature a = BayesianOpenGame {

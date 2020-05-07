@@ -35,6 +35,10 @@ instance (Monoid m) => OG (StatefulPayoffGame m v) where
     coplay      = \(a, b) (x1, x2) (r1, r2) -> do {s1 <- coplay g1 a x1 r1; s2 <- coplay g2 b x2 r2; return (s1, s2)},
     equilibrium = \(h1, h2) k (a, b) -> equilibrium g1 h1 (\y1 -> do {(r1, _) <- k (y1, play g2 b h2); return r1}) a
                               `mappend` equilibrium g2 h2 (\y2 -> do {(_, r2) <- k (play g1 a h1, y2); return r2}) b}
+  (+++) g1 g2 = StatefulPayoffGame {
+    play        = \(a, b) x -> case x of {Left x1 -> Left (play g1 a x1); Right x2 -> Right (play g2 b x2)},
+    coplay      = \(a, b) x r -> case x of {Left x1 -> coplay g1 a x1 r; Right x2 -> coplay g2 b x2 r},
+    equilibrium = \h k (a, b) -> case h of {Left h1 -> equilibrium g1 h1 (k . Left) a; Right h2 -> equilibrium g2 h2 (k . Right) b}}
 
 -- Operate nonlocally on the payoff of a fixed agent
 agentPayoff :: (Eq agent, Monoid m) => agent -> (p -> r -> p) -> StatefulPayoffGame m (agent -> p) () () () () r
