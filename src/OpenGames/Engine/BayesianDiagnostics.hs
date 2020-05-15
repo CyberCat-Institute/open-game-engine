@@ -71,6 +71,17 @@ reindex f g = BayesianDiagnosticOpenGame {
   play = \(a, b) -> play g1 a &&&& play g2 b,
   equilibrium = \c (a, b) -> equilibrium g1 (rcancel (play g2 b) c) a ++ equilibrium g2 (lcancel (play g1 a) c) b}
 
+(+++) :: (Num prob, Fractional prob) => BayesianDiagnosticOpenGame prob a x1 s y1 r -> BayesianDiagnosticOpenGame prob b x2 s y2 r -> BayesianDiagnosticOpenGame prob (a, b) (Either x1 x2) s (Either y1 y2) r
+(+++) g1 g2 = BayesianDiagnosticOpenGame {
+  play = \(a, b) -> play g1 a ++++ play g2 b,
+  equilibrium = \(C h k) (a, b) -> let xs1 = [((a, x), p) | ((a, Left x), p) <- decons h]
+                                       xs2 = [((a, x'), p) | ((a, Right x'), p) <- decons h]
+                                       e1 = equilibrium g1 (C (fromFreqs xs1) (\a y1 -> k a (Left y1))) a
+                                       e2 = equilibrium g2 (C (fromFreqs xs2) (\a y2 -> k a (Right y2))) b
+                                    in if null xs2 then e1
+                                       else if null xs1 then e2
+                                       else e1 `mappend` e2}
+
 fromFunctions :: (Num prob) => (x -> y) -> (r -> s) -> BayesianDiagnosticOpenGame prob () x s y r
 fromFunctions f g = fromLens f (const g)
 

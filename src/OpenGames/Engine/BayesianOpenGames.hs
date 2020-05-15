@@ -40,6 +40,13 @@ iso f g = L (\x -> return ((), f x)) (\() r -> return (g r))
   v (x, x') = do {(a, y) <- vl x; (b, y') <- vm x'; return ((a, b), (y, y'))}
   u (a, b) (r, r') = do {s <- ul a r; s' <- um b r'; return (s, s')}
 
+(++++) :: (Num prob) => L prob x s y r -> L prob x' s y' r -> L prob (Either x x') s (Either y y') r
+(++++) (L vl ul) (L vm um) = L v u where
+  v (Left x) = do {(a, y) <- vl x; return (Left a, Left y)}
+  v (Right x') = do {(a', y') <- vm x'; return (Right a', Right y')}
+  u (Left a) r = ul a r
+  u (Right a') r = um a' r
+
 -- Contexts
 
 data C prob x s y r where C :: T prob (a, x) -> (a -> y -> T prob r) -> C prob x s y r
@@ -81,7 +88,15 @@ instance (Monoid m) => OG (BayesianOpenGame m) where
   (&&&) g1 g2 = BayesianOpenGame {
     play = \(a, b) -> play g1 a &&&& play g2 b,
     equilibrium = \c (a, b) -> equilibrium g1 (rcancel (play g2 b) c) a `mappend` equilibrium g2 (lcancel (play g1 a) c) b}
-  (+++) = error "Not implemented yet"
+  (+++) g1 g2 = BayesianOpenGame {
+    play = \(a, b) -> play g1 a ++++ play g2 b,
+    equilibrium = \(C h k) (a, b) -> let xs1 = [((a, x), p) | ((a, Left x), p) <- decons h]
+                                         xs2 = [((a, x'), p) | ((a, Right x'), p) <- decons h]
+                                         e1 = equilibrium g1 (C (fromFreqs xs1) (\a y1 -> k a (Left y1))) a
+                                         e2 = equilibrium g2 (C (fromFreqs xs2) (\a y2 -> k a (Right y2))) b
+                                      in if null xs2 then e1
+                                         else if null xs1 then e2
+                                         else e1 `mappend` e2}
 
 nature :: (Monoid m) => D x -> BayesianOpenGame m () () () x ()
 nature a = BayesianOpenGame {
