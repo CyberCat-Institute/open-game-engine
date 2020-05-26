@@ -1,5 +1,7 @@
 module OpenGames.Examples.Governance.ChoosingGames where
 
+import Data.List (sort)
+
 import OpenGames.Examples.Bimatrix (Coin(..), matchingPenniesMatrix1, matchingPenniesMatrix2, Coordination(..), meetingInNYMatrix)
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Engine.OpenGamesClass
@@ -76,3 +78,44 @@ prisonersDilemmaMetagame dictator = reindex (\x -> (x, ())) ((reindex (\x -> (()
 prisonersDilemmaMetagameEq = equilibrium (prisonersDilemmaMetagame "player1") () (const (return ()))
 
 -- Idea for next week: 3rd player votes to break tie but doesn't take part in the real game
+
+prisonersDilemmaMetagame2Src = Block ["dictator"] []
+                                     [Line ["dictator", "()"] [] "reindex const (roleDecision [0..3])" ["penalty"] ["1"],
+                                      Line ["penalty"] [] "prisonersDilemmaPenalty" [] []]
+                                     [] []
+
+prisonersDilemmaMetagame2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(dictator, penalty) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\dictator -> (dictator, (dictator, ()))) (\((dictator, penalty), ()) -> (dictator, penalty))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (roleDecision [0..3]))))))) >>> (fromFunctions (\(dictator, penalty) -> (dictator, penalty)) (\(dictator, penalty) -> ((dictator, penalty), 1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(dictator, penalty) -> ((dictator, penalty), penalty)) (\((dictator, penalty), ()) -> (dictator, penalty))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((prisonersDilemmaPenalty)))))) >>> (fromFunctions (\((dictator, penalty), ()) -> (dictator, penalty)) (\(dictator, penalty) -> ((dictator, penalty), ()))))))))) >>> (fromLens (\(dictator, penalty) -> ()) (curry (\((dictator, penalty), ()) -> (dictator, penalty)))))
+
+majority :: String -> String -> String -> String
+majority a b c = let [_, x, _] = sort [a, b, c] in x
+
+prisonersDilemmaVotingMetagameSrc = Block [] []
+                                          [Line [] [] "reindex const (agentDecision \"player1\" [\"player1\", \"player2\"])" ["vote1"] ["0"],
+                                           Line [] [] "reindex const (agentDecision \"player2\" [\"player1\", \"player2\"])" ["vote2"] ["0"],
+                                           Line [] [] "reindex const (agentDecision \"player3\" [\"player1\", \"player2\"])" ["vote3"] ["0"],
+                                           Line ["majority vote1 vote2 vote3"] [] "prisonersDilemmaMetagame2" [] []]
+                                           [] []
+
+prisonersDilemmaVotingMetagame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, vote3) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (agentDecision "player1" ["player1", "player2"]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, vote3) -> ((vote1, vote2, vote3), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (agentDecision "player2" ["player1", "player2"]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, vote3) -> ((vote1, vote2, vote3), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), ())) (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (agentDecision "player3" ["player1", "player2"]))))))) >>> (fromFunctions (\((vote1, vote2), vote3) -> (vote1, vote2, vote3)) (\(vote1, vote2, vote3) -> ((vote1, vote2, vote3), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, vote3) -> ((vote1, vote2, vote3), majority vote1 vote2 vote3)) (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((prisonersDilemmaMetagame2)))))) >>> (fromFunctions (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3)) (\(vote1, vote2, vote3) -> ((vote1, vote2, vote3), ()))))))))) >>> (fromLens (\(vote1, vote2, vote3) -> ()) (curry (\((vote1, vote2, vote3), ()) -> (vote1, vote2, vote3)))))
+
+prisonersDilemmaVotingMetagameEq = equilibrium prisonersDilemmaVotingMetagame () (const $ return ())
+
+{- Example usage
+> :m - OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood 
+> prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 0, (Defect, Defect)))
+[]
+> prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 0, (Cooperate, Cooperate)))
+[DiagnosticInfo {player = "\"player1\"", state = "0 % 1", strategy = "Cooperate", payoff = "2 % 1", optimalMove = "Defect", optimalPayoff = "3 % 1"},DiagnosticInfo {player = "\"player2\"", state = "0 % 1", strategy = "Cooperate", payoff = "2 % 1", optimalMove = "Defect", optimalPayoff = "3 % 1"}]
+> prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 3, (Cooperate, Cooperate)))
+[]
+> prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 3, (Defect, Defect)))
+[DiagnosticInfo {player = "\"player1\"", state = "()", strategy = "3 % 1", payoff = "(-2) % 1", optimalMove = "0 % 1", optimalPayoff = "1 % 1"},DiagnosticInfo {player = "\"player1\"", state = "3 % 1", strategy = "Defect", payoff = "(-2) % 1", optimalMove = "Cooperate", optimalPayoff = "0 % 1"},DiagnosticInfo {player = "\"player2\"", state = "3 % 1", strategy = "Defect", payoff = "(-2) % 1", optimalMove = "Cooperate", optimalPayoff = "0 % 1"}]
+> mapM_ print $ prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 3, (Defect, Defect)))
+DiagnosticInfo {player = "\"player1\"", state = "()", strategy = "3 % 1", payoff = "(-2) % 1", optimalMove = "0 % 1", optimalPayoff = "1 % 1"}
+DiagnosticInfo {player = "\"player1\"", state = "3 % 1", strategy = "Defect", payoff = "(-2) % 1", optimalMove = "Cooperate", optimalPayoff = "0 % 1"}
+DiagnosticInfo {player = "\"player2\"", state = "3 % 1", strategy = "Defect", payoff = "(-2) % 1", optimalMove = "Cooperate", optimalPayoff = "0 % 1"}
+> mapM_ print $ prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 1, (Defect, Defect)))
+DiagnosticInfo {player = "\"player1\"", state = "()", strategy = "1 % 1", payoff = "0 % 1", optimalMove = "0 % 1", optimalPayoff = "1 % 1"}
+> mapM_ print $ prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 1, (Cooperate, Cooperate)))
+> mapM_ print $ prisonersDilemmaVotingMetagameEq ("player1", "player1", "player1", (const 1, (Cooperate, Cooperate)))
+-}
