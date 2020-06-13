@@ -23,11 +23,10 @@ type Profit = Rational
 -- NOTE We should consider other settings, value variable and private information etc. but before we need to fix the game structure and the possible dependency of the action spaces.
 profit :: Value -> Permit -> Permit -> Permit -> Cost -> Profit
 profit v reqP receivedP usedP c | receivedP < reqP                  =   - c*usedP
-                                -- ^ If not permits received, using any of them results in costs
+                                -- ^ If not enough permits received, using any of them results in costs
                                 | receivedP >= reqP && usedP < reqP =   - c*usedP
                                 -- ^ If enough permits received, but using not the required amount only causes costs
                                 | otherwise                         = v - c*usedP
-                                
 
 -- companies: number of permits needed for production
 prior :: T Rational Permit
@@ -146,4 +145,8 @@ strategyPermit (recP,reqP) | recP < reqP         = certainly 0
                      | otherwise                 = certainly 0
                      -- ^ If sufficient permits received but inefficient production, do not use permits.
 
--- eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyPermit))))
+-- eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyPermit))))
+
+strategyCopy (recP,_) = certainly recP
+
+-- not an eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyCopy))))
