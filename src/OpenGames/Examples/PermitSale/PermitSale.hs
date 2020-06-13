@@ -19,12 +19,17 @@ type Profit = Rational
 
 
 -- companies payoffs
+-- Production requires fixed number of permits. Required number of permits are private information
+-- NOTE We should consider other settings, value variable and private information etc. but before we need to fix the game structure and the possible dependency of the action spaces.
 profit :: Value -> Permit -> Permit -> Permit -> Cost -> Profit
 profit v reqP receivedP usedP c | receivedP < reqP                  =   - c*usedP
+                                -- ^ If not permits received, using any of them results in costs
                                 | receivedP >= reqP && usedP < reqP =   - c*usedP
+                                -- ^ If enough permits received, but using not the required amount only causes costs
                                 | otherwise                         = v - c*usedP
+                                
 
--- companies no of permits needed
+-- companies: number of permits needed for production
 prior :: T Rational Permit
 prior =  uniform [1,2]
 
@@ -65,26 +70,26 @@ randomAllocation = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunct
 -- 3. Production continuation games
 -- Without feeding information forward
 productionDec02Src = Block ["(p1,p2,pType1,pType2)"] []
-                    [Line ["p1"] [] "decision \"player1\" [0]"     ["dec1"] ["profit value pType1 p1 dec1 cost"],
-                     Line ["p2"] [] "decision \"player2\" [0,1,2]" ["dec2"] ["profit value pType2 p2 dec2 cost"]]
+                    [Line ["p1","pType1"] [] "decision \"player1\" [0]"     ["dec1"] ["profit value pType1 p1 dec1 cost"],
+                     Line ["p2","pType2"] [] "decision \"player2\" [0,1,2]" ["dec2"] ["profit value pType2 p2 dec2 cost"]]
                      [] []
 
-productionDec02 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), p1)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), dec1) -> (p1, p2, pType1, pType2, dec1)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2, dec1) -> ((p1, p2, pType1, pType2, dec1), p2)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0,1,2])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2, dec1), dec2) -> (p1, p2, pType1, pType2, dec1, dec2)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\(p1, p2, pType1, pType2, dec1, dec2) -> ()) (curry (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2)))))
+productionDec02 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((p1,p2,pType1,pType2), dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1,p2,pType1,pType2) -> ((p1,p2,pType1,pType2), (p1, pType1))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0])))))) >>> (fromFunctions (\((p1,p2,pType1,pType2), dec1) -> ((p1,p2,pType1,pType2), dec1)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((p1,p2,pType1,pType2), dec1) -> (((p1,p2,pType1,pType2), dec1), (p2, pType2))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0,1,2])))))) >>> (fromFunctions (\(((p1,p2,pType1,pType2), dec1), dec2) -> ((p1,p2,pType1,pType2), dec1, dec2)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\((p1,p2,pType1,pType2), dec1, dec2) -> ()) (curry (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2)))))
 
 productionDec11Src = Block ["(p1,p2,pType1,pType2)"] []
-                    [Line ["p1"] [] "decision \"player1\" [0,1]" ["dec1"] ["profit value pType1 p1 dec1 cost"],
-                     Line ["p2"] [] "decision \"player2\" [0,1]" ["dec2"] ["profit value pType2 p2 dec2 cost"]]
+                    [Line ["p1","pType1"] [] "decision \"player1\" [0,1]" ["dec1"] ["profit value pType1 p1 dec1 cost"],
+                     Line ["p2","pType2"] [] "decision \"player2\" [0,1]" ["dec2"] ["profit value pType2 p2 dec2 cost"]]
                      [] []
 
-productionDec11 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), p1)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0,1])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), dec1) -> (p1, p2, pType1, pType2, dec1)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2, dec1) -> ((p1, p2, pType1, pType2, dec1), p2)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0,1])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2, dec1), dec2) -> (p1, p2, pType1, pType2, dec1, dec2)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\(p1, p2, pType1, pType2, dec1, dec2) -> ()) (curry (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2)))))
+productionDec11 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((p1,p2,pType1,pType2), dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1,p2,pType1,pType2) -> ((p1,p2,pType1,pType2), (p1, pType1))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0,1])))))) >>> (fromFunctions (\((p1,p2,pType1,pType2), dec1) -> ((p1,p2,pType1,pType2), dec1)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((p1,p2,pType1,pType2), dec1) -> (((p1,p2,pType1,pType2), dec1), (p2, pType2))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0,1])))))) >>> (fromFunctions (\(((p1,p2,pType1,pType2), dec1), dec2) -> ((p1,p2,pType1,pType2), dec1, dec2)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\((p1,p2,pType1,pType2), dec1, dec2) -> ()) (curry (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2)))))
 
 
 productionDec20Src = Block ["(p1,p2,pType1,pType2)"] []
-                    [Line ["p1"] [] "decision \"player1\" [0,1,2]" ["dec1"] ["profit value pType1 p1 dec1 cost"],
-                     Line ["p2"] [] "decision \"player2\" [0]"     ["dec2"] ["profit value pType2 p2 dec2 cost"]]
+                    [Line ["p1","pType1"] [] "decision \"player1\" [0,1,2]" ["dec1"] ["profit value pType1 p1 dec1 cost"],
+                     Line ["p2","pType2"] [] "decision \"player2\" [0]"     ["dec2"] ["profit value pType2 p2 dec2 cost"]]
                      [] []
 
-productionDec20 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), p1)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0,1,2])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), dec1) -> (p1, p2, pType1, pType2, dec1)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2, dec1) -> ((p1, p2, pType1, pType2, dec1), p2)) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0])))))) >>> (fromFunctions (\((p1, p2, pType1, pType2, dec1), dec2) -> (p1, p2, pType1, pType2, dec1, dec2)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\(p1, p2, pType1, pType2, dec1, dec2) -> ()) (curry (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2)))))
+productionDec20 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((p1,p2,pType1,pType2), dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1,p2,pType1,pType2) -> ((p1,p2,pType1,pType2), (p1, pType1))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [0,1,2])))))) >>> (fromFunctions (\((p1,p2,pType1,pType2), dec1) -> ((p1,p2,pType1,pType2), dec1)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((p1,p2,pType1,pType2), dec1) -> (((p1,p2,pType1,pType2), dec1), (p2, pType2))) (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [0])))))) >>> (fromFunctions (\(((p1,p2,pType1,pType2), dec1), dec2) -> ((p1,p2,pType1,pType2), dec1, dec2)) (\((p1,p2,pType1,pType2), dec1, dec2) -> (((p1,p2,pType1,pType2), dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\((p1,p2,pType1,pType2), dec1, dec2) -> ()) (curry (\(((p1,p2,pType1,pType2), dec1, dec2), ()) -> ((p1,p2,pType1,pType2), dec1, dec2)))))
 
 -------------------------------
 -- 4. Organizing the continuation games
@@ -120,15 +125,25 @@ productionCont2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFuncti
 -- 5. Complete game
 -- For now excluding a resale market
 
-completeSrc = Block [] []
+completeGameSrc = Block [] []
                 [Line [] []                            "randomAllocation"   ["p1","p2","pType1","pType2"] [],
                  Line ["p1","p2","pType1","pType2"] [] "whichCont1"         []                            []]
                   [] []
 
-complete = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((), (p1, p2, pType1, pType2)) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), (p1, p2, pType1, pType2))) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((whichCont1)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))))))) >>> (fromLens (\(p1, p2, pType1, pType2) -> ()) (curry (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)))))
+completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((), (p1, p2, pType1, pType2)) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), (p1, p2, pType1, pType2))) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((whichCont1)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))))))) >>> (fromLens (\(p1, p2, pType1, pType2) -> ()) (curry (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)))))
 
 
 
 ------------------------------
 -- 6. Analysis
--- 
+eqGame =  equilibrium completeGame trivialContext
+
+
+strategyPermit (recP,reqP) | recP < reqP         = certainly 0
+                     -- ^ If not sufficient permits received produce nothing
+                     | recP >= reqP && reqP == 1 = certainly 1
+                     -- ^ If sufficient permits received and efficient production, use permits
+                     | otherwise                 = certainly 0
+                     -- ^ If sufficient permits received but inefficient production, do not use permits.
+
+-- eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyPermit))))
