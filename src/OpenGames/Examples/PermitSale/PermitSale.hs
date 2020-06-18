@@ -2,6 +2,7 @@
 
 module OpenGames.Examples.PermitSale.PermitSale where
 
+import qualified Control.Arrow as CA
 import           Numeric.Probability.Distribution
 --import           OpenGames.Engine.BayesianDiagnostics
 import           OpenGames.Engine.OpenGamesClass
@@ -165,8 +166,8 @@ strategyPermit (recP,reqP) | recP < reqP         = certainly 0
                      | otherwise                 = certainly 0
                      -- ^ If sufficient permits received but inefficient production, do not use permits.
 
--- eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyPermit))))
 
 strategyCopy (recP,_) = certainly recP
 
--- not an eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyCopy))))
+-- eq: eqGame (((),(),()),((CA.Kleisli strategyPermit, CA.Kleisli strategyPermit)))
+-- not an eq: eqGame (((),(),()),((CA.Kleisli strategyPermit, CA.Kleisli strategyCopy)))
