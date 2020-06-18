@@ -1,10 +1,10 @@
-{-# LANGUAGE MultiParamTypeClasses, AllowAmbiguousTypes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module OpenGames.Engine.OpticClass where
 
 -- Experimental type classes for optics and contexts
 
-import OpenGames.Engine.OpenGamesClass
+import           OpenGames.Engine.OpenGamesClass
 
 class Optic o where
   lens :: (s -> a) -> (s -> b -> t) -> o s t a b
@@ -22,8 +22,8 @@ class Precontext c where
 
 class (Optic o, Precontext c) => Context c o where
   cmap :: o s1 t1 s2 t2 -> o a1 b1 a2 b2 -> c s1 t1 a2 b2 -> c s2 t2 a1 b1
-  (//) :: o s1 t1 a1 b1 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s2 t2 a2 b2
-  (\\) :: o s2 t2 a2 b2 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s1 t1 a1 b1
+  (//) :: (Show s1) => o s1 t1 a1 b1 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s2 t2 a2 b2
+  (\\) :: (Show s2) => o s2 t2 a2 b2 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s1 t1 a1 b1
 
 -- (\\) is derivable from (//) using
 -- l \\ c = l // (cmap (lift swap swap) (lift swap swap) c)
@@ -37,7 +37,7 @@ class ContextAdd c where
   prr :: c (Either s1 s2) t (Either a1 a2) b -> Maybe (c s2 t a2 b)
 
 data OpticOpenGame o c m a x s y r = OpticOpenGame {
-  play :: a -> o x s y r,
+  play        :: a -> o x s y r,
   equilibrium :: c x s y r -> a -> m}
 
 instance (Optic o, Precontext c, Context c o, ContextAdd c, Monoid m) => OG (OpticOpenGame o c m) where
