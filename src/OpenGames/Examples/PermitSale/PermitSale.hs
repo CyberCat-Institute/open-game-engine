@@ -60,6 +60,13 @@ randomAllocationSrc = Block [] []
 
 randomAllocation = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\((), v1) -> v1) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\v1 -> (v1, ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\(v1, v2) -> (v1, v2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (randomAll availablePermits))))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2) -> (p1, p2, v1, v2)) (curry (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)))))
 
+exogenousPriceSrc  = Block [] []
+            [Line [] [] "nature prior" ["v1"] [],
+             Line [] [] "nature prior" ["v2"] [],
+             Line [] [] "agentDecision \"player1\" [0,availablePermits] " ["bought1"] ["- cost* p1"],
+             Line [] [] "agentDecision \"player2\" [0,availablePermits] " ["bought2"] ["- cost* p2"],
+             Line ["bought1", "bought2"] ["p1","p2"]    "2"                [] []]
+            ["p1","p2","v1","v2"] []
 
 -------------------------------
 -- 3. Production continuation games
