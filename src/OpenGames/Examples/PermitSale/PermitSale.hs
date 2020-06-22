@@ -5,6 +5,7 @@ module OpenGames.Examples.PermitSale.PermitSale where
 import qualified Control.Arrow as CA
 import           Numeric.Probability.Distribution
 --import           OpenGames.Engine.BayesianDiagnostics
+import qualified OpenGames.Engine.StatefulPayoffs as SP
 import           OpenGames.Engine.OpenGamesClass
 import           OpenGames.Engine.OpticClass
 import           OpenGames.Engine.StatefulBayesian
@@ -63,10 +64,18 @@ randomAllocation = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunct
 exogenousPriceSrc  = Block [] []
             [Line [] [] "nature prior" ["v1"] [],
              Line [] [] "nature prior" ["v2"] [],
-             Line [] [] "agentDecision \"player1\" [0,availablePermits] " ["bought1"] ["- cost* p1"],
-             Line [] [] "agentDecision \"player2\" [0,availablePermits] " ["bought2"] ["- cost* p2"],
-             Line ["bought1", "bought2"] ["p1","p2"]    "2"                [] []]
+             Line ["\"player1\"", "[0..availablePermits]", "v1"] [] "dependentDecision" ["ask1"] ["- cost* p1"],
+             Line ["\"player2\"", "[0..availablePermits]", "v2"] [] "dependentDecision" ["ask2"] ["- cost* p2"],
+             Line ["(ask1,ask2)"] []    "fromFunctions allocatePermits id"  ["(p1,p2)"] []]
             ["p1","p2","v1","v2"] []
+
+exogenousPrice = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, ask1, ask2, (p1,p2)) -> ())) >>> (reindex (\(a1, a2, a3, a4, a5) -> ((((a1, a2), a3), a4), a5)) (((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2)))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\((), v1) -> v1) (\(v1, v2, ask1, ask2, (p1,p2)) -> ((v1, v2, ask1, ask2, (p1,p2)), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\v1 -> (v1, ())) (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2)))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\(v1, v2) -> (v1, v2)) (\(v1, v2, ask1, ask2, (p1,p2)) -> ((v1, v2, ask1, ask2, (p1,p2)), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), ("player1", [0..availablePermits], v1))) (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2)))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((v1, v2), ask1) -> (v1, v2, ask1)) (\(v1, v2, ask1, ask2, (p1,p2)) -> ((v1, v2, ask1, ask2, (p1,p2)), - cost* p1)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, ask1) -> ((v1, v2, ask1), ("player2", [0..availablePermits], v2))) (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2)))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((v1, v2, ask1), ask2) -> (v1, v2, ask1, ask2)) (\(v1, v2, ask1, ask2, (p1,p2)) -> ((v1, v2, ask1, ask2, (p1,p2)), - cost* p2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, ask1, ask2) -> ((v1, v2, ask1, ask2), (ask1,ask2))) (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2)))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions allocatePermits id)))))) >>> (fromFunctions (\((v1, v2, ask1, ask2), (p1,p2)) -> (v1, v2, ask1, ask2, (p1,p2))) (\(v1, v2, ask1, ask2, (p1,p2)) -> ((v1, v2, ask1, ask2, (p1,p2)), ()))))))))) >>> (fromLens (\(v1, v2, ask1, ask2, (p1,p2)) -> (p1, p2, v1, v2)) (curry (\((v1, v2, ask1, ask2, (p1,p2)), ()) -> (v1, v2, ask1, ask2, (p1,p2))))))
+
+
+-- NOTE change later to account better for overdemand
+allocatePermits :: (Permit,Permit) -> (Permit,Permit)
+allocatePermits  (ask1,ask2)   | ask1 + ask2 <= 2 = (ask1,ask2)
+                               | otherwise        = (1,1)
 
 -------------------------------
 -- 3. Production continuation games
@@ -87,7 +96,7 @@ productionDec = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunction
 -- 5. Complete game
 -- For now excluding a resale market
 
-
+-- 5.1 With initial random allocation
 completeGameSrc = Block [] []
   [Line [] [] "randomAllocation" ["p1","p2","v1","v2"] [],
    Line ["p1","p2","v1","v2"] [] "productionDec" [] []]
@@ -96,9 +105,19 @@ completeGameSrc = Block [] []
 completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, v1, v2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((), (p1, p2, v1, v2)) -> (p1, p2, v1, v2)) (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), (p1, p2, v1, v2))) (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2)) (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ()))))))))) >>> (fromLens (\(p1, p2, v1, v2) -> ()) (curry (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2)))))
 
 
+-- 5.2 With fixed price allocation
+completeGameEPSrc = Block [] []
+  [Line [] [] "exogenousPrice" ["p1","p2","v1","v2"] [],
+   Line ["p1","p2","v1","v2"] [] "productionDec" [] []]
+  [] []
+
+completeGameEP = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, v1, v2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((exogenousPrice)))))) >>> (fromFunctions (\((), (p1, p2, v1, v2)) -> (p1, p2, v1, v2)) (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), (p1, p2, v1, v2))) (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2)) (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ()))))))))) >>> (fromLens (\(p1, p2, v1, v2) -> ()) (curry (\((p1, p2, v1, v2), ()) -> (p1, p2, v1, v2)))))
+
 ------------------------------
 -- 6. Analysis
 eqGame =  equilibrium completeGame void
+
+eqGameEP = equilibrium completeGameEP void 
 
 strategyCopy (recP,_) = certainly recP
 
