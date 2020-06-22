@@ -121,3 +121,9 @@ eqGameEP = equilibrium completeGameEP void
 
 strategyCopy (recP,_) = certainly recP
 
+strategyEP v = if v >= cost then certainly availablePermits
+                            else certainly 0
+
+-- Testing eq.
+--eqGame (((),(),()),(CA.Kleisli strategyCopy,CA.Kleisli strategyCopy))
+--eqGameEP (((),(),CA.Kleisli strategyEP, CA.Kleisli strategyEP,()),(CA.Kleisli strategyCopy,CA.Kleisli strategyCopy))
