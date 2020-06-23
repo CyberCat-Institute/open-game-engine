@@ -4,12 +4,12 @@ module OpenGames.Engine.StatefulPayoffs where
 -- This augments a game with an imperative program running backwards in time
 -- An experimental pragmatic solution to a practical difficulty with agent identity
 
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.Diagnostics
+import           OpenGames.Engine.Diagnostics
+import           OpenGames.Engine.OpenGamesClass
 
-import Control.Monad.State -- .Strict would probably be better
-import Data.List (maximumBy)
-import Data.Ord (comparing)
+import           Control.Monad.State
+import           Data.List                       (maximumBy)
+import           Data.Ord                        (comparing)
 
 -- This could trivially be generalised to any monad
 data StatefulPayoffGame m v a x s y r = StatefulPayoffGame
@@ -65,6 +65,7 @@ agentDecision agent ys = StatefulPayoffGame {
                            in if u (a h) >= optimalPayoff then []
                                                           else [DiagnosticInfo {player = show agent,
                                                                                 OpenGames.Engine.Diagnostics.state = show h,
+                                                                                unobservableState = "",
                                                                                 strategy = show (a h),
                                                                                 OpenGames.Engine.Diagnostics.payoff = show (u (a h)),
                                                                                 optimalMove = show (optimalPlay),
@@ -81,8 +82,8 @@ roleDecision ys = StatefulPayoffGame {
                                     in if u (a agent h) >= optimalPayoff then []
                                                                          else [DiagnosticInfo {player = show agent,
                                                                                                OpenGames.Engine.Diagnostics.state = show h,
+                                                                                               unobservableState = "",
                                                                                                strategy = show (a agent h),
                                                                                                OpenGames.Engine.Diagnostics.payoff = show (u (a agent h)),
                                                                                                optimalMove = show (optimalPlay),
                                                                                                optimalPayoff = show (optimalPayoff)}]}
-

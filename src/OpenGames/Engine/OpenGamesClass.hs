@@ -7,7 +7,7 @@ class OG g where
   fromLens :: (x -> y) -> (x -> r -> s) -> g () x s y r
   reindex  :: (a -> b) -> g b x s y r -> g a x s y r
   (>>>)    :: g a x s y r -> g b y r z q -> g (a, b) x s z q
-  (&&&)    :: g a x1 s1 y1 r1 -> g b x2 s2 y2 r2 -> g (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
+  (&&&)    :: (Show x1, Show x2) => g a x1 s1 y1 r1 -> g b x2 s2 y2 r2 -> g (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
   (+++)    :: g a x1 s y1 r -> g b x2 s y2 r -> g (a, b) (Either x1 x2) s (Either y1 y2) r
 
 fromFunctions :: (OG g) => (x -> y) -> (r -> s) -> g () x s y r

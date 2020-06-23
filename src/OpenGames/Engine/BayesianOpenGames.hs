@@ -6,12 +6,12 @@ module OpenGames.Engine.BayesianOpenGames where
 -- All numbers are rational
 -- Generic over a monoid of truth-values, which can be used to return debugging information about a strategy profile
 
-import Data.List (maximumBy)
-import Data.Ord (comparing)
-import Numeric.Probability.Distribution hiding (map)
+import           Data.List                        (maximumBy)
+import           Data.Ord                         (comparing)
+import           Numeric.Probability.Distribution hiding (map)
 
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.Diagnostics
+import           OpenGames.Engine.Diagnostics
+import           OpenGames.Engine.OpenGamesClass
 
 -- Probability monad
 
@@ -42,9 +42,9 @@ iso f g = L (\x -> return ((), f x)) (\() r -> return (g r))
 
 (++++) :: (Num prob) => L prob x s y r -> L prob x' s y' r -> L prob (Either x x') s (Either y y') r
 (++++) (L vl ul) (L vm um) = L v u where
-  v (Left x) = do {(a, y) <- vl x; return (Left a, Left y)}
+  v (Left x)   = do {(a, y) <- vl x; return (Left a, Left y)}
   v (Right x') = do {(a', y') <- vm x'; return (Right a', Right y')}
-  u (Left a) r = ul a r
+  u (Left a) r   = ul a r
   u (Right a') r = um a' r
 
 -- Contexts
@@ -72,7 +72,7 @@ rcancel (L v u) (C h k) = C h' k' where
 -- Bayesian open games
 
 data BayesianOpenGame m a x s y r = BayesianOpenGame {
-  play :: a -> L Rational x s y r,
+  play        :: a -> L Rational x s y r,
   equilibrium :: C Rational x s y r -> a -> m}
 
 instance (Monoid m) => OG (BayesianOpenGame m) where
@@ -123,9 +123,9 @@ bayesianDecisionDiagnostic name ys = BayesianOpenGame {
                                         in if strategicPayoff >= optimalPayoff then []
                                                                                else [DiagnosticInfo {player        = name,
                                                                                                      state         = show x,
+                                                                                                     unobservableState = "",
                                                                                                      strategy      = show strategy,
                                                                                                      payoff        = show strategicPayoff,
                                                                                                      optimalMove   = show optimalPlay,
                                                                                                      optimalPayoff = show optimalPayoff}]
                                      | (theta, x) <- support h ]}
-

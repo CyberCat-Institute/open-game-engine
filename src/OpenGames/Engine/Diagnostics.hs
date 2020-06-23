@@ -5,12 +5,13 @@ module OpenGames.Engine.Diagnostics where
 -- (the monoid instance to be used is lists of this)
 
 data DiagnosticInfo = DiagnosticInfo {
-  player        :: String,
-  state         :: String,
-  strategy      :: String,
-  payoff        :: String,
-  optimalMove   :: String,
-  optimalPayoff :: String}
+  player            :: String,
+  state             :: String,
+  unobservableState :: String,
+  strategy          :: String,
+  payoff            :: String,
+  optimalMove       :: String,
+  optimalPayoff     :: String}
   deriving (Show)
 
 -- Apparently Bool doesn't have an existing Monoid instance. Luckily the conjunctive one is the more natural one

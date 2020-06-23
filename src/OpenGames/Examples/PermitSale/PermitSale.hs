@@ -2,6 +2,10 @@
 
 module OpenGames.Examples.PermitSale.PermitSale where
 
+<<<<<<< HEAD
+=======
+import qualified Control.Arrow as CA
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
 import           Numeric.Probability.Distribution
 --import           OpenGames.Engine.BayesianDiagnostics
 import           OpenGames.Engine.OpenGamesClass
@@ -21,7 +25,11 @@ type Profit = Double
 
 
 
+<<<<<<< HEAD
 -- companies payoffs
+=======
+-- Companies payoffs
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
 -- Production requires fixed number of permits. Required number of permits are private information
 -- NOTE We should consider other settings, value variable and private information etc. but before we need to fix the game structure and the possible dependency of the action spaces.
 profit :: Value -> Permit -> Permit -> Permit -> Cost -> Profit
@@ -51,7 +59,11 @@ availablePermits = 2
 randomAll :: Permit -> Stochastic (Permit,Permit)
 randomAll noP = do
        p1 <- uniform [0..noP]
+<<<<<<< HEAD
        p2 <- uniform [(noP - p1)..noP]
+=======
+       p2 <- certainly (noP - p1)
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
        return (p1,p2)
 
 -------------------------------
@@ -77,6 +89,7 @@ productionDecSrc = Block ["p1", "p2", "pType1", "pType2"] []
 
 productionDec = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ("player1", [0 .. p1], (p1, pType1)))) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), dec1) -> (p1, p2, pType1, pType2, dec1)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType1 p1 dec1 cost))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2, dec1) -> ((p1, p2, pType1, pType2, dec1), ("player2", [0 .. p2], (p2, pType2)))) (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2, dec1), dec2) -> (p1, p2, pType1, pType2, dec1, dec2)) (\(p1, p2, pType1, pType2, dec1, dec2) -> ((p1, p2, pType1, pType2, dec1, dec2), profit value pType2 p2 dec2 cost))))))))) >>> (fromLens (\(p1, p2, pType1, pType2, dec1, dec2) -> ()) (curry (\((p1, p2, pType1, pType2, dec1, dec2), ()) -> (p1, p2, pType1, pType2, dec1, dec2)))))
 
+<<<<<<< HEAD
 {-}
 productionDec02Src = Block ["(p1,p2,pType1,pType2)"] []
                     [Line ["p1","pType1"] [] "decision \"player1\" [0]"     ["dec1"] ["profit value pType1 p1 dec1 cost"],
@@ -126,6 +139,8 @@ productionCont2Src = Block ["(p1,p2,pType1,pType2)"] []
 productionCont2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2, discard) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), whoHasPermits2 p1 p2 pType1 pType2)) (\((p1, p2, pType1, pType2, discard), ()) -> (p1, p2, pType1, pType2, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec11 +++ productionDec20)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), discard) -> (p1, p2, pType1, pType2, discard)) (\(p1, p2, pType1, pType2, discard) -> ((p1, p2, pType1, pType2, discard), ())))))))) >>> (fromLens (\(p1, p2, pType1, pType2, discard) -> ()) (curry (\((p1, p2, pType1, pType2, discard), ()) -> (p1, p2, pType1, pType2, discard)))))
 
 -}
+=======
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
 
 -------------------------------
 -- 4. Resale market
@@ -135,12 +150,15 @@ productionCont2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFuncti
 -- 5. Complete game
 -- For now excluding a resale market
 
+<<<<<<< HEAD
 {-}
 completeGameSrc = Block [] []
                 [Line [] []                            "randomAllocation"   ["p1","p2","pType1","pType2"] [],
                  Line ["p1","p2","pType1","pType2"] [] "whichCont1"         []                            []]
                   [] []
 -}
+=======
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
 
 completeGameSrc = Block [] []
   [Line [] [] "randomAllocation" ["p1","p2","pType1","pType2"] [],
@@ -149,10 +167,13 @@ completeGameSrc = Block [] []
 
 completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((), (p1, p2, pType1, pType2)) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), (p1, p2, pType1, pType2))) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))))))) >>> (fromLens (\(p1, p2, pType1, pType2) -> ()) (curry (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)))))
 
+<<<<<<< HEAD
 {-}
 completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, pType1, pType2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((), (p1, p2, pType1, pType2)) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), (p1, p2, pType1, pType2))) (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((whichCont1)))))) >>> (fromFunctions (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)) (\(p1, p2, pType1, pType2) -> ((p1, p2, pType1, pType2), ()))))))))) >>> (fromLens (\(p1, p2, pType1, pType2) -> ()) (curry (\((p1, p2, pType1, pType2), ()) -> (p1, p2, pType1, pType2)))))
 -}
 
+=======
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
 
 ------------------------------
 -- 6. Analysis
@@ -165,8 +186,16 @@ strategyPermit (recP,reqP) | recP < reqP         = certainly 0
                      | otherwise                 = certainly 0
                      -- ^ If sufficient permits received but inefficient production, do not use permits.
 
+<<<<<<< HEAD
 -- eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyPermit))))
 
 strategyCopy (recP,_) = certainly recP
 
 -- not an eq: eqGame (((),(),()),((strategyPermit,strategyPermit),((strategyPermit,strategyPermit),(strategyPermit,strategyCopy))))
+=======
+
+strategyCopy (recP,_) = certainly recP
+
+-- eq: eqGame (((),(),()),((CA.Kleisli strategyPermit, CA.Kleisli strategyPermit)))
+-- not an eq: eqGame (((),(),()),((CA.Kleisli strategyPermit, CA.Kleisli strategyCopy)))
+>>>>>>> b4a500581121f4760dab2026f039e4ac4f83e368
