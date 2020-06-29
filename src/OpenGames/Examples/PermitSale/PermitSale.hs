@@ -84,8 +84,10 @@ exogenousPrice = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctio
 
 -- NOTE change later to account better for overdemand
 allocatePermits :: (Permit,Permit) -> (Permit,Permit)
-allocatePermits  (ask1,ask2)   | ask1 + ask2 <= 2 = (ask1,ask2)
-                               | otherwise        = (1,1)
+allocatePermits  (ask1,ask2)   | ask1 + ask2 <= 2       = (ask1,ask2)
+                               | ask1 == 0 && ask2 >  2 = (0,2)
+                               | ask1 >  2 && ask2 == 0 = (2,0)
+                               | otherwise              = (1,1)
 
 
 -- 3.2 VCG auction of permits
