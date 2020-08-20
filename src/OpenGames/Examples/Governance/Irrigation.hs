@@ -1,6 +1,6 @@
 module OpenGames.Examples.Governance.Irrigation where
 
-import           OpenGames.Examples.Governance.Monitoring (FarmerMove (..))
+import           OpenGames.Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
 
 import           OpenGames.Engine.OpenGamesClass
 import           OpenGames.Engine.OpticClass
@@ -30,4 +30,44 @@ irrigationMonitoringSrc = Block [] []
    Line ["\"farmer3\"", "[Work, Shirk]"] [] "dependentDecision" ["monitorDecision"] ["if monitorDecision == Work then 1 else 0"]]
   [] []
 
-   -- next thing to do: monitor gets paid a fraction of total yield only if they work
+assignWater :: (Double, FarmerMove, MonitorMove) -> (Double, Double)
+assignWater (startLevel, farmerMove, monitorWorks)
+  = if monitorWorks == Work then ((1 - monitorPayRate)*w, monitorPayRate*w) else (w, 0)
+    where w = farmerWater startLevel farmerMove
+
+monitorPayRate :: Double
+monitorPayRate = 0.1
+
+irrigationStepMonitorSrc = Block ["name", "startLevel", "monitorWorks"] ["monitorWater"]
+  [Line ["name", "[Crack, Flood]", "()"] [] "dependentDecision" ["farmerMove"] ["farmerWater"],
+   Line ["startLevel", "farmerMove", "monitorWorks"] ["()"] "fromFunctions assignWater id" ["farmerWater", "monitorWater"] ["()"]]
+  ["startLevel - farmerWater - monitorWater"] []
+
+irrigationStepMonitor = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()) -> monitorWater)) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks) -> ((name, startLevel, monitorWorks), (name, [Crack, Flood], ()))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((name, startLevel, monitorWorks), farmerMove) -> (name, startLevel, monitorWorks, farmerMove)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()), farmerWater))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks, farmerMove) -> ((name, startLevel, monitorWorks, farmerMove), (startLevel, farmerMove, monitorWorks))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions assignWater id)))))) >>> (fromFunctions (\((name, startLevel, monitorWorks, farmerMove), (farmerWater, monitorWater)) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater), ()))))))))) >>> (fromLens (\(name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater) -> startLevel - farmerWater - monitorWater) (curry (\((name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, monitorWater)))))
+
+irrigationNoMonitoring2Src = Block [] []
+  [Line ["\"farmer1\"", "10", "Shirk"] ["dummy1"] "irrigationStepMonitor" ["levelAfter1"] [],
+   Line ["\"farmer2\"", "levelAfter1", "Shirk"] ["dummy2"] "irrigationStepMonitor" ["levelAfter2"] [],
+   Line ["\"farmer3\"", "levelAfter2", "Shirk"] ["dummy3"] "irrigationStepMonitor" ["levelAfter3"] []]
+  [] []
+
+irrigationNoMonitoring2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2, dummy1) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ("farmer1", 10, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2), dummy1) -> (levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2, dummy1))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((), levelAfter1) -> levelAfter1) (\(levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2) -> ((levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\levelAfter1 -> (levelAfter1, ("farmer2", levelAfter1, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3, dummy3), dummy2) -> (levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\(levelAfter1, levelAfter2) -> (levelAfter1, levelAfter2)) (\(levelAfter1, levelAfter2, levelAfter3, dummy3) -> ((levelAfter1, levelAfter2, levelAfter3, dummy3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(levelAfter1, levelAfter2) -> ((levelAfter1, levelAfter2), ("farmer3", levelAfter2, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3), dummy3) -> (levelAfter1, levelAfter2, levelAfter3, dummy3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((levelAfter1, levelAfter2), levelAfter3) -> (levelAfter1, levelAfter2, levelAfter3)) (\(levelAfter1, levelAfter2, levelAfter3) -> ((levelAfter1, levelAfter2, levelAfter3), ()))))))))) >>> (fromLens (\(levelAfter1, levelAfter2, levelAfter3) -> ()) (curry (\((levelAfter1, levelAfter2, levelAfter3), ()) -> (levelAfter1, levelAfter2, levelAfter3)))))
+
+{- Example usage
+> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
+[DiagnosticInfo {player = "farmer1", state = "()", unobservableState = "(((),()),(\"farmer1\",10.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"},DiagnosticInfo {player = "farmer2", state = "()", unobservableState = "(((),8.0),(\"farmer2\",8.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"},DiagnosticInfo {player = "farmer3", state = "()", unobservableState = "(((),(8.0,6.0)),(\"farmer3\",6.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"}]
+> let a = Kleisli (\x -> certainly Flood)
+> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
+[]
+> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),((Kleisli (\x -> certainly Crack)),()))
+[]
+-}
+
+irrigationMonitor2Src = Block [] []
+  [Line ["\"monitor\"", "[Work, Shirk]", "()"] [] "dependentDecision" ["monitorWorks"] ["monitorWater1 + monitorWater2 + monitorWater3 - if monitorWorks == Work then 1 else 0"],
+   Line ["\"farmer1\"", "10", "monitorWorks"] ["monitorWater1"] "irrigationStepMonitor" ["levelAfter1"] [],
+   Line ["\"farmer2\"", "levelAfter1", "monitorWorks"] ["monitorWater2"] "irrigationStepMonitor" ["levelAfter2"] [],
+   Line ["\"farmer3\"", "levelAfter2", "monitorWorks"] ["monitorWater3"] "irrigationStepMonitor" ["levelAfter3"] []]
+  [] []
+
+irrigationMonitor2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ("monitor", [Work, Shirk], ()))) (\((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1), ()) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((), monitorWorks) -> monitorWorks) (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1) -> ((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1), monitorWater1 + monitorWater2 + monitorWater3 - if monitorWorks == Work then 1 else 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\monitorWorks -> (monitorWorks, ("farmer1", 10, monitorWorks))) (\((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2), monitorWater1) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2, monitorWater1))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\(monitorWorks, levelAfter1) -> (monitorWorks, levelAfter1)) (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2) -> ((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(monitorWorks, levelAfter1) -> ((monitorWorks, levelAfter1), ("farmer2", levelAfter1, monitorWorks))) (\((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3), monitorWater2) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3, monitorWater2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((monitorWorks, levelAfter1), levelAfter2) -> (monitorWorks, levelAfter1, levelAfter2)) (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3) -> ((monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(monitorWorks, levelAfter1, levelAfter2) -> ((monitorWorks, levelAfter1, levelAfter2), ("farmer3", levelAfter2, monitorWorks))) (\((monitorWorks, levelAfter1, levelAfter2, levelAfter3), monitorWater3) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3, monitorWater3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((monitorWorks, levelAfter1, levelAfter2), levelAfter3) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3)) (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ((monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()))))))))) >>> (fromLens (\(monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ()) (curry (\((monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> (monitorWorks, levelAfter1, levelAfter2, levelAfter3)))))
