@@ -36,7 +36,11 @@ instance Optic StochasticStatefulOptic where
   (&&&&) (StochasticStatefulOptic v1 u1) (StochasticStatefulOptic v2 u2) = StochasticStatefulOptic v u
     where v (s1, s2) = do {(z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))}
           u (z1, z2) (b1, b2) = do {t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)}
-  (++++) = undefined
+  (++++) (StochasticStatefulOptic v1 u1) (StochasticStatefulOptic v2 u2) = StochasticStatefulOptic v u
+    where v (Left s1)  = do {(z1, a1) <- v1 s1; return (Left z1, Left a1)}
+          v (Right s2) = do {(z2, a2) <- v2 s2; return (Right z2, Right a2)}
+          u (Left z1) b  = u1 z1 b
+          u (Right z2) b = u2 z2 b
 
 data StochasticStatefulContext s t a b where
   StochasticStatefulContext :: (Show z) => Stochastic (z, s) -> (z -> a -> StateT Vector Stochastic b) -> StochasticStatefulContext s t a b
