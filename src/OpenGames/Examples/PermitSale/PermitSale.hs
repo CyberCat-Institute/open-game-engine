@@ -2,6 +2,7 @@
 
 module OpenGames.Examples.PermitSale.PermitSale where
 
+import qualified Control.Arrow as CA
 import           Numeric.Probability.Distribution
 import qualified OpenGames.Engine.StatefulPayoffs as SP
 import           OpenGames.Engine.OpenGamesClass
@@ -156,7 +157,7 @@ resaleMarketClearing :: (Cost,Cost,Permit,Permit) -> ((Permit,Cost),(Permit,Cost
 resaleMarketClearing (p1,p2,prmt1,prmt2) | prmt1 > prmt2 && p2 > p1 =  ((prmt1-1,pFinal),(prmt2 + 1,-pFinal))
                                          | prmt2 > prmt1 && p1 > p2 =  ((prmt1 + 1,-pFinal),(prmt2 - 1,pFinal))
                                          | otherwise             =   ((prmt1,0),(prmt2,0))
-   where pFinal = (p1 + p2)/2 
+   where pFinal = (p1 + p2)/2
 
 ------------------------------
 -- 6. Complete game
@@ -264,4 +265,3 @@ testA = eqGameEP (((),()),(CA.Kleisli strInitAlloStConst, CA.Kleisli strInitAllo
 testB = eqGameVCG (((),()),(CA.Kleisli strInitAlloStAll, CA.Kleisli strInitAlloStAll,()),(CA.Kleisli strProdStcopy,CA.Kleisli strProdStcopy))
 testC = eqGameRes2 (((),()),(),(CA.Kleisli strProdStcopy,CA.Kleisli strProdStcopy),(CA.Kleisli strResAlloSt, CA.Kleisli strResAlloSt, ()),(CA.Kleisli strProdStcopy,CA.Kleisli strProdStcopy))
 testD = eqGameRes2 (((),()),(),(CA.Kleisli strProdStcont,CA.Kleisli strProdStcont),(CA.Kleisli strResAlloSt, CA.Kleisli strResAlloSt, ()),(CA.Kleisli strProdStcopy,CA.Kleisli strProdStcopy))
-
