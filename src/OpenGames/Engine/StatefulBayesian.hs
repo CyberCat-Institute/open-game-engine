@@ -95,6 +95,13 @@ instance Decision (Kleisli Stochastic) StochasticStatefulOpenGame where
                                            optimalPayoff = show optimalPayoff}]
              | (theta, x) <- support h]}
 
+{-
+roleDecision and dependentDecision are wrong but are kept here for backward compatibility with older examples
+Intended usage:
+import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import OpenGames.Engine.DependentDecision
+-}
+
 roleDecision :: (Eq x, Show x, Ord y, Show y) => [y] -> StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, x) () y Double
 roleDecision ys = OpticOpenGame {
   play = \a -> let v (name, x) = do {y <- runKleisli a x; return (name, y)}
