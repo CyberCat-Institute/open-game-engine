@@ -116,6 +116,7 @@ vcgAllocation (b1,b2) | b1 == b2 = ((1,b2/2),(1,b1/2))
 -- 4. Production continuation games
 -- 4.0. Without feeding information forward
 
+-- TODO fix the dependent decision - delivers wrong result
 productionDecSrc = Block ["p1", "p2", "v1", "v2"] []
   [Line ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
    Line ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
@@ -124,6 +125,7 @@ productionDecSrc = Block ["p1", "p2", "v1", "v2"] []
 productionDec = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, v1, v2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ("player1", [0 .. p1], (p1, v1)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2), dec1) -> (p1, p2, v1, v2, dec1)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v1 0 dec1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2, dec1) -> ((p1, p2, v1, v2, dec1), ("player2", [0 .. p2], (p2, v2)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2, dec1), dec2) -> (p1, p2, v1, v2, dec1, dec2)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v2 0 dec2))))))))) >>> (fromLens (\(p1, p2, v1, v2, dec1, dec2) -> ()) (curry (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2)))))
 
 -- 4.1 With feeding information forward
+-- TODO fix the dependent decision - delivers wrong result
 productionDecContSrc = Block ["p1", "p2", "v1", "v2"] []
   [Line ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
    Line ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
