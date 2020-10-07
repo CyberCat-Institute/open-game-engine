@@ -32,7 +32,8 @@ library
                        OpenGames.Examples.Governance.Monitoring, OpenGames.Examples.Governance.ChoosingGames, OpenGames.Examples.Governance.ChoosingRandomly,
                        OpenGames.Examples.Governance.ChoosingStatefulRandomly, OpenGames.Examples.Governance.ThirdOption,
                        OpenGames.Examples.SubgameTest, OpenGames.Examples.Governance.Irrigation,
-                       OpenGames.Examples.PermitSale.PermitSale, OpenGames.Examples.Consensus.Simple
+                       OpenGames.Examples.PermitSale.PermitSale,
+                       OpenGames.Examples.Consensus.Simple, OpenGames.Examples.Consensus.Censor
   build-depends:       base >= 4.7 && < 5, mtl, transformers, probability, ad, poly, profunctors
   default-language:    Haskell2010
 
