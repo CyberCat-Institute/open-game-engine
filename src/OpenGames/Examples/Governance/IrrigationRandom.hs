@@ -105,7 +105,3 @@ rotatingStrategy = (Kleisli (const (certainly Work)),
 -- []
 
 
-
------ Simplify game structure
-
-
