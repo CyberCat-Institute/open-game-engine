@@ -31,7 +31,7 @@ library
                        OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood,
                        OpenGames.Examples.Governance.Monitoring, OpenGames.Examples.Governance.ChoosingGames, OpenGames.Examples.Governance.ChoosingRandomly,
                        OpenGames.Examples.Governance.ChoosingStatefulRandomly, OpenGames.Examples.Governance.ThirdOption,
-                       OpenGames.Examples.SubgameTest, OpenGames.Examples.Governance.Irrigation, OpenGames.Examples.Governance.IrrigationRandom
+                       OpenGames.Examples.SubgameTest, OpenGames.Examples.Governance.Irrigation, OpenGames.Examples.Governance.IrrigationRandom, OpenGames.Examples.Governance.IrrigationRandom2
                        OpenGames.Examples.PermitSale.PermitSale,
                        OpenGames.Examples.Consensus.Simple, OpenGames.Examples.Consensus.Censor
   build-depends:       base >= 4.7 && < 5, mtl, transformers, probability, ad, poly, profunctors

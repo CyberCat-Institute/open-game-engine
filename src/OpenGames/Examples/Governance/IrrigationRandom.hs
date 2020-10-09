@@ -88,20 +88,23 @@ irrigationRandomMonitorSrc = Block [] []
 irrigationRandomMonitor = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(switch, discard) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [Left (Left ()), Left (Right ()), Right ()]))))))) >>> (fromFunctions (\((), switch) -> switch) (\(switch, discard) -> ((switch, discard), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\switch -> (switch, switch)) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationMonitorP1 +++ irrigationMonitorP2 +++ irrigationMonitorP3)))))) >>> (fromFunctions (\(switch, discard) -> (switch, discard)) (\(switch, discard) -> ((switch, discard), ()))))))))) >>> (fromLens (\(switch, discard) -> ()) (curry (\((switch, discard), ()) -> (switch, discard)))))
 
 
-rotatingStrategy :: (Kleisli Stochastic () MonitorMove,
+rotatingStrategy1,rotatingStrategy2 :: (Kleisli Stochastic () MonitorMove,
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()))
-rotatingStrategy = (Kleisli (const (certainly Work)),
+rotatingStrategy1 = (Kleisli (const (certainly Work)),
                     (Kleisli (const (certainly Crack)), ()),
                     (Kleisli (const (certainly Crack)), ()),
                     (Kleisli (const (certainly Crack)), ()),
                     (Kleisli (const (certainly Crack)), ()))
+rotatingStrategy2 = (Kleisli (const (certainly Shirk)),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Flood)), ()))
+
+testStrategyR = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy1, rotatingStrategy1),rotatingStrategy1))
 
 
--- equilibriumRandom = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy, rotatingStrategy),rotatingStrategy))
--- >equilibriumRandom
--- []
-
-
+testStrategyR2 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy2))
