@@ -1,7 +1,6 @@
 module OpenGames.Examples.Governance.VotingGames where
 
 import           Control.Arrow (Kleisli(..))
-import           Data.List
 import           Numeric.Probability.Distribution
 
 
@@ -24,6 +23,8 @@ tgFactor :: Double
 tgFactor = 3
 
 
+uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
+uncurry3 f ~(a,b,c) = f a b c
 
 
 payoffUG :: Endowment ->  Transfer -> Bool -> (Double, Double)
@@ -37,46 +38,78 @@ payoffTG end trans received return  = (end - trans + return, received - return)
 --------------------------
 -- 1. Stage games
 
-ultimatumGameSrc = Block ["sender" :: Agent, "receiver" :: Agent] []
+ultimatumGameSrc = Block ["(sender, receiver)"] []
    [Line ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffUG endowment amountProposed accDec" ],
     Line ["(receiver,amountProposed)"] [] "roleDecision [True,False]" ["accDec"] ["snd $ payoffUG endowment amountProposed accDec"]
    ]
    [] []
 
-ultimatumGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(sender, receiver, amountProposed, accDec) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver) -> ((sender, receiver), (sender,()))) (\((sender, receiver, amountProposed, accDec), ()) -> (sender, receiver, amountProposed, accDec))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision  [0..endowment])))))) >>> (fromFunctions (\((sender, receiver), amountProposed) -> (sender, receiver, amountProposed)) (\(sender, receiver, amountProposed, accDec) -> ((sender, receiver, amountProposed, accDec), fst $ payoffUG endowment amountProposed accDec))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver, amountProposed) -> ((sender, receiver, amountProposed), (receiver,amountProposed))) (\((sender, receiver, amountProposed, accDec), ()) -> (sender, receiver, amountProposed, accDec))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [True,False])))))) >>> (fromFunctions (\((sender, receiver, amountProposed), accDec) -> (sender, receiver, amountProposed, accDec)) (\(sender, receiver, amountProposed, accDec) -> ((sender, receiver, amountProposed, accDec), snd $ payoffUG endowment amountProposed accDec))))))))) >>> (fromLens (\(sender, receiver, amountProposed, accDec) -> ()) (curry (\((sender, receiver, amountProposed, accDec), ()) -> (sender, receiver, amountProposed, accDec)))))
+ultimatumGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((sender, receiver), amountProposed, accDec) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver) -> ((sender, receiver), (sender,()))) (\(((sender, receiver), amountProposed, accDec), ()) -> ((sender, receiver), amountProposed, accDec))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision  [0..endowment])))))) >>> (fromFunctions (\((sender, receiver), amountProposed) -> ((sender, receiver), amountProposed)) (\((sender, receiver), amountProposed, accDec) -> (((sender, receiver), amountProposed, accDec), fst $ payoffUG endowment amountProposed accDec))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((sender, receiver), amountProposed) -> (((sender, receiver), amountProposed), (receiver,amountProposed))) (\(((sender, receiver), amountProposed, accDec), ()) -> ((sender, receiver), amountProposed, accDec))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [True,False])))))) >>> (fromFunctions (\(((sender, receiver), amountProposed), accDec) -> ((sender, receiver), amountProposed, accDec)) (\((sender, receiver), amountProposed, accDec) -> (((sender, receiver), amountProposed, accDec), snd $ payoffUG endowment amountProposed accDec))))))))) >>> (fromLens (\((sender, receiver), amountProposed, accDec) -> ()) (curry (\(((sender, receiver), amountProposed, accDec), ()) -> ((sender, receiver), amountProposed, accDec)))))
 
 
 
-trustGameSrc = Block ["sender" :: Agent, "receiver" :: Agent] []
+trustGameSrc = Block ["(sender, receiver)"] []
    [Line ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffTG endowment amountProposed (amountProposed * tgFactor) return" ],
     Line ["(receiver,amountProposed)"] [] "dependentRoleDecision (\\x -> [0..(x * tgFactor)])" ["return"] ["snd $ payoffTG endowment amountProposed (amountProposed * tgFactor) return"]
    ]
    [] []
 
 
-trustGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(sender, receiver, amountProposed, return) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver) -> ((sender, receiver), (sender,()))) (\((sender, receiver, amountProposed, return), ()) -> (sender, receiver, amountProposed, return))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision  [0..endowment])))))) >>> (fromFunctions (\((sender, receiver), amountProposed) -> (sender, receiver, amountProposed)) (\(sender, receiver, amountProposed, return) -> ((sender, receiver, amountProposed, return), fst $ payoffTG endowment amountProposed (amountProposed * tgFactor) return))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver, amountProposed) -> ((sender, receiver, amountProposed), (receiver,amountProposed))) (\((sender, receiver, amountProposed, return), ()) -> (sender, receiver, amountProposed, return))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentRoleDecision (\x -> [0..(x * tgFactor)]))))))) >>> (fromFunctions (\((sender, receiver, amountProposed), return) -> (sender, receiver, amountProposed, return)) (\(sender, receiver, amountProposed, return) -> ((sender, receiver, amountProposed, return), snd $ payoffTG endowment amountProposed (amountProposed * tgFactor) return))))))))) >>> (fromLens (\(sender, receiver, amountProposed, return) -> ()) (curry (\((sender, receiver, amountProposed, return), ()) -> (sender, receiver, amountProposed, return)))))
+trustGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((sender, receiver), amountProposed, return) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sender, receiver) -> ((sender, receiver), (sender,()))) (\(((sender, receiver), amountProposed, return), ()) -> ((sender, receiver), amountProposed, return))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision  [0..endowment])))))) >>> (fromFunctions (\((sender, receiver), amountProposed) -> ((sender, receiver), amountProposed)) (\((sender, receiver), amountProposed, return) -> (((sender, receiver), amountProposed, return), fst $ payoffTG endowment amountProposed (amountProposed * tgFactor) return))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((sender, receiver), amountProposed) -> (((sender, receiver), amountProposed), (receiver,amountProposed))) (\(((sender, receiver), amountProposed, return), ()) -> ((sender, receiver), amountProposed, return))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentRoleDecision (\x -> [0..(x * tgFactor)]))))))) >>> (fromFunctions (\(((sender, receiver), amountProposed), return) -> ((sender, receiver), amountProposed, return)) (\((sender, receiver), amountProposed, return) -> (((sender, receiver), amountProposed, return), snd $ payoffTG endowment amountProposed (amountProposed * tgFactor) return))))))))) >>> (fromLens (\((sender, receiver), amountProposed, return) -> ()) (curry (\(((sender, receiver), amountProposed, return), ()) -> ((sender, receiver), amountProposed, return)))))
 
 
 --------------------------
 -- 2. Voting on game
 
-majorityGame :: (Fractional prob) => Either () () -> Either () () -> T prob (Either () ())
-majorityGame (Left ()) (Left ()) = certainly (Left ())
-majorityGame (Right ()) (Right ()) = certainly (Right ())
-majorityGame _ _ = uniform [Left (), Right ()]
 
+-- NOTE the majorityfunction defaults to _Left_ (trustGame)
+majorityGame :: (Agent,Agent) -> Either () () -> Either () () -> Either (Agent,Agent) (Agent,Agent)
+majorityGame (ag1,ag2) (Left ()) (Left ()) = Left (ag1,ag2)
+majorityGame (ag1,ag2) (Right ()) (Right ()) = Right (ag1,ag2)
+majorityGame (ag1,ag2) _ _ = Left (ag1,ag2)
+
+-- Voting on the game; roles are random
 votingGameSrc = Block [] []
-                    [Line [] [] "dependentDecision \"player1\" [Left (), Right ()])" ["vote1"] [],
-                     Line [] [] "dependentDecision \"player2\" [Left (), Right ()])" ["vote2"] [],
-                     Line ["vote1", "vote2"] [] "liftStochastic (uncurry majority2)" ["result"] [],
-                     Line [] []  [] [],
-                     Line ["result"] ["payoff1", "payoff2"] "prisonersDilemma +++ stagHunt" ["discard"] []]
+                    [Line [] [] "dependentDecision \"player1\" (const [Left (), Right ()])" ["vote1"] ["0"],
+                     Line [] [] "dependentDecision \"player2\" (const [Left (), Right ()])" ["vote2"] ["0"],
+                     Line [] [] "nature (uniform [(\"player1\",\"player2\"),(\"player2\",\"player2\")])" ["roles"] [],
+                     Line ["majorityGame roles vote1 vote2"] [] "trustGame +++ ultimatumGame" ["discard"] []]
                     [] []
-votingGame = undefined --reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [Left (), Right ()]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), payoff1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player2" [Left (), Right ()]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), payoff2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1, vote2))) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic (uncurry majority2))))))) >>> (fromFunctions (\((vote1, vote2), result) -> (vote1, vote2, result)) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, result) -> ((vote1, vote2, result), result)) (\((vote1, vote2, result, discard), (payoff1, payoff2)) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((prisonersDilemma +++ stagHunt)))))) >>> (fromFunctions (\((vote1, vote2, result), discard) -> (vote1, vote2, result, discard)) (\(vote1, vote2, result, discard) -> ((vote1, vote2, result, discard), ()))))))))) >>> (fromLens (\(vote1, vote2, result, discard) -> ()) (curry (\((vote1, vote2, result, discard), ()) -> (vote1, vote2, result, discard)))))
+votingGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles, discard) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const [Left (), Right ()]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const [Left (), Right ()]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [("player1","player2"),("player2","player2")]))))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), majorityGame roles vote1 vote2)) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((trustGame +++ ultimatumGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), discard) -> (vote1, vote2, roles, discard)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), ()))))))))) >>> (fromLens (\(vote1, vote2, roles, discard) -> ()) (curry (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard)))))
+
 
 
 --------------------------
--- 3. Voting on role
+-- 3. Voting role in trust game
+
+votingRole :: (Agent,Agent) -> Stochastic (Agent,Agent)
+votingRole ("player1", "player1") = certainly ("player1","player2") 
+votingRole ("player2", "player2") = certainly ("player2","player1")
+votingRole (_,_)                 = uniform [("player1","player2"),("player2","player1")]
+
+
+-- Voting on roles in trust game
+votingRoleTrustSrc = Block [] []
+                    [Line [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
+                     Line [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
+                     Line ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
+                     Line ["roles"] [] "trustGame" [] []]
+                    [] []
+
+votingRoleTrust = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const ["player1", "player2"]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const ["player1", "player2"]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1,vote2))) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic votingRole)))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), roles)) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((trustGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ()))))))))) >>> (fromLens (\(vote1, vote2, roles) -> ()) (curry (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)))))
+
+
+--------------------------
+-- 4. Voting role in ultimatum game
+
+votingRoleUltimatumSrc = Block [] []
+                    [Line [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
+                     Line [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
+                     Line ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
+                     Line ["roles"] [] "ultimatumGame" [] []]
+                    [] []
+
+votingRoleUltimatum = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const ["player1", "player2"]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const ["player1", "player2"]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1,vote2))) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic votingRole)))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), roles)) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((ultimatumGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ()))))))))) >>> (fromLens (\(vote1, vote2, roles) -> ()) (curry (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)))))
 
 
 
