@@ -54,14 +54,14 @@ randomOrder = do
        p1 <- uniform lst
        return (p1,((lst' p1) !! 0),(lst' p1) !! 1)
      where lst = ["farmerA","farmerB","farmerC"]
-           lst' x = delete x lst 
+           lst' x = delete x lst
 
 irrigationRandomRoleSrc = Block [] []
-  [Line [][] "nature randomOrder" ["(m,p2,p3)"] [],
-   Line ["(m,())"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
-   Line ["\"p2\"", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
-   Line ["\"p3\"", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
-   Line ["\"m\"", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] []]
+  [Line [][] "nature randomOrder" ["m", "p2", "p3"] [],
+   Line ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
+   Line ["p2", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
+   Line ["p3", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
+   Line ["m", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] []]
   [] []
 
 irrigationRandomRole = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ())) >>> (reindex (\(a1, a2, a3, a4, a5) -> ((((a1, a2), a3), a4), a5)) (((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature randomOrder)))))) >>> (fromFunctions (\((), (m,p2,p3)) -> (m,p2,p3)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(m,p2,p3) -> ((m,p2,p3), (m,()))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [Work, Shirk])))))) >>> (fromFunctions (\((m,p2,p3), monitorWorks) -> ((m,p2,p3), monitorWorks)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), monitorPayoff 0 0 0 monitorWorks)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks) -> (((m,p2,p3), monitorWorks), ("p2", 9, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks), levelAfter1) -> ((m,p2,p3), monitorWorks, levelAfter1)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks, levelAfter1) -> (((m,p2,p3), monitorWorks, levelAfter1), ("p3", levelAfter1, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks, levelAfter1), levelAfter2) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2), ("m", levelAfter2, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2), levelAfter3) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()))))))))) >>> (fromLens (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ()) (curry (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3)))))
@@ -94,4 +94,3 @@ testStrategyRD3 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole 
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()))
-
