@@ -37,3 +37,24 @@ pureDecision ys = PureOpenGame
   {play = \a -> a,
    coplay = \_ _ _ -> (),
    equilibrium = \h k a -> all (\y -> k (a h) >= k y) ys}
+
+-- extremely evil hack, do not think about what this does or your brain will rot
+repeated :: Int -> r -> [x] -> PureOpenGame Bool a x r (x, y) r -> PureOpenGame Bool a x r [y] ()
+repeated precision zero subgames g = PureOpenGame {
+  play = \a x -> let (x', y) = play g a x
+                  in y : play (repeated precision zero subgames g) a x',
+  coplay = \a x () -> case precision of
+                        0 -> zero
+                        _ -> let (x', _) = play g a x
+                              in coplay g a x $ coplay (repeated (precision - 1) zero subgames g) a x' (),
+  equilibrium = \_ _ a -> let k (x, _) = coplay (repeated precision zero subgames g) a x ()
+                           in all (\h -> equilibrium g h k a) subgames
+}
+
+{- Bad things done by the previous function:
+1. Types are not what the coalgebra says, I just made them up because I don't understand the coalgebra
+2. Conflates strategy states with game states, ie. conflats repeated games with Markov games
+3. Truncates coplay (for termination), making it into a finite horizon game
+4. Uses the 1-deviation principle (also for termination) even though it's invalid given 2-3
+5. Hacks subgame perfect equilibrium even though this backend isn't designed for it
+-}

@@ -49,11 +49,12 @@ instance ContextAdd (KleisliContext []) where
   prl = undefined
   prr = undefined
 
-subgamePerfectDecision :: (Ord r) => [y] -> OpticOpenGame (KleisliOptic []) (KleisliContext []) Bool (x -> y) x () y r
+type SubgamePerfectOpenGame = OpticOpenGame (KleisliOptic []) (KleisliContext []) Bool
+
+subgamePerfectDecision :: (Ord r) => [y] -> SubgamePerfectOpenGame (x -> y) x () y r
 subgamePerfectDecision ys = OpticOpenGame {
   play = \a -> KleisliOptic (\x -> zip (repeat ()) (a x : ys)) (\() _ -> [()]),
   equilibrium = \(KleisliContext h k) a -> and [head (k z (a x)) >= head (k z y) | (z, x) <- h, y <- ys]}
 
-instance Decision (->) (OpticOpenGame (KleisliOptic []) (KleisliContext []) Bool) where
+instance Decision (->) SubgamePerfectOpenGame where
   decision = const subgamePerfectDecision
-
