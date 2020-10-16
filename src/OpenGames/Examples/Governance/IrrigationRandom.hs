@@ -118,7 +118,9 @@ irrigationRandomRoleSrc = Block [] []
 
 
 
-rotatingStrategy1,rotatingStrategy2 :: (Kleisli Stochastic () MonitorMove,
+
+
+rotatingStrategy1,rotatingStrategy2,rotatingStrategy3 :: (Kleisli Stochastic () MonitorMove,
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
@@ -133,8 +135,19 @@ rotatingStrategy2 = (Kleisli (const (certainly Shirk)),
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()))
+rotatingStrategy3 = (Kleisli (const (certainly Work)),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Crack)), ()),
+                    (Kleisli (const (certainly Crack)), ()))
+
 
 testStrategyR = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy1, rotatingStrategy1),rotatingStrategy1))
 
 
 testStrategyR2 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy2))
+
+testStrategyR2' = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy1))
+
+
+testStrategyR3 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy3))
