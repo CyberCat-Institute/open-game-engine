@@ -88,6 +88,36 @@ irrigationRandomMonitorSrc = Block [] []
 irrigationRandomMonitor = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(switch, discard) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [Left (Left ()), Left (Right ()), Right ()]))))))) >>> (fromFunctions (\((), switch) -> switch) (\(switch, discard) -> ((switch, discard), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\switch -> (switch, switch)) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationMonitorP1 +++ irrigationMonitorP2 +++ irrigationMonitorP3)))))) >>> (fromFunctions (\(switch, discard) -> (switch, discard)) (\(switch, discard) -> ((switch, discard), ()))))))))) >>> (fromLens (\(switch, discard) -> ()) (curry (\((switch, discard), ()) -> (switch, discard)))))
 
 
+
+-- Alternative formulation
+
+
+irrigationStepRoleDepSrc = Block ["name", "startLevel", "monitorWorks"] []
+  [Line ["(name,())"] [] "roleDecision [Crack, Flood]" ["farmerMove"] ["farmerWater"],
+   Line ["startLevel", "farmerMove", "monitorWorks"] ["()"] "fromFunctions assignWaterNoTax id" ["farmerWater", "downstreamWater"] ["()"]]
+    ["downstreamWater"] []
+
+irrigationStepRoleDep = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks) -> ((name, startLevel, monitorWorks), (name,()))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [Crack, Flood])))))) >>> (fromFunctions (\((name, startLevel, monitorWorks), farmerMove) -> (name, startLevel, monitorWorks, farmerMove)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()), farmerWater))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks, farmerMove) -> ((name, startLevel, monitorWorks, farmerMove), (startLevel, farmerMove, monitorWorks))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions assignWaterNoTax id)))))) >>> (fromFunctions (\((name, startLevel, monitorWorks, farmerMove), (farmerWater, downstreamWater)) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()))))))))) >>> (fromLens (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater) -> downstreamWater) (curry (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater)))))
+
+
+
+irrigationRandomRoleSrc = Block [] []
+  [Line [][] "nature (uniform [\"player1\",\"player2\",\"player3\"])" ["m"] [],
+   Line ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
+   Line ["\"player1\"", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
+   Line ["\"player2\"", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
+   Line ["\"player3\"", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] [],
+   Line ["m", "levelAfter3", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfte4"] []]
+  [] []
+
+
+-- Testing 
+
+
+
+
+
+
 rotatingStrategy1,rotatingStrategy2 :: (Kleisli Stochastic () MonitorMove,
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
