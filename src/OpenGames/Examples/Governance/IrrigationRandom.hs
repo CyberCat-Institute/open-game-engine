@@ -88,7 +88,7 @@ irrigationRandomMonitorSrc = Block [] []
 irrigationRandomMonitor = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(switch, discard) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [Left (Left ()), Left (Right ()), Right ()]))))))) >>> (fromFunctions (\((), switch) -> switch) (\(switch, discard) -> ((switch, discard), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\switch -> (switch, switch)) (\((switch, discard), ()) -> (switch, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationMonitorP1 +++ irrigationMonitorP2 +++ irrigationMonitorP3)))))) >>> (fromFunctions (\(switch, discard) -> (switch, discard)) (\(switch, discard) -> ((switch, discard), ()))))))))) >>> (fromLens (\(switch, discard) -> ()) (curry (\((switch, discard), ()) -> (switch, discard)))))
 
 
-rotatingStrategy1,rotatingStrategy2 :: (Kleisli Stochastic () MonitorMove,
+rotatingStrategy1,rotatingStrategy2,rotatingStrategy3 :: (Kleisli Stochastic () MonitorMove,
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
                      (Kleisli Stochastic () FarmerMove, ()),
@@ -103,8 +103,19 @@ rotatingStrategy2 = (Kleisli (const (certainly Shirk)),
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()),
                     (Kleisli (const (certainly Flood)), ()))
+rotatingStrategy3 = (Kleisli (const (certainly Work)),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Flood)), ()),
+                    (Kleisli (const (certainly Crack)), ()),
+                    (Kleisli (const (certainly Crack)), ()))
+
 
 testStrategyR = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy1, rotatingStrategy1),rotatingStrategy1))
 
 
 testStrategyR2 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy2))
+
+testStrategyR2' = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy1))
+
+
+testStrategyR3 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy3))
