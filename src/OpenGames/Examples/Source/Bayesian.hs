@@ -10,9 +10,18 @@ bayesianPD = Block [] []
                     Line ["t"] [] "decision \"prisoner2\" [Confess, DontConfess]" ["y"] ["pdMatrix2 t x y"]]
                    [] []
 
+-- Bayesian Battle of the Sexes
+
 bayesianBOS = Block [] []
                     [Line [] [] "nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})" ["t1", "t2"] [],
                      Line ["t1"] [] "decision \"man\" [BayesianB, BayesianS]" ["x"] ["bos_bayesian_matrix1 t1 x y"],
                      Line ["t2"] [] "decision \"woman\" [BayesianB, BayesianS]" ["y"] ["bos_bayesian_matrix2 t2 x y"]]
                     [] []
 
+-- Sheriff's Dilemma
+
+sheriffsDilemma = Block [] []
+                  [Line [] [] "nature (fromFreqs [(Civilian, 5), (Criminal, 1)])" ["t"] [],
+                   Line [] [] "reindex const (decision \"suspect\" [Shoot, DontShoot])" ["x"] ["suspectMatrix t x y"],
+                   Line ["t"] [] "decision \"sheriff\" [Shoot, DontShoot]" ["y"] ["sheriffMatrix t x y"]]
+                  [] []
