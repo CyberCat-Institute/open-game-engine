@@ -29,4 +29,3 @@ data Block = Block {
   blockCovariantInputs :: [String], blockContravariantOutputs :: [String],
   blockLines :: [Line],
   blockCovariantOutputs :: [String], blockContravariantInputs :: [String]}
-
