@@ -14,29 +14,7 @@ import           OpenGames.Engine.DependentDecision
 import           OpenGames.Preprocessor.AbstractSyntax
 
 --------------------------
--- 0. Types and parameters
-
-type Transfer = Double
-type Endowment = Double
-
-endowment :: Endowment
-endowment = 10
-
-tgFactor :: Double
-tgFactor = 3
-
-
-uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
-uncurry3 f ~(a,b,c) = f a b c
-
-
-payoffUG :: Endowment ->  Transfer -> Bool -> (Double, Double)
-payoffUG _   _     False = (0,0)
-payoffUG end trans True  = (end - trans, trans)
-
-payoffTG :: Endowment ->  Transfer -> Transfer -> Transfer -> (Double, Double)
-payoffTG end trans received return  = (end - trans + return, received - return)
-
+-- 0. Payoffs
 
 productionFunction :: Double -> Double -> Double
 productionFunction tech effort = tech*effort
