@@ -12,7 +12,7 @@ data DiagnosticInfo = DiagnosticInfo {
   payoff            :: String,
   optimalMove       :: String,
   optimalPayoff     :: String}
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- Apparently Bool doesn't have an existing Monoid instance. Luckily the conjunctive one is the more natural one
 -- This file is also a reasonable place to put this instance

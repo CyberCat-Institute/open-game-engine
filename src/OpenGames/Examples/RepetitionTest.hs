@@ -1,9 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 module OpenGames.Examples.RepetitionTest where
 
 import OpenGames.Engine.PureOpenGames
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.Diagnostics
-import OpenGames.Preprocessor.AbstractSyntax
+import OpenGames.Preprocessor.THSyntax
 
 data StagePDTitForTatState = TitForTatState1 | TitForTatState2 deriving (Show)
 data StagePDGrimTriggerState = GrimTriggerState1 | GrimTriggerState2 deriving (Show)
@@ -26,24 +27,23 @@ stagePDPayoffs Defect Defect = (1, 1)
 repetitionTestDiscountFactor :: Double
 repetitionTestDiscountFactor = 0.1
 
-stagePDSrc = Block ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
-  [Line ["titForTatState"] [] "pureDecision [Cooperate, Defect]" ["move1"] ["payoff1"],
-   Line ["grimTriggerState"] [] "pureDecision [Cooperate, Defect]" ["move2"] ["payoff2"],
-   Line [] ["payoff1", "payoff2"]
-        "fromFunctions id (\\(move1, move2, continuation1, continuation2) -> \
-         \ let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1, \
-                                                       \ u2 + repetitionTestDiscountFactor*continuation2))"
-        [] ["move1", "move2", "continuation1", "continuation2"]]
-  ["(stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1)", "(move1, move2)"]
-  ["(continuation1, continuation2)"]
+-- generateGame "stagePDTH" [] $  GBlock ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
+--   [QLine [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
+--    QLine [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
+--    QLine [] ["payoff1", "payoff2"]
+--          [|fromFunctions id (\(move1, move2, continuation1, continuation2) ->
+--            let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
+--                                                          u2 + repetitionTestDiscountFactor*continuation2))|]
+--         [] [[|move1|], [|move2|], [|continuation1|], [|continuation2|]]]
+--   ["(stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1)", "(move1, move2)"]
+--   ["(continuation1, continuation2)"]
 
 stagePD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2) -> (payoff1, payoff2))) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(titForTatState, grimTriggerState) -> ((titForTatState, grimTriggerState), titForTatState)) (\((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2), ()) -> (titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((pureDecision [Cooperate, Defect])))))) >>> (fromFunctions (\((titForTatState, grimTriggerState), move1) -> (titForTatState, grimTriggerState, move1)) (\(titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2) -> ((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2), payoff1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(titForTatState, grimTriggerState, move1) -> ((titForTatState, grimTriggerState, move1), grimTriggerState)) (\((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2), ()) -> (titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((pureDecision [Cooperate, Defect])))))) >>> (fromFunctions (\((titForTatState, grimTriggerState, move1), move2) -> (titForTatState, grimTriggerState, move1, move2)) (\(titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2) -> ((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2), payoff2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(titForTatState, grimTriggerState, move1, move2) -> ((titForTatState, grimTriggerState, move1, move2), ())) (\((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2)), (payoff1, payoff2)) -> (titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2), payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions id (\(move1, move2, continuation1, continuation2) ->  let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,  u2 + repetitionTestDiscountFactor*continuation2)))))))) >>> (fromFunctions (\((titForTatState, grimTriggerState, move1, move2), ()) -> (titForTatState, grimTriggerState, move1, move2)) (\(titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2)) -> ((titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2)), (move1, move2, continuation1, continuation2)))))))))) >>> (fromLens (\(titForTatState, grimTriggerState, move1, move2) -> ((stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1), (move1, move2))) (curry (\((titForTatState, grimTriggerState, move1, move2), (continuation1, continuation2)) -> (titForTatState, grimTriggerState, move1, move2, (continuation1, continuation2))))))
 
 repeatedPDStates = [(a, b) | a <- [TitForTatState1, TitForTatState2], b <- [GrimTriggerState1, GrimTriggerState2]]
 
-repeatedPDSrc = Block [] []
-  [Line ["TitForTatState1", "GrimTriggerState1"] ["payoff1", "payoff2"] "repeated 10 (0, 0) repeatedPDStates stagePD" ["moves"] []]
-  [] []
+generateGame "repeatedPDSrc" [] $
+  [QLine [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
 
 repeatedPD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(moves, payoff1, payoff2) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), (TitForTatState1, GrimTriggerState1))) (\(moves, (payoff1, payoff2)) -> (moves, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((repeated 10 (0, 0) repeatedPDStates stagePD)))))) >>> (fromFunctions (\((), moves) -> moves) (\moves -> (moves, ())))))))) >>> (fromLens (\moves -> ()) (curry (\(moves, ()) -> moves))))
 

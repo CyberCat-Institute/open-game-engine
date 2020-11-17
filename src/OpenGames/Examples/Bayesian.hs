@@ -1,8 +1,14 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 module OpenGames.Examples.Bayesian where
 
 import Numeric.Probability.Distribution
 
 import OpenGames.Engine.BayesianDiagnostics
+import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.AbstractSyntax
+import Language.Haskell.TH.Syntax
+import GHC.Generics
 
 -- Bayesian prisoner's dilemma, from Mas-Colell, Whinston & Green p.254
 
@@ -25,6 +31,21 @@ pdMatrix2 Omerta Confess DontConfess = -10
 pdMatrix2 Omerta DontConfess Confess = -7
 pdMatrix2 Omerta DontConfess DontConfess = -2
 
+-- using TH
+generateGame "bayesianPDTH" []
+                   [QLine [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
+                   ,QLine [] [] [|reindex const (decision "prisoner1" [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
+                   ,QLine [[|t|]] [] [|decision "prisoner2" [Confess, DontConfess]|] ["y"] [[|pdMatrix2 t x y|]]
+                   ]
+
+-- Using blocks
+bayesianPDsrc = Block [] []
+                      [Line [] [] "nature (uniform [Rat, Omerta])" ["t"] [],
+                       Line [] [] "reindex const (decision \"prisoner1\" [Confess, DontConfess])" ["x"] ["pdMatrix1 x y"],
+                       Line ["t"] [] "decision \"prisoner2\" [Confess, DontConfess]" ["y"] ["pdMatrix2 t x y"]]
+                      [] []
+
+
 bayesianPD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(t, x, y) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((t, x, y), ()) -> (t, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (fromFreqs [(Rat, 1), (Omerta, 1)]))))))) >>> (fromFunctions (\((), t) -> t) (\(t, x, y) -> ((t, x, y), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\t -> (t, ())) (\((t, x, y), ()) -> (t, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "prisoner1" [Confess, DontConfess]))))))) >>> (fromFunctions (\(t, x) -> (t, x)) (\(t, x, y) -> ((t, x, y), pdMatrix1 x y)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(t, x) -> ((t, x), t)) (\((t, x, y), ()) -> (t, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "prisoner2" [Confess, DontConfess])))))) >>> (fromFunctions (\((t, x), y) -> (t, x, y)) (\(t, x, y) -> ((t, x, y), pdMatrix2 t x y))))))))) >>> (fromLens (\(t, x, y) -> ()) (curry (\((t, x, y), ()) -> (t, x, y)))))
 
 bayesianPDEquilibrium = equilibrium bayesianPD trivialContext
@@ -43,8 +64,8 @@ strategyPD2 Omerta = certainly DontConfess
 
 -- Battle of sexes with asymmetric uncertainty, from https://sites.duke.edu/niou/files/2011/05/Lecture-7-Bayesian-Games1.pdf
 
-data BOSType = BOSType1 | BOSType2 deriving (Eq, Ord, Show)
-data BOSMove = BayesianB | BayesianS deriving (Eq, Ord, Show)
+data BOSType = BOSType1 | BOSType2 deriving (Eq, Ord, Show, Generic)
+data BOSMove = BayesianB | BayesianS deriving (Eq, Ord, Show, Generic)
 
 bos_bayesian_matrix1, bos_bayesian_matrix2 :: BOSType -> BOSMove -> BOSMove -> Rational
 bos_bayesian_matrix1 BOSType1 BayesianB BayesianB = 2
@@ -59,6 +80,19 @@ bos_bayesian_matrix2 BOSType1 _ _ = 0
 bos_bayesian_matrix2 BOSType2 BayesianS BayesianB = 1
 bos_bayesian_matrix2 BOSType2 BayesianB BayesianS = 2
 bos_bayesian_matrix2 BOSType2 _ _ = 0
+
+-- Using TH
+generateGame "bayesianBOSTH" []
+                    [QLine []       [] [|nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})|] ["t1", "t2"] []
+                    ,QLine [[|t1|]] [] [|decision "man" [BayesianB, BayesianS]|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
+                    ,QLine [[|t2|]] [] [|decision "woman" [BayesianB, BayesianS]|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
+                    ]
+-- Using blocks
+bayesianBOSsrc = Block [] []
+                       [Line [] [] "nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})" ["t1", "t2"] [],
+                        Line ["t1"] [] "decision \"man\" [BayesianB, BayesianS]" ["x"] ["bos_bayesian_matrix1 t1 x y"],
+                        Line ["t2"] [] "decision \"woman\" [BayesianB, BayesianS]" ["y"] ["bos_bayesian_matrix2 t2 x y"]]
+                       [] []
 
 bayesianBOS = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(t1, t2, x, y) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((t1, t2, x, y), ()) -> (t1, t2, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)}))))))) >>> (fromFunctions (\((), (t1, t2)) -> (t1, t2)) (\(t1, t2, x, y) -> ((t1, t2, x, y), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(t1, t2) -> ((t1, t2), t1)) (\((t1, t2, x, y), ()) -> (t1, t2, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "man" [BayesianB, BayesianS])))))) >>> (fromFunctions (\((t1, t2), x) -> (t1, t2, x)) (\(t1, t2, x, y) -> ((t1, t2, x, y), bos_bayesian_matrix1 t1 x y)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(t1, t2, x) -> ((t1, t2, x), t2)) (\((t1, t2, x, y), ()) -> (t1, t2, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "woman" [BayesianB, BayesianS])))))) >>> (fromFunctions (\((t1, t2, x), y) -> (t1, t2, x, y)) (\(t1, t2, x, y) -> ((t1, t2, x, y), bos_bayesian_matrix2 t2 x y))))))))) >>> (fromLens (\(t1, t2, x, y) -> ()) (curry (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))))
 
