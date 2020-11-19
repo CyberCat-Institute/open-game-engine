@@ -10,6 +10,17 @@ class OG g where
   (&&&)    :: (Show x1, Show x2) => g a x1 s1 y1 r1 -> g b x2 s2 y2 r2 -> g (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
   (+++)    :: g a x1 s y1 r -> g b x2 s y2 r -> g (a, b) (Either x1 x2) s (Either y1 y2) r
 
+population :: (OG g, Show x) => [g a x s y r] -> g [a] [x] [s] [y] [r]
+population = foldr1 q . map p
+  where p g = reindex (\[a] -> (((), a), ()))
+                      ((fromLens (\[x] -> x) (\[x] s -> [s])
+                        >>> g)
+                        >>> fromLens (\y -> [y]) (\y [r] -> r))
+        q g h = reindex (\as -> (((), ([head as], tail as)), ()))
+                        ((fromLens (\xs -> ([head xs], tail xs)) (\_ ([s], ss) -> s : ss)
+                          >>> (g &&& h))
+                          >>> fromLens (\([y], ys) -> y : ys) (\_ rs -> ([head rs], tail rs)))
+
 fromFunctions :: (OG g) => (x -> y) -> (r -> s) -> g () x s y r
 fromFunctions f g = fromLens f (const g)
 
