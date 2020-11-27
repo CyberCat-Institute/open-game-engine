@@ -39,8 +39,8 @@ majority tech (Right ()) (Right ()) = Right tech
 majority tech _ _ = Left tech
 
 -- 0.3 random choice of institutional
-randomRegime :: Double -> [Char] -> Either Double Double
-randomRegime tech "cr" = Left tech
+regimeChoice :: Double -> [Char] -> Either Double Double
+regimeChoice tech "cr" = Left tech
 randomTegime tech "wa" = Right tech
 
 --------------------------
@@ -65,7 +65,7 @@ landLordShareSrc = Block ["tech"] []
 landLordShare = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, share, effort) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, tech)) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "landLord" (const [0, 0.1 .. 1]))))))) >>> (fromFunctions (\(tech, share) -> (tech, share)) (\(tech, share, effort) -> ((tech, share, effort), payoffLandLordShare (productionFunction tech effort) share)))))))) >>> (fromLens (\(tech, share) -> share) (curry (\((tech, share), effort) -> (tech, share, effort)))))
 
 
--- 2.1 Landowners setting the share 
+-- 2.1 Landowners setting the wage
 
 landLordWageSrc = Block ["tech"] []
                   [Line ["tech"] [] "dependentDecision \"landLord\" (const [0, 1 .. 10])" ["wage"] ["payoffLandLordWage (productionFunction tech effort) wage"]]
@@ -164,12 +164,22 @@ branchingGame  = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctio
 randomInstSrc = Block [] []
                  [Line [] [] "technology" ["tech"] [],
                   Line [] [] "nature (uniform [\"cr\", \"wa\"])" ["inst"] [],
-                  Line ["randomRegime tech inst"] [] "cropGame +++ wageGame " ["discard"] []
+                  Line ["regimeChoice tech inst"] [] "cropGame +++ wageGame " ["discard"] []
                  ]
                  [] []
 
-randomInst = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, inst, discard) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, ())) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform ["cr", "wa"]))))))) >>> (fromFunctions (\(tech, inst) -> (tech, inst)) (\(tech, inst, discard) -> ((tech, inst, discard), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, inst) -> ((tech, inst), randomRegime tech inst)) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((cropGame +++ wageGame )))))) >>> (fromFunctions (\((tech, inst), discard) -> (tech, inst, discard)) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))))))) >>> (fromLens (\(tech, inst, discard) -> ()) (curry (\((tech, inst, discard), ()) -> (tech, inst, discard)))))
+randomInst = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, inst, discard) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, ())) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform ["cr", "wa"]))))))) >>> (fromFunctions (\(tech, inst) -> (tech, inst)) (\(tech, inst, discard) -> ((tech, inst, discard), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, inst) -> ((tech, inst), regimeChoice tech inst)) (\((tech, inst, discard), ()) -> (tech, inst, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((cropGame +++ wageGame )))))) >>> (fromFunctions (\((tech, inst), discard) -> (tech, inst, discard)) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))))))) >>> (fromLens (\(tech, inst, discard) -> ()) (curry (\((tech, inst, discard), ()) -> (tech, inst, discard)))))
 
+
+-- 6.4 Dictator deciding the institution
+dictatorInstSrc = Block [] []
+                 [Line [] [] "technology" ["tech"] [],
+                  Line [] [] "dependentDecision \"dictator\" (const [\"cr\", \"wa\"])" ["inst"] ["effort"],
+                  Line ["regimeChoice tech inst"] ["effort"] "cropGame +++ wageGame " ["discard"] []
+                 ]
+                 [] []
+
+--dictatorInst = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, inst, discard, effort) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, inst, discard, effort), ()) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, inst, discard, effort) -> ((tech, inst, discard, effort), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, ())) (\((tech, inst, discard, effort), ()) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "dictator" (const ["cr", "wa"]))))))) >>> (fromFunctions (\(tech, inst) -> (tech, inst)) (\(tech, inst, discard, effort) -> ((tech, inst, discard, effort), effort)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, inst) -> ((tech, inst), regimeChoice tech inst)) (\((tech, inst, discard), effort) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((cropGame +++ wageGame )))))) >>> (fromFunctions (\((tech, inst), discard) -> (tech, inst, discard)) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))))))) >>> (fromLens (\(tech, inst, discard) -> ()) (curry (\((tech, inst, discard), ()) -> (tech, inst, discard)))))
 
 -- 6 eq checks
 eqCropGame = OpenGames.Engine.OpticClass.equilibrium cropGameComplete void
