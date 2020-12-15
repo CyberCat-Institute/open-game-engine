@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TemplateHaskell #-}
 
 module OpenGames.Examples.Consensus.DepositGame where
 
@@ -6,6 +6,7 @@ import Control.Arrow (Kleisli(..))
 import Numeric.Probability.Distribution (certainly)
 
 import OpenGames.Preprocessor.AbstractSyntax
+import OpenGames.Preprocessor.THSyntax
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.DecisionClass
@@ -36,13 +37,18 @@ instance Obfuscatable Bool [Bool] where
 instance Obfuscatable Bool Int where
   obfuscate xs = length (filter id xs)
 
-payoffInt :: Double -> [Double] -> Int -> [Double]
-payoffInt reward deposits numHonest = if totalDeposit == 0
-                                        then replicate (length deposits) 0
-                                        else [(reward*deposit*m) / (totalDeposit*n) | deposit <- deposits]
+payoffInt :: Double -> Double -> [Double] -> Int -> [Double]
+payoffInt payoffParameter reward deposits numHonest
+  = if totalDeposit == 0
+       then replicate (length deposits) 0
+       else [(rewardShare deposit + deposit)*payoffScaler - deposit | deposit <- deposits]
   where n = fromIntegral (length deposits)
         m = fromIntegral numHonest
         totalDeposit = sum deposits
+        outcomeScore = m / n
+        safeDepositProportion = payoffParameter
+        payoffScaler = outcomeScore*(1 - safeDepositProportion) + safeDepositProportion
+        rewardShare deposit = (deposit / totalDeposit)*reward
 
 attackerPayoff :: [Bool] -> Double -> Double -> Double
 attackerPayoff bribesAccepted bribe successfulAttackPayoff
@@ -51,28 +57,28 @@ attackerPayoff bribesAccepted bribe successfulAttackPayoff
   where numPlayers = length bribesAccepted
         numBribed  = length (filter id bribesAccepted)
 
-fullThingSrc = Block [] []
-  [Line ["replicate numPlayers costOfCapital"] ["discard1"] "population [depositStagePlayer (\"Player \" ++ show n) 0 10 0.1 | n <- [1 .. numPlayers]]" ["deposits"] ["replicate numPlayers ()"],
-   Line ["deposits"] [] "dependentDecision \"Attacker\" (const [0, 0.1 .. maxBribe])" ["bribe"] ["attackerPayoff bribesAccepted bribe successfulAttackPayoff"],
-   Line ["replicate numPlayers (deposits, bribe)"] ["discard2"] "population [playingStagePlayer (\"Player \" ++ show n) [True, False] (const False) | n <- [1 .. numPlayers]]" ["moves"] ["zip (payoffInt reward deposits (obfuscate moves)) bribesAccepted"],
-   Line ["moves"] [] "fromFunctions (map not) id" ["bribesAccepted"] []]
+generateGame "fullThing" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "payoffParameter"] $ GBlock [] []
+  [QLine [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   QLine [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.1 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   QLine [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] (const False) | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   QLine [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
-fullThing numPlayers reward costOfCapital maxBribe successfulAttackPayoff = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(deposits, bribe, moves, bribesAccepted, discard2, discard1) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), replicate numPlayers costOfCapital)) (\((deposits, bribe, moves, bribesAccepted, discard2), discard1) -> (deposits, bribe, moves, bribesAccepted, discard2, discard1))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 | n <- [1 .. numPlayers]])))))) >>> (fromFunctions (\((), deposits) -> deposits) (\(deposits, bribe, moves, bribesAccepted, discard2) -> ((deposits, bribe, moves, bribesAccepted, discard2), replicate numPlayers ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\deposits -> (deposits, deposits)) (\((deposits, bribe, moves, bribesAccepted, discard2), ()) -> (deposits, bribe, moves, bribesAccepted, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "Attacker" (const [0, 0.1 .. maxBribe]))))))) >>> (fromFunctions (\(deposits, bribe) -> (deposits, bribe)) (\(deposits, bribe, moves, bribesAccepted, discard2) -> ((deposits, bribe, moves, bribesAccepted, discard2), attackerPayoff bribesAccepted bribe successfulAttackPayoff)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(deposits, bribe) -> ((deposits, bribe), replicate numPlayers (deposits, bribe))) (\((deposits, bribe, moves, bribesAccepted), discard2) -> (deposits, bribe, moves, bribesAccepted, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((population [playingStagePlayer ("Player " ++ show n) [True, False] (const False) | n <- [1 .. numPlayers]])))))) >>> (fromFunctions (\((deposits, bribe), moves) -> (deposits, bribe, moves)) (\(deposits, bribe, moves, bribesAccepted) -> ((deposits, bribe, moves, bribesAccepted), zip (payoffInt reward deposits (obfuscate moves)) bribesAccepted)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(deposits, bribe, moves) -> ((deposits, bribe, moves), moves)) (\((deposits, bribe, moves, bribesAccepted), ()) -> (deposits, bribe, moves, bribesAccepted))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions (map not) id)))))) >>> (fromFunctions (\((deposits, bribe, moves), bribesAccepted) -> (deposits, bribe, moves, bribesAccepted)) (\(deposits, bribe, moves, bribesAccepted) -> ((deposits, bribe, moves, bribesAccepted), ()))))))))) >>> (fromLens (\(deposits, bribe, moves, bribesAccepted) -> ()) (curry (\((deposits, bribe, moves, bribesAccepted), ()) -> (deposits, bribe, moves, bribesAccepted)))))
-
-testFullThing costOfCapital maxBribe = equilibrium (fullThing 10 10 costOfCapital maxBribe 1000) void
+testFullThing numPlayers reward costOfCapital maxBribe = equilibrium (fullThing numPlayers reward costOfCapital maxBribe 1000 0) void
 -- with 10 players, reward = 5, costOfCapital = 0.046
 
-deviationPenalty i reward deposits = ((payoffInt reward deposits numPlayers) !! i)
-                                   - ((payoffInt reward deposits (numPlayers - 1)) !! i)
+deviationPenalty i reward deposits = ((payoffInt 0 reward deposits numPlayers) !! i)
+                                   - ((payoffInt 0 reward deposits (numPlayers - 1)) !! i)
   where numPlayers = length deposits
 
 bribeStrategy i reward = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits >= bribe
 
-testBribeStrategy costOfCapital maxBribe = testFullThing costOfCapital maxBribe $
-  (replicate 10 $ Kleisli $ const $ certainly 9.8,
+testBribeStrategy costOfCapital maxBribe = testFullThing numPlayers reward costOfCapital maxBribe $
+  (replicate numPlayers $ Kleisli $ const $ certainly 9.8,
    Kleisli $ const $ certainly 0.1,
-   [bribeStrategy i 10 | i <- [0 .. 9]],
+   [bribeStrategy i reward | i <- [0 .. numPlayers - 1]],
    ())
+   where reward = 5
+         numPlayers = 10
 
 -- next time: minmax the attacker, maximise attacker budget
