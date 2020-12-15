@@ -1,0 +1,84 @@
+name: open-games-hs
+version: '0.1.0.0'
+synopsis: Haskell implementation of open games
+category: Math
+author: Jules Hedges & other contributors
+maintainer: juleshedges.invariant@gmail.com
+copyright: 2020 Jules Hedges & other contributors
+license: AGPL
+github: jules-hedges/open-games-hs
+extra-source-files:
+- README.md
+library:
+  source-dirs: src
+  exposed-modules:
+    - OpenGames.Engine.OpenGamesClass
+    - OpenGames.Engine.Diagnostics
+    - OpenGames.Engine.PureOpenGames
+    - OpenGames.Engine.BayesianOpenGames
+    - OpenGames.Engine.BayesianDiagnostics
+    - OpenGames.Engine.BayesianDiagnosticsTLL
+    - OpenGames.Engine.StatefulPayoffs
+    - OpenGames.Engine.OpticClass
+    - OpenGames.Engine.SubgamePerfect
+    - OpenGames.Engine.DecisionClass
+    - OpenGames.Engine.StatefulBayesian
+    - OpenGames.Engine.DependentDecision
+    - OpenGames.Engine.PureNumerical
+    - OpenGames.Engine.PureNumerical2
+    - OpenGames.Engine.PureNumerical3
+    - OpenGames.Engine.PolyNumerical
+    - OpenGames.Preprocessor.THSyntax
+    - OpenGames.Preprocessor.TH
+    - OpenGames.Preprocessor.AbstractSyntax
+    - OpenGames.Preprocessor.FreeOpenGames
+    - OpenGames.Preprocessor.Preprocessor
+    - OpenGames.Examples.Bimatrix
+    - OpenGames.Examples.Sequential
+    - OpenGames.Examples.Bayesian
+    - OpenGames.Examples.Signalling
+    - OpenGames.Examples.SimpleAuction
+    - OpenGames.Examples.LemonMarket
+    - OpenGames.Examples.ResaleMarket
+    - OpenGames.Examples.KD.Bimatrix
+    - OpenGames.Examples.KD.Sequential
+    - OpenGames.Examples.KD.LemonMarket
+    - OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood
+    - OpenGames.Examples.Governance.Monitoring
+    - OpenGames.Examples.Governance.ChoosingGames
+    - OpenGames.Examples.Governance.ChoosingRandomly
+    - OpenGames.Examples.Governance.ChoosingStatefulRandomly
+    - OpenGames.Examples.Governance.ThirdOption
+    - OpenGames.Examples.SubgameTest
+    - OpenGames.Examples.Governance.Irrigation
+    - OpenGames.Examples.Governance.IrrigationRandom
+    - OpenGames.Examples.Governance.IrrigationRandom2
+    - OpenGames.Examples.Governance.VotingGames
+    - OpenGames.Examples.Governance.VotingGames2
+    - OpenGames.Examples.PermitSale.PermitSale
+    - OpenGames.Examples.RepetitionTest
+    - OpenGames.Examples.Consensus.Simple
+    - OpenGames.Examples.Consensus.Censor
+    - OpenGames.Examples.Consensus.CensorStrategicAttacker
+  dependencies:
+    - base >=4.7 && <5
+    - mtl
+    - transformers
+    - probability
+    - ad
+    - poly
+    - profunctors
+    - template-haskell
+    - parsec
+    - QuickCheck
+tests:
+  test-open-games:
+    main: THTests
+    source-dirs: tests
+    dependencies:
+      - open-games-hs
+      - template-haskell
+      - base
+      - probability
+      - hspec
+      - QuickCheck

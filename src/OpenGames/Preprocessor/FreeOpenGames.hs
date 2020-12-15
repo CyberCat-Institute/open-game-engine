@@ -81,7 +81,7 @@ instance Show FreeOpenGame where
 -- Macros commonly used in compiled code
 
 sequentialTrivialL, sequentialTrivialR, simultaneousTrivialL, simultaneousTrivialR :: FreeOpenGame -> FreeOpenGame -> FreeOpenGame
-sequentialTrivialL g h   = Reindex UnitIntroL (Sequential g h)
-sequentialTrivialR g h   = Reindex UnitIntroR (Sequential g h)
-simultaneousTrivialL g h = Reindex UnitIntroL (Simultaneous g h)
-simultaneousTrivialR g h = Reindex UnitIntroR (Simultaneous g h)
+sequentialTrivialL g h   = Reindex UnitIntroL (Sequential g h) -- \x -> ((), x)
+sequentialTrivialR g h   = Reindex UnitIntroR (Sequential g h) -- \x -> (x, ())
+simultaneousTrivialL g h = Reindex UnitIntroL (Simultaneous g h) -- \x -> ((), x)
+simultaneousTrivialR g h = Reindex UnitIntroR (Simultaneous g h) -- \x -> (x, ())
