@@ -24,7 +24,7 @@ Other contributions not recorded by GitHub (because this is a copy of a private 
 
 In order to use the preprocessor, create a value of type `OpenGames.Preprocessor.AbstractSyntax.Block`, and then interactively (in GHCi) apply the function `OpenGames.Preprocessor.Preprocessor.compileBlock`. The resulting `Show` instance will result in a string containing Haskell code. Copy this code from the terminal into a file that makes the appropriate imports from `OpenGames.Engine`.
 
-Examples of blocks can be seen in `OpenGames.Examples.Source`, and in each case the resulting generated code can be seen in the file of the same name in `OpenGames.Examples`.
+Examples of blocks can be seen in `OpenGames.Examples`, and in each case the resulting generated code can be seen right after the block definition.
 
 The scoping rules for blocks are quite complicated, and reflect the topological rules for string diagrams of open games:
 * Block inputs and line outputs (both covariant and contravariant) are variables, which are brought into scope (I think they could be general patterns, but I haven't tested it properly)
@@ -36,3 +36,25 @@ The scoping rules for blocks are quite complicated, and reflect the topological 
 (Think: covariant values flow downwards, then turn around and come back upwards. Contravariant values only flow upwards.)
 
 The preprocessor does no scope or type checking, so if you make a mistake then you will get a (probably large) error message when you compile the generated code.
+
+## Using the Template Haskell code generator
+
+In addition to using `Block`, one can use `QBlock` and `QLine` by importing
+`OpenGames.Preprocessor.THSyntax` and add `{-# LANGUAGE TemplateHaskell #-}` at the top of the file
+as a language pragma. This allows to define blocks _inline_ without copy pasting generated code
+through GHCI using a syntax very similar to the one for `Block`. In order to generate the code
+for a `QBlock` or a list of `QLine`, you need to call the function `generateGame` at the top
+level of your file with a function name given as a string and a list of strings for the
+arguments this function will use. The last argument is the `QBlock` that define the game.
+
+This approach as some known limitations:
+
+- All the intermediate terms have to be quoted with `[|…|]` which makes the syntax look really
+confusing when they are within lists
+- The block context can only return parameters and not expressions.
+
+## Run the code
+
+You can use `stack build` to compile the project, `stack test` will run the tests
+`stack ghci` and `stack ghci --test` will run ghci using the main target or the test
+targets respectively.

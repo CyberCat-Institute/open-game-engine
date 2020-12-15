@@ -43,7 +43,7 @@ data DiagnosticInfo = DiagnosticInfo {
   payoff          :: String,
   optimalMove     :: String,
   optimalPayoff   :: String}
-  deriving (Show)
+  deriving (Show, Eq)
 
 data BayesianDiagnosticOpenGame prob a x s y r = BayesianDiagnosticOpenGame {
   play :: a -> L prob x s y r,
