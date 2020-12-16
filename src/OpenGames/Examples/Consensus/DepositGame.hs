@@ -59,26 +59,28 @@ attackerPayoff bribesAccepted bribe successfulAttackPayoff
 
 generateGame "fullThing" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "payoffParameter"] $ GBlock [] []
   [QLine [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   QLine [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.1 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   QLine [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
    QLine [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] (const False) | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
    QLine [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
-testFullThing numPlayers reward costOfCapital maxBribe = equilibrium (fullThing numPlayers reward costOfCapital maxBribe 1000 0) void
+testFullThing numPlayers reward costOfCapital = equilibrium (fullThing numPlayers reward costOfCapital 1 1000 0) void
 -- with 10 players, reward = 5, costOfCapital = 0.046
 
-deviationPenalty i reward deposits = ((payoffInt 0 reward deposits numPlayers) !! i)
-                                   - ((payoffInt 0 reward deposits (numPlayers - 1)) !! i)
+deviationPenalty i reward deposits payoffParameter = ((payoffInt payoffParameter reward deposits numPlayers) !! i)
+                                   - ((payoffInt payoffParameter reward deposits (numPlayers - 1)) !! i)
   where numPlayers = length deposits
 
-bribeStrategy i reward = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits >= bribe
+bribeStrategy i reward payoffParameter = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits payoffParameter >= bribe
 
-testBribeStrategy costOfCapital maxBribe = testFullThing numPlayers reward costOfCapital maxBribe $
-  (replicate numPlayers $ Kleisli $ const $ certainly 9.8,
-   Kleisli $ const $ certainly 0.1,
-   [bribeStrategy i reward | i <- [0 .. numPlayers - 1]],
+testBribeStrategy costOfCapital bribe payoffParameter = testFullThing numPlayers reward costOfCapital $
+  (replicate numPlayers $ Kleisli $ const $ certainly 10,
+   Kleisli $ const $ certainly bribe,
+   [bribeStrategy i reward payoffParameter | i <- [0 .. numPlayers - 1]],
    ())
    where reward = 5
          numPlayers = 10
 
--- next time: minmax the attacker, maximise attacker budget
+-- TODO: investigate optimal bribe amount close to the payoff parameter 0
+-- understand the other player deviations
+-- certainly 0, certainly maxDeposit, certainly 0, certainly maxBribe
