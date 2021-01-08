@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 83f09da22001ba2e7374e505d31881f86262676867660affae91b1f426857d39
+-- hash: 597216e9df1e60e64d9e047ebbd1b6d355a88357f07f8941b0a76279edc7b43a
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -77,6 +77,9 @@ library
       OpenGames.Examples.Consensus.CensorStrategicAttacker
   other-modules:
       OpenGames.Examples.Consensus.DepositGame
+      OpenGames.Examples.Governance.Irrigation2
+      OpenGames.Preprocessor.Expression
+      OpenGames.Preprocessor.Interpret
       Paths_open_games_hs
   hs-source-dirs:
       src
