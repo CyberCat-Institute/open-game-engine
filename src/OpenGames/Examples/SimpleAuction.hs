@@ -32,10 +32,10 @@ strategyAuction = ((),(), strat, strat)
 
 -- Using TH
 generateGame "firstPriceAuctionTH" []
-                           [QLine [] [] [|nature (uniform [0..6])|] ["t1"] [],
-                            QLine [] [] [|nature (uniform [0..6])|] ["t2"] [],
-                            QLine [[|t1|]] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility t1 x y|]],
-                            QLine [[|t2|]] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility t2 x y|]]]
+                           [line [] [] [|nature (uniform [0..6])|] ["t1"] [],
+                            line [] [] [|nature (uniform [0..6])|] ["t2"] [],
+                            line [[|t1|]] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility t1 x y|]],
+                            line [[|t2|]] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility t2 x y|]]]
 
 
 -- Using Blocks
@@ -131,10 +131,10 @@ playerTwoUtility2nd t2 x y = if playerOneWins x y then 0 else t2 - playerTwoPays
 
 -- Using TH
 generateGame "secondPriceAuctionTH" [] $
-                           [QLine [] [] [|nature (uniform [0..6])|] ["t1"] [],
-                            QLine [] [] [|nature (uniform [0..6])|] ["t2"] [],
-                            QLine [param "t1"] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility2nd t1 x y|]],
-                            QLine [param "t2"] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility2nd t2 x y|]]]
+                           [line [] [] [|nature (uniform [0..6])|] ["t1"] [],
+                            line [] [] [|nature (uniform [0..6])|] ["t2"] [],
+                            line [param "t1"] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility2nd t1 x y|]],
+                            line [param "t2"] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility2nd t2 x y|]]]
 
 -- Using Blocks
 secondPriceAuctionSrc = Block [] []
@@ -172,12 +172,12 @@ playerTwoUtility_correlated t s1 s2 x y tieFavoursOne | (x > y || (x == y && tie
 
 -- Using TH
 generateGame "firstPriceCommonValuationTH" [] $
-  [QLine [] []           [|nature (uniform [10..16])|] ["t"] [],
-   QLine [] []           [|nature (uniform [10..16])|] ["s1"] [],
-   QLine [] []           [|nature (uniform [10..16])|] ["s2"] [],
-   QLine [] []           [|nature (uniform [False, True])|] ["tieFavoursOne"] [],
-   QLine [[|t + s1|]] [] [|decision "player1" [20..32]|] ["x"] [[|playerOneUtility_correlated t s1 s2 x y tieFavoursOne|]],
-   QLine [[|t + s2|]] [] [|decision "player2" [20..32]|] ["y"] [[|playerTwoUtility_correlated t s1 s2 x y tieFavoursOne|]]]
+  [line [] []           [|nature (uniform [10..16])|] ["t"] [],
+   line [] []           [|nature (uniform [10..16])|] ["s1"] [],
+   line [] []           [|nature (uniform [10..16])|] ["s2"] [],
+   line [] []           [|nature (uniform [False, True])|] ["tieFavoursOne"] [],
+   line [[|t + s1|]] [] [|decision "player1" [20..32]|] ["x"] [[|playerOneUtility_correlated t s1 s2 x y tieFavoursOne|]],
+   line [[|t + s2|]] [] [|decision "player2" [20..32]|] ["y"] [[|playerTwoUtility_correlated t s1 s2 x y tieFavoursOne|]]]
 
 -- Using blocks
 firstPriceCommonValuationSrc = Block [] []
@@ -223,9 +223,9 @@ discreteAuctionUtility2 t Ten Ten False = 15
 
 -- Using TH
 generateGame "discreteAuctionTH" [] $
-   [QLine []           [] [|nature discreteAuctionPrior|]       ["t1", "t2", "flip'"] [],
-    QLine [param "t1"] [] [|decision "player1" [Ten, Hundred]|] ["x"] [[|discreteAuctionUtility1 t1 x y flip'|]],
-    QLine [param "t2"] [] [|decision "player2" [Ten, Hundred]|] ["y"] [[|discreteAuctionUtility2 t2 x y flip'|]]
+   [line []           [] [|nature discreteAuctionPrior|]       ["t1", "t2", "flip'"] [],
+    line [param "t1"] [] [|decision "player1" [Ten, Hundred]|] ["x"] [[|discreteAuctionUtility1 t1 x y flip'|]],
+    line [param "t2"] [] [|decision "player2" [Ten, Hundred]|] ["y"] [[|discreteAuctionUtility2 t2 x y flip'|]]
    ]
 
 -- Using Blocks

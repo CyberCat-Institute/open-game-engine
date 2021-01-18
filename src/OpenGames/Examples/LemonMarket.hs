@@ -29,9 +29,9 @@ lemonUtilityBuyer quality price Buy = lemonValuationBuyer quality - lemonPrice p
 lemonUtilityBuyer quality price NotBuy = 0
 
 -- Using TH
-generateGame "lemonMarketTH" [] [QLine [] [] [|nature (fromFreqs [(Good, 1), (Bad, 4)])|] ["quality"] []
-                                ,QLine [param "quality"] [] [|decision "seller" [Low, High] |] ["price"] [[|lemonUtilitySeller quality price buy|]]
-                                ,QLine [param "price"] [] [|decision "buyer" [Buy, NotBuy]|] ["buy"] [[|lemonUtilityBuyer quality price buy|]]]
+generateGame "lemonMarketTH" [] [line [] [] [|nature (fromFreqs [(Good, 1), (Bad, 4)])|] ["quality"] []
+                                ,line [param "quality"] [] [|decision "seller" [Low, High] |] ["price"] [[|lemonUtilitySeller quality price buy|]]
+                                ,line [param "price"] [] [|decision "buyer" [Buy, NotBuy]|] ["buy"] [[|lemonUtilityBuyer quality price buy|]]]
 
 -- Using Blocks
 lemonMarketSrc = Block [] []

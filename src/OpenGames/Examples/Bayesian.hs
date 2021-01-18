@@ -33,9 +33,9 @@ pdMatrix2 Omerta DontConfess DontConfess = -2
 
 -- using TH
 generateGame "bayesianPDTH" []
-                   [QLine [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
-                   ,QLine [] [] [|reindex const (decision "prisoner1" [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
-                   ,QLine [[|t|]] [] [|decision "prisoner2" [Confess, DontConfess]|] ["y"] [[|pdMatrix2 t x y|]]
+                   [line [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
+                   ,line [] [] [|reindex const (decision "prisoner1" [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
+                   ,line [[|t|]] [] [|decision "prisoner2" [Confess, DontConfess]|] ["y"] [[|pdMatrix2 t x y|]]
                    ]
 
 -- Using blocks
@@ -83,9 +83,9 @@ bos_bayesian_matrix2 BOSType2 _ _ = 0
 
 -- Using TH
 generateGame "bayesianBOSTH" []
-                    [QLine []       [] [|nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})|] ["t1", "t2"] []
-                    ,QLine [[|t1|]] [] [|decision "man" [BayesianB, BayesianS]|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
-                    ,QLine [[|t2|]] [] [|decision "woman" [BayesianB, BayesianS]|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
+                    [line []       [] [|nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})|] ["t1", "t2"] []
+                    ,line [[|t1|]] [] [|decision "man" [BayesianB, BayesianS]|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
+                    ,line [[|t2|]] [] [|decision "woman" [BayesianB, BayesianS]|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
                     ]
 -- Using blocks
 bayesianBOSsrc = Block [] []
