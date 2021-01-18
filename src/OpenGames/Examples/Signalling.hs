@@ -1,10 +1,11 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
 
 module OpenGames.Examples.Signalling where
 
 import GHC.Generics
 import Numeric.Probability.Distribution
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Compile
 import OpenGames.Preprocessor.AbstractSyntax
 
 import OpenGames.Engine.BayesianDiagnostics
@@ -35,16 +36,16 @@ signallingUtilityFirm _ _ NotAccept = 0
 
 -- Using TH
 generateGame "signallingTH" []
-  [line []                                   []
+  [Line []                                   []
        [|nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)])|]
      ["productivity"] [],
-   line [param "productivity"]               []
+   Line [param "productivity"]               []
        [|decision "worker-effort" [LowEffort, HighEffort]|]
      ["effort"]   [[|signallingUtilityWorker productivity effort wage contract|]],
-   line [param "effort"]                     []
+   Line [param "effort"]                     []
        [|decision "firm" [LowWage, HighWage]|]
      ["wage"]     [[|signallingUtilityFirm productivity wage contract|]],
-   line [param "productivity", param "wage"] []
+   Line [param "productivity", param "wage"] []
        [|decision "worker-contract" [Accept, NotAccept]|]
      ["contract"] [[|signallingUtilityWorker productivity effort wage contract|]]]
 --
@@ -56,6 +57,16 @@ signallingSrc = Block [] []
                     Line ["productivity", "wage"] [] "decision \"worker-contract\" [Accept, NotAccept]" ["contract"] ["signallingUtilityWorker productivity effort wage contract"]]
                    [] []
 
-signalling = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(productivity, effort, wage, contract) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((productivity, effort, wage, contract), ()) -> (productivity, effort, wage, contract))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)]))))))) >>> (fromFunctions (\((), productivity) -> productivity) (\(productivity, effort, wage, contract) -> ((productivity, effort, wage, contract), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\productivity -> (productivity, productivity)) (\((productivity, effort, wage, contract), ()) -> (productivity, effort, wage, contract))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "worker-effort" [LowEffort, HighEffort])))))) >>> (fromFunctions (\(productivity, effort) -> (productivity, effort)) (\(productivity, effort, wage, contract) -> ((productivity, effort, wage, contract), signallingUtilityWorker productivity effort wage contract)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(productivity, effort) -> ((productivity, effort), effort)) (\((productivity, effort, wage, contract), ()) -> (productivity, effort, wage, contract))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "firm" [LowWage, HighWage])))))) >>> (fromFunctions (\((productivity, effort), wage) -> (productivity, effort, wage)) (\(productivity, effort, wage, contract) -> ((productivity, effort, wage, contract), signallingUtilityFirm productivity wage contract)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(productivity, effort, wage) -> ((productivity, effort, wage), (productivity, wage))) (\((productivity, effort, wage, contract), ()) -> (productivity, effort, wage, contract))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "worker-contract" [Accept, NotAccept])))))) >>> (fromFunctions (\((productivity, effort, wage), contract) -> (productivity, effort, wage, contract)) (\(productivity, effort, wage, contract) -> ((productivity, effort, wage, contract), signallingUtilityWorker productivity effort wage contract))))))))) >>> (fromLens (\(productivity, effort, wage, contract) -> ()) (curry (\((productivity, effort, wage, contract), ()) -> (productivity, effort, wage, contract)))))
+-- Using QuasiQuotes
+signalling = [game| || =>>
+  productivity | <- nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)]) -< | ;
+  effort | signallingUtilityWorker productivity effort wage contract
+    <- decision "worker-effort" [LowEffort, HighEffort] -< | productivity ;
+  wage | signallingUtilityFirm productivity wage contract
+    <- decision "firm" [LowWage, HighWage] -< | effort;
+  contract | signallingUtilityWorker productivity effort wage contract
+    <- decision "worker-contract" [Accept, NotAccept] -< | productivity, wage;
+    <<= ||
+|]
 
 signallingEquilibrium = equilibrium signalling trivialContext

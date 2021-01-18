@@ -21,7 +21,7 @@ payoffAndGate penalty reward deposits True
   where sumDeposits = sum deposits
 payoffAndGate penalty reward deposits False
   = [-penalty*deposit | deposit <- deposits]
-
+    {-
 generateGame "andGateGame" ["numPlayers", "reward", "costOfCapital", "minBribe", "maxBribe", "incrementBribe", "maxSuccessfulAttackPayoff", "attackerProbability", "penalty", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $ block [] []
   [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
    line [] [] [| nature (fromFreqs [(0, 1 - attackerProbability), (maxSuccessfulAttackPayoff, attackerProbability)]) |] ["successfulAttackPayoff"] [],
@@ -29,3 +29,4 @@ generateGame "andGateGame" ["numPlayers", "reward", "costOfCapital", "minBribe",
    line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffAndGate penalty reward deposits (obfuscateAndGate moves)) bribesAccepted |] ],
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
+  -}

@@ -1,11 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE DeriveGeneric #-}
 module OpenGames.Examples.SimpleAuction where
 
 import Numeric.Probability.Distribution
 
+import GHC.Generics
 import OpenGames.Engine.BayesianDiagnostics
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Types
 import OpenGames.Preprocessor.AbstractSyntax
+import OpenGames.Preprocessor.Compile
 
 -- Second-price sealed bid auction
 
@@ -32,81 +37,20 @@ strategyAuction = ((),(), strat, strat)
 
 -- Using TH
 generateGame "firstPriceAuctionTH" []
-                           [line [] [] [|nature (uniform [0..6])|] ["t1"] [],
-                            line [] [] [|nature (uniform [0..6])|] ["t2"] [],
-                            line [[|t1|]] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility t1 x y|]],
-                            line [[|t2|]] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility t2 x y|]]]
+                           [Line [] [] [|nature (uniform [0..6])|] ["t1"] [],
+                            Line [] [] [|nature (uniform [0..6])|] ["t2"] [],
+                            Line [[|t1|]] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility t1 x y|]],
+                            Line [[|t2|]] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility t2 x y|]]]
 
-
--- Using Blocks
-firstPriceAuctionSrc = Block [] []
-                           [Line [] [] "nature (uniform [0..6])" ["t1"] [],
-                            Line [] [] "nature (uniform [0..6])" ["t2"] [],
-                            Line ["t1"] [] "decision \"player1\" [0..12]" ["x"] ["playerOneUtility t1 x y"],
-                            Line ["t2"] [] "decision \"player2\" [0..12]" ["y"] ["playerTwoUtility t2 x y"]]
-                           [] []
-
-firstPriceAuction =
-  reindex (\x -> (x, ()))
-    ((reindex (\x -> ((), x))
-      ((fromFunctions (id) (\(t1, t2, x, y) -> ()))
-        >>>
-          (reindex
-            (\(a1, a2, a3, a4)
-            -> (((a1, a2), a3), a4))
-              ((((reindex (\x -> (x, ()))
-                ((reindex (\x -> ((), x))
-                  ((fromFunctions (\() -> ((), ()))
-                    (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))
-                      >>>
-                        (reindex (\x -> ((), x))
-                          ((fromFunctions (id) (id)) &&& ((nature (uniform [0..6])))))))
-                  >>>
-                    (fromFunctions (\((), t1) -> t1)
-                      (\(t1, t2, x, y) -> ((t1, t2, x, y), ())))))
-                 >>>
-                   (reindex (\x -> (x, ()))
-                     ((reindex (\x -> ((), x))
-                       ((fromFunctions (\t1 -> (t1, ()))
-                       (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))
-                       >>>
-                         (reindex (\x -> ((), x))
-                         ((fromFunctions (id) (id)) &&& ((nature (uniform [0..6])))))))
-                     >>>
-                       (fromFunctions (\(t1, t2) -> (t1, t2))
-                         (\(t1, t2, x, y) -> ((t1, t2, x, y), ()))))))
-                   >>>
-                     (reindex (\x -> (x, ()))
-                       ((reindex (\x -> ((), x))
-                         ((fromFunctions (\(t1, t2) -> ((t1, t2), t1))
-                           (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))
-                           >>>
-                             (reindex (\x -> ((), x))
-                             ((fromFunctions (id) (id)) &&& ((decision "player1" [0..12]))))))
-                         >>>
-                           (fromFunctions (\((t1, t2), x) -> (t1, t2, x))
-                             (\(t1, t2, x, y)
-                               -> ((t1, t2, x, y), playerOneUtility t1 x y))))))
-                 >>>
-                   (reindex (\x -> (x, ()))
-                     ((reindex (\x -> ((), x))
-                       ((fromFunctions (\(t1, t2, x) -> ((t1, t2, x), t2))
-                         (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))
-                         >>>
-                           (reindex (\x -> ((), x))
-                             ((fromFunctions (id) (id)) &&& ((decision "player2" [0..12]))))))
-                       >>>
-                         (fromFunctions (\((t1, t2, x), y) -> (t1, t2, x, y))
-                           (\(t1, t2, x, y)
-                             -> ((t1, t2, x, y), playerTwoUtility t2 x y)))))))))
-             >>>
-               (fromLens (\(t1, t2, x, y) -> ())
-                 (curry (\((t1, t2, x, y), ()) -> (t1, t2, x, y)))))
-
+firstPriceAuction = [game| || =>>
+   t1 | <- nature (uniform [0 .. 6]) -< | ;
+   t2 | <- nature (uniform [0 .. 6]) -< | ;
+   x | playerOneUtility t1 x y <- decision "player1" [0 .. 12] -< | t1;
+   y | playerTwoUtility t2 x y <- decision "player2" [0 .. 12] -< | t2;
+   <<= ||
+ |]
 
 firstPriceAuctionEquilibrium = equilibrium firstPriceAuction trivialContext
-
-
 
 -----------------
 -- Eq. strategies
@@ -131,11 +75,17 @@ playerTwoUtility2nd t2 x y = if playerOneWins x y then 0 else t2 - playerTwoPays
 
 -- Using TH
 generateGame "secondPriceAuctionTH" [] $
-                           [line [] [] [|nature (uniform [0..6])|] ["t1"] [],
-                            line [] [] [|nature (uniform [0..6])|] ["t2"] [],
-                            line [param "t1"] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility2nd t1 x y|]],
-                            line [param "t2"] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility2nd t2 x y|]]]
+                           [Line [] [] [|nature (uniform [0..6])|] ["t1"] [],
+                            Line [] [] [|nature (uniform [0..6])|] ["t2"] [],
+                            Line [param "t1"] [] [|decision "player1" [0..12]|] ["x"] [[|playerOneUtility2nd t1 x y|]],
+                            Line [param "t2"] [] [|decision "player2" [0..12]|] ["y"] [[|playerTwoUtility2nd t2 x y|]]]
 
+secondPriceAuctionQQ = [game| || =>>
+    t1 | <- nature (uniform [0..6]) -< | ;
+    t2 | <- nature (uniform [0..6]) -< | ;
+    x | playerOneUtility2nd t1 x y <- decision "player1" [0..12] -< | t1 ;
+    y | playerTwoUtility2nd t2 x y <- decision "player2" [0..12] -< | t2 ;
+    <<= || |]
 -- Using Blocks
 secondPriceAuctionSrc = Block [] []
                            [Line [] [] "nature (uniform [0..6])" ["t1"] [],
@@ -172,12 +122,12 @@ playerTwoUtility_correlated t s1 s2 x y tieFavoursOne | (x > y || (x == y && tie
 
 -- Using TH
 generateGame "firstPriceCommonValuationTH" [] $
-  [line [] []           [|nature (uniform [10..16])|] ["t"] [],
-   line [] []           [|nature (uniform [10..16])|] ["s1"] [],
-   line [] []           [|nature (uniform [10..16])|] ["s2"] [],
-   line [] []           [|nature (uniform [False, True])|] ["tieFavoursOne"] [],
-   line [[|t + s1|]] [] [|decision "player1" [20..32]|] ["x"] [[|playerOneUtility_correlated t s1 s2 x y tieFavoursOne|]],
-   line [[|t + s2|]] [] [|decision "player2" [20..32]|] ["y"] [[|playerTwoUtility_correlated t s1 s2 x y tieFavoursOne|]]]
+  [Line [] []           [|nature (uniform [10..16])|] ["t"] [],
+   Line [] []           [|nature (uniform [10..16])|] ["s1"] [],
+   Line [] []           [|nature (uniform [10..16])|] ["s2"] [],
+   Line [] []           [|nature (uniform [False, True])|] ["tieFavoursOne"] [],
+   Line [[|t + s1|]] [] [|decision "player1" [20..32]|] ["x"] [[|playerOneUtility_correlated t s1 s2 x y tieFavoursOne|]],
+   Line [[|t + s2|]] [] [|decision "player2" [20..32]|] ["y"] [[|playerTwoUtility_correlated t s1 s2 x y tieFavoursOne|]]]
 
 -- Using blocks
 firstPriceCommonValuationSrc = Block [] []
@@ -195,7 +145,7 @@ firstPriceCommonValuationEquilibrium = equilibrium firstPriceCommonValuation tri
 
 -- Discrete auction with correlated types, from https://www.ssc.wisc.edu/~dquint/econ899%20S2018/lecture%204.pdf
 
-data DiscreteAuctionType = Ten | Hundred deriving (Eq, Ord, Show)
+data DiscreteAuctionType = Ten | Hundred deriving (Eq, Ord, Show, Generic)
 type DiscreteAuctionBid = DiscreteAuctionType
 
 discreteAuctionBidValue :: DiscreteAuctionBid -> Rational
@@ -223,18 +173,17 @@ discreteAuctionUtility2 t Ten Ten False = 15
 
 -- Using TH
 generateGame "discreteAuctionTH" [] $
-   [line []           [] [|nature discreteAuctionPrior|]       ["t1", "t2", "flip'"] [],
-    line [param "t1"] [] [|decision "player1" [Ten, Hundred]|] ["x"] [[|discreteAuctionUtility1 t1 x y flip'|]],
-    line [param "t2"] [] [|decision "player2" [Ten, Hundred]|] ["y"] [[|discreteAuctionUtility2 t2 x y flip'|]]
+   [Line []           [] [|nature discreteAuctionPrior|]       ["t1", "t2", "flip'"] [],
+    Line [param "t1"] [] [|decision "player1" [Ten, Hundred]|] ["x"] [[|discreteAuctionUtility1 t1 x y flip'|]],
+    Line [param "t2"] [] [|decision "player2" [Ten, Hundred]|] ["y"] [[|discreteAuctionUtility2 t2 x y flip'|]]
    ]
 
--- Using Blocks
-discreteAuctionSrc = Block [] []
-                           [Line [] [] "nature discreteAuctionPrior" ["t1", "t2", "flip"] [],
-                            Line ["t1"] [] "decision \"player1\" [Ten, Hundred]" ["x"] ["discreteAuctionUtility1 t1 x y flip"],
-                            Line ["t2"] [] "decision \"player2\" [Ten, Hundred]" ["y"] ["discreteAuctionUtility2 t2 x y flip"]]
-                           [] []
-
-discreteAuction = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(t1, t2, flip, x, y) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((t1, t2, flip, x, y), ()) -> (t1, t2, flip, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature discreteAuctionPrior)))))) >>> (fromFunctions (\((), (t1, t2, flip)) -> (t1, t2, flip)) (\(t1, t2, flip, x, y) -> ((t1, t2, flip, x, y), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(t1, t2, flip) -> ((t1, t2, flip), t1)) (\((t1, t2, flip, x, y), ()) -> (t1, t2, flip, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player1" [Ten, Hundred])))))) >>> (fromFunctions (\((t1, t2, flip), x) -> (t1, t2, flip, x)) (\(t1, t2, flip, x, y) -> ((t1, t2, flip, x, y), discreteAuctionUtility1 t1 x y flip)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(t1, t2, flip, x) -> ((t1, t2, flip, x), t2)) (\((t1, t2, flip, x, y), ()) -> (t1, t2, flip, x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [Ten, Hundred])))))) >>> (fromFunctions (\((t1, t2, flip, x), y) -> (t1, t2, flip, x, y)) (\(t1, t2, flip, x, y) -> ((t1, t2, flip, x, y), discreteAuctionUtility2 t2 x y flip))))))))) >>> (fromLens (\(t1, t2, flip, x, y) -> ()) (curry (\((t1, t2, flip, x, y), ()) -> (t1, t2, flip, x, y)))))
+-- Using QuasiQuotes
+discreteAuction = [game| || =>>
+  t1, t2, flip | <- nature discreteAuctionPrior -< | ;
+  x | discreteAuctionUtility1 t1 x y flip <- decision "player1" [Ten, Hundred] -< | t1;
+  y | discreteAuctionUtility2 t2 x y flip <- decision "player2" [Ten, Hundred] -< | t2;
+  <<= ||
+  |]
 
 discreteAuctionEquilibrium = equilibrium discreteAuction trivialContext

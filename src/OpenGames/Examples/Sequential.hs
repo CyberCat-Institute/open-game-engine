@@ -1,9 +1,10 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
 module OpenGames.Examples.Sequential where
 
 import GHC.Generics
 import OpenGames.Engine.BayesianDiagnostics
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Compile
 import OpenGames.Preprocessor.AbstractSyntax
 
 -- Game of perfect information, considered with Bayesian equilibrium because why not
@@ -19,15 +20,14 @@ sequentialMatrix2 _ _ = 0
 
 -- Using TH
 generateGame "sequentialTH" [] $
-                   [line []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
-                   ,line [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
+                   [Line []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
+                   ,Line [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
 
--- Using Blocks
-sequentialSrc = Block [] []
-                   [Line [] [] "reindex const (decision \"player1\" [GoLeft, GoRight])" ["x"] ["sequentialMatrix1 x y"],
-                    Line ["x"] [] "decision \"player2\" [GoLeft, GoRight]" ["y"] ["sequentialMatrix2 x y"]]
-                   [] []
-
-sequential = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y), ()) -> (x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [GoLeft, GoRight]))))))) >>> (fromFunctions (\((), x) -> x) (\(x, y) -> ((x, y), sequentialMatrix1 x y))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> (x, x)) (\((x, y), ()) -> (x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "player2" [GoLeft, GoRight])))))) >>> (fromFunctions (\(x, y) -> (x, y)) (\(x, y) -> ((x, y), sequentialMatrix2 x y))))))))) >>> (fromLens (\(x, y) -> ()) (curry (\((x, y), ()) -> (x, y)))))
+-- Using QuasiQuotes
+sequential = [game| || =>>
+  x | sequentialMatrix1 x y <- reindex const (decision "player1" [GoLeft, GoRight]) -< | ;
+  y | sequentialMatrix2 x y <- decision "player2" [GoLeft, GoRight] -< | x ;
+  <<= ||
+  |]
 
 sequentialEquilibrium = equilibrium sequential trivialContext

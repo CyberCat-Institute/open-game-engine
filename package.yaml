@@ -30,9 +30,11 @@ library:
     - OpenGames.Engine.PolyNumerical
     - OpenGames.Preprocessor.THSyntax
     - OpenGames.Preprocessor.TH
+    - OpenGames.Preprocessor.Compile
     - OpenGames.Preprocessor.AbstractSyntax
-    - OpenGames.Preprocessor.FreeOpenGames
     - OpenGames.Preprocessor.Preprocessor
+    - OpenGames.Preprocessor.Parser
+    - OpenGames.Preprocessor.Lambda
     - OpenGames.Examples.Bimatrix
     - OpenGames.Examples.Sequential
     - OpenGames.Examples.Bayesian
@@ -72,6 +74,8 @@ library:
     - template-haskell
     - parsec
     - QuickCheck
+    - comonad
+    - haskell-src-meta
 tests:
   test-open-games:
     main: THTests

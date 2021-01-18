@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell, DeriveGeneric, QuasiQuotes #-}
 
 module OpenGames.Examples.ResaleMarket where
 
@@ -8,6 +8,7 @@ import Numeric.Probability.Distribution
 import OpenGames.Engine.BayesianDiagnostics
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Compile
 
 -- Public good resale market
 
@@ -42,10 +43,26 @@ pgResale_prior = fromFreqs [((LowSellerType, LowBuyerType), 2), ((HighSellerType
 
 -- Using TH
 generateGame "resaleMarketTH" [] $
-                     [line []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] [],
-                      line [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]],
-                      line [param "price'"]      [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
+  [Line []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] []
+  ,Line [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]]
+  ,Line [param "price'"]     [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
 
+resaleMarketQQ = [game|
+  || =>>
+
+ sellerType, buyerType |
+     <- nature pgResale_prior
+     -< | ;
+
+ price' | sellerUtility sellerType price' buy
+     <- decision "seller" [LowPrice, MediumPrice, HighPrice]
+     -< | sellerType ;
+
+ buy | buyerUtility buyerType price' buy
+     <- decision "buyer" [BuyGood, NotBuyGood]
+     -< | price';
+     <<= ||
+|]
 -- Using Blocks
 resaleMarketSrc = Block [] []
                      [Line [] [] "nature pgResale_prior" ["sellerType", "buyerType"] [],

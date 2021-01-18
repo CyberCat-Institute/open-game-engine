@@ -16,7 +16,6 @@ import Language.Haskell.TH.Syntax
 
 import OpenGames.Preprocessor.THSyntax as THS
 import OpenGames.Preprocessor.Preprocessor as Pre
-import OpenGames.Preprocessor.FreeOpenGames as Free
 import OpenGames.Preprocessor.TH
 import OpenGames.Preprocessor.AbstractSyntax as ABS
 
@@ -25,6 +24,7 @@ import OpenGames.Examples.Bimatrix
 import OpenGames.Examples.Bayesian as B
 import OpenGames.Examples.LemonMarket
 import OpenGames.Examples.ResaleMarket
+import OpenGames.Examples.RepetitionTest
 import OpenGames.Examples.Sequential
 import OpenGames.Examples.Signalling
 
@@ -53,6 +53,8 @@ instance Arbitrary Wage where
   arbitrary = bool LowWage HighWage <$> arbitrary
 instance Arbitrary Contract where
   arbitrary = bool Accept NotAccept <$> arbitrary
+instance Arbitrary DiscreteAuctionType where
+  arbitrary = bool Ten Hundred <$> arbitrary
 
 instance CoArbitrary BOSMove where
 instance CoArbitrary LemonQuality where
@@ -64,6 +66,7 @@ instance CoArbitrary SequentialMove where
 instance CoArbitrary Productivity where
 instance CoArbitrary Effort where
 instance CoArbitrary Wage where
+instance CoArbitrary DiscreteAuctionType where
 
 instance Function BOSType where
 instance Function LemonPrice where
@@ -75,6 +78,7 @@ instance Function SequentialMove where
 instance Function Productivity where
 instance Function Effort where
 instance Function Wage where
+instance Function DiscreteAuctionType where
 
 instance Arbitrary t => Arbitrary (T Rational t) where
   arbitrary = certainly <$> arbitrary
@@ -107,7 +111,7 @@ main = do
         \(Fn (f :: BOSType -> T Rational BOSMove))
          (Fn (g :: BOSType -> T Rational BOSMove))
                 -> equilibrium bayesianBOS trivialContext ((), f, g)
-                == equilibrium bayesianBOS trivialContext ((), f, g)
+                == equilibrium bayesianBOSTH trivialContext ((), f, g)
 
       it "should find the same equilibrium with meetingInNY" $ property $
         \x -> equilibrium meetingInNY trivialContext x
@@ -134,12 +138,18 @@ main = do
          x
           -> sequentialEquilibrium (x, seq)
           == equilibrium sequentialTH trivialContext (x, seq)
+
       it "should find the same equilibrium with Signalling" $ property $
         \(Fn (effort :: Productivity -> T Rational Effort))
          (Fn (wage :: Effort -> T Rational Wage))
          (Fn (decision :: (Productivity, Wage) -> T Rational Contract))
           -> equilibrium signalling trivialContext ((), effort, wage, decision)
           == equilibrium signallingTH trivialContext ((), effort, wage, decision)
+      it "should find the same equilibrium with discrete auction" $ property $
+        \(Fn (x :: DiscreteAuctionType -> T Rational DiscreteAuctionType))
+         (Fn (y :: DiscreteAuctionType -> T Rational DiscreteAuctionType))
+           -> equilibrium discreteAuction trivialContext ((), x, y)
+           == equilibrium discreteAuctionTH trivialContext ((), x, y)
 
 
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
 module OpenGames.Examples.LemonMarket where
 
 import GHC.Generics
@@ -6,6 +6,7 @@ import Numeric.Probability.Distribution
 
 import OpenGames.Engine.BayesianDiagnostics
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Compile
 import OpenGames.Preprocessor.AbstractSyntax
 
 data LemonQuality = Good | Bad deriving (Eq, Ord, Show, Generic, Enum)
@@ -29,18 +30,18 @@ lemonUtilityBuyer quality price Buy = lemonValuationBuyer quality - lemonPrice p
 lemonUtilityBuyer quality price NotBuy = 0
 
 -- Using TH
-generateGame "lemonMarketTH" [] [line [] [] [|nature (fromFreqs [(Good, 1), (Bad, 4)])|] ["quality"] []
-                                ,line [param "quality"] [] [|decision "seller" [Low, High] |] ["price"] [[|lemonUtilitySeller quality price buy|]]
-                                ,line [param "price"] [] [|decision "buyer" [Buy, NotBuy]|] ["buy"] [[|lemonUtilityBuyer quality price buy|]]]
+generateGame "lemonMarketTH" [] [Line [] [] [|nature (fromFreqs [(Good, 1), (Bad, 4)])|] ["quality"] []
+                                ,Line [param "quality"] [] [|decision "seller" [Low, High] |] ["price"] [[|lemonUtilitySeller quality price buy|]]
+                                ,Line [param "price"] [] [|decision "buyer" [Buy, NotBuy]|] ["buy"] [[|lemonUtilityBuyer quality price buy|]]]
 
--- Using Blocks
-lemonMarketSrc = Block [] []
-                    [Line [] [] "nature (fromFreqs [(Good, 1), (Bad, 4)])" ["quality"] [],
-                     Line ["quality"] [] "decision \"seller\" [Low, High]" ["price"] ["lemonUtilitySeller quality price buy"],
-                     Line ["price"] [] "decision \"buyer\" [Buy, NotBuy]" ["buy"] ["lemonUtilityBuyer quality price buy"]]
-                    [] []
-
-lemonMarket = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(quality, price, buy) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((quality, price, buy), ()) -> (quality, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (fromFreqs [(Good, 1), (Bad, 4)]))))))) >>> (fromFunctions (\((), quality) -> quality) (\(quality, price, buy) -> ((quality, price, buy), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\quality -> (quality, quality)) (\((quality, price, buy), ()) -> (quality, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "seller" [Low, High])))))) >>> (fromFunctions (\(quality, price) -> (quality, price)) (\(quality, price, buy) -> ((quality, price, buy), lemonUtilitySeller quality price buy)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(quality, price) -> ((quality, price), price)) (\((quality, price, buy), ()) -> (quality, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "buyer" [Buy, NotBuy])))))) >>> (fromFunctions (\((quality, price), buy) -> (quality, price, buy)) (\(quality, price, buy) -> ((quality, price, buy), lemonUtilityBuyer quality price buy))))))))) >>> (fromLens (\(quality, price, buy) -> ()) (curry (\((quality, price, buy), ()) -> (quality, price, buy)))))
+-- Using QuasiQuotes
+lemonMarket = [game|
+  || =>>
+  quality | <- nature (fromFreqs [(Good, 1), (Bad, 4)]) -< | ;
+  price   | lemonUtilitySeller quality price buy <- decision "seller" [Low, High] -< | quality ;
+  buy     | lemonUtilityBuyer quality price buy <- decision "buyer" [Buy, NotBuy] -< | price ;
+  <<= ||
+|]
 
 lemonMarketEquilibrium = equilibrium lemonMarket trivialContext
 
