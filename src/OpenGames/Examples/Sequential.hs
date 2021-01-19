@@ -19,8 +19,8 @@ sequentialMatrix2 _ _ = 0
 
 -- Using TH
 generateGame "sequentialTH" [] $
-                   [QLine []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
-                   ,QLine [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
+                   [line []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
+                   ,line [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
 
 -- Using Blocks
 sequentialSrc = Block [] []

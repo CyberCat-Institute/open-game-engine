@@ -35,16 +35,16 @@ signallingUtilityFirm _ _ NotAccept = 0
 
 -- Using TH
 generateGame "signallingTH" []
-  [QLine []                                   []
+  [line []                                   []
        [|nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)])|]
      ["productivity"] [],
-   QLine [param "productivity"]               []
+   line [param "productivity"]               []
        [|decision "worker-effort" [LowEffort, HighEffort]|]
      ["effort"]   [[|signallingUtilityWorker productivity effort wage contract|]],
-   QLine [param "effort"]                     []
+   line [param "effort"]                     []
        [|decision "firm" [LowWage, HighWage]|]
      ["wage"]     [[|signallingUtilityFirm productivity wage contract|]],
-   QLine [param "productivity", param "wage"] []
+   line [param "productivity", param "wage"] []
        [|decision "worker-contract" [Accept, NotAccept]|]
      ["contract"] [[|signallingUtilityWorker productivity effort wage contract|]]]
 --

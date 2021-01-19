@@ -20,8 +20,8 @@ matchingPenniesMatrix2 x y = if x == y then 0 else 1
 
 -- Using TH
 generateGame "matchingPenniesTH" []
-                        [QLine [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
-                         QLine [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
+                        [line [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
+                         line [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
 
 -- Using Blocks
 matchingPenniesSrc = Block [] []
@@ -43,8 +43,8 @@ meetingInNYMatrix x y = if x == y then 1 else 0
 
 -- Using TH
 generateGame "meetingInNYTH" []
-                        [QLine [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix x y|]],
-                         QLine [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix x y|]]]
+                        [line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix x y|]],
+                         line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix x y|]]]
 
 -- Using Blocks
 meetingInNYsrc = Block [] []
@@ -64,9 +64,9 @@ meetingInNYMatrix3 x y z = if x == y && x == z then 1 else 0
 
 -- Using TH
 generateGame "meetingInNY3TH" []
-                        [QLine [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix3 x y z|]],
-                         QLine [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix3 x y z|]],
-                         QLine [] [] [|reindex const (decision "player3" [GCT, ES])|] ["z"] [[|meetingInNYMatrix3 x y z|]]]
+                        [line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix3 x y z|]],
+                         line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix3 x y z|]],
+                         line [] [] [|reindex const (decision "player3" [GCT, ES])|] ["z"] [[|meetingInNYMatrix3 x y z|]]]
 
 -- Using Blocks
 

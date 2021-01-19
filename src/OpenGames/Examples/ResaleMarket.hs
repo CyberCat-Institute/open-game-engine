@@ -42,9 +42,9 @@ pgResale_prior = fromFreqs [((LowSellerType, LowBuyerType), 2), ((HighSellerType
 
 -- Using TH
 generateGame "resaleMarketTH" [] $
-                     [QLine []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] [],
-                      QLine [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]],
-                      QLine [param "price'"]      [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
+                     [line []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] [],
+                      line [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]],
+                      line [param "price'"]      [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
 
 -- Using Blocks
 resaleMarketSrc = Block [] []

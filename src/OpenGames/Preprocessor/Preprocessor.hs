@@ -37,7 +37,7 @@ compileLine (LineWithContext l cov con) = (l1 `sequentialTrivialL` l2) `sequenti
         l3 = Function (Multiplex cov (VariableList (covariantOutputs l))) (CopyLambda con (ExpressionList (contravariantInputs l)))
 
 compileBlock :: Block -> FreeOpenGame
-compileBlock block = (l1 `sequentialTrivialL` l2) `sequentialTrivialR` l3
+compileBlock block = l1 `sequentialTrivialL` (l2 `sequentialTrivialR` l3)
   where lines = linesWithContext block
         covariantBlockContext = flattenVariableList [covariantContext (last lines), VariableList (covariantOutputs (line (last lines)))]
         contravariantBlockContext = flattenVariableList [contravariantContext (head lines), VariableList (contravariantOutputs (line (head lines)))]
