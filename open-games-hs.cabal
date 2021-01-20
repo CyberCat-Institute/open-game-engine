@@ -43,6 +43,7 @@ library
       OpenGames.Engine.PureNumerical2
       OpenGames.Engine.PureNumerical3
       OpenGames.Engine.PolyNumerical
+      OpenGames.Engine.Costrategies
       OpenGames.Preprocessor.THSyntax
       OpenGames.Preprocessor.TH
       OpenGames.Preprocessor.AbstractSyntax

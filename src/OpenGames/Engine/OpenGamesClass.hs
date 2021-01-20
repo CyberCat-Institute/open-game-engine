@@ -10,6 +10,15 @@ class OG g where
   (&&&)    :: (Show x1, Show x2) => g a x1 s1 y1 r1 -> g b x2 s2 y2 r2 -> g (a, b) (x1, x2) (s1, s2) (y1, y2) (r1, r2)
   (+++)    :: g a x1 s y1 r -> g b x2 s y2 r -> g (a, b) (Either x1 x2) s (Either y1 y2) r
 
+fromFunctions :: (OG g) => (x -> y) -> (r -> s) -> g () x s y r
+fromFunctions f g = fromLens f (const g)
+
+counit :: (OG g) => g () x x () ()
+counit = fromLens (const ()) const
+
+counitFunction :: (OG g) => (x -> y) -> g () x y () ()
+counitFunction f = fromLens (const ()) (const . f)
+
 population :: (OG g, Show x) => [g a x s y r] -> g [a] [x] [s] [y] [r]
 population = foldr1 q . map p
   where p g = reindex (\[a] -> (((), a), ()))
@@ -20,12 +29,3 @@ population = foldr1 q . map p
                         ((fromLens (\xs -> ([head xs], tail xs)) (\_ ([s], ss) -> s : ss)
                           >>> (g &&& h))
                           >>> fromLens (\([y], ys) -> y : ys) (\_ rs -> ([head rs], tail rs)))
-
-fromFunctions :: (OG g) => (x -> y) -> (r -> s) -> g () x s y r
-fromFunctions f g = fromLens f (const g)
-
-counit :: (OG g) => g () x x () ()
-counit = fromLens (const ()) const
-
-counitFunction :: (OG g) => (x -> y) -> g () x y () ()
-counitFunction f = fromLens (const ()) (const . f)

@@ -28,9 +28,9 @@ repetitionTestDiscountFactor :: Double
 repetitionTestDiscountFactor = 0.1
 
 -- generateGame "stagePDTH" [] $  GBlock ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
---   [QLine [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
---    QLine [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
---    QLine [] ["payoff1", "payoff2"]
+--   [line [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
+--    line [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
+--    line [] ["payoff1", "payoff2"]
 --          [|fromFunctions id (\(move1, move2, continuation1, continuation2) ->
 --            let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
 --                                                          u2 + repetitionTestDiscountFactor*continuation2))|]
@@ -43,7 +43,7 @@ stagePD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x 
 repeatedPDStates = [(a, b) | a <- [TitForTatState1, TitForTatState2], b <- [GrimTriggerState1, GrimTriggerState2]]
 
 generateGame "repeatedPDSrc" [] $
-  [QLine [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
+  [line [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
 
 repeatedPD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(moves, payoff1, payoff2) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), (TitForTatState1, GrimTriggerState1))) (\(moves, (payoff1, payoff2)) -> (moves, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((repeated 10 (0, 0) repeatedPDStates stagePD)))))) >>> (fromFunctions (\((), moves) -> moves) (\moves -> (moves, ())))))))) >>> (fromLens (\moves -> ()) (curry (\(moves, ()) -> moves))))
 

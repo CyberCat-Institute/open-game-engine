@@ -13,17 +13,20 @@ import OpenGames.Engine.DecisionClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
 
+generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
+  block ["costOfCapital"] []
+  [line [[|costOfCapital|]] [] [|epsilonDecision epsilon name [minDeposit, minDeposit + incrementDeposit .. maxDeposit]|] ["deposit"] [[|(-deposit) * costOfCapital|]]]
+  [[|deposit|]] []
+{-}
 depositStagePlayerSrc = Block ["costOfCapital"] []
   [Line ["costOfCapital"] [] "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])" ["deposit"] ["-deposit * costOfCapital"]]
   ["deposit"] []
 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(costOfCapital, deposit) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\costOfCapital -> (costOfCapital, costOfCapital)) (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit]))))))) >>> (fromFunctions (\(costOfCapital, deposit) -> (costOfCapital, deposit)) (\(costOfCapital, deposit) -> ((costOfCapital, deposit), -deposit * costOfCapital)))))))) >>> (fromLens (\(costOfCapital, deposit) -> deposit) (curry (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit)))))
-
-playingStagePlayerSrc = Block ["observation", "bribe"] []
-  [Line ["observation", "bribe"] [] "dependentDecision name (const moves)" ["move"] ["payoff + if bribePaid then bribe else 0"]]
-  ["move"] ["payoff", "bribePaid"]
-
-playingStagePlayer name moves payoutCondition = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(observation, bribe, move, payoff, bribePaid) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(observation, bribe) -> ((observation, bribe), (observation, bribe))) (\((observation, bribe, move, payoff, bribePaid), ()) -> (observation, bribe, move, payoff, bribePaid))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision name (const moves))))))) >>> (fromFunctions (\((observation, bribe), move) -> (observation, bribe, move)) (\(observation, bribe, move, payoff, bribePaid) -> ((observation, bribe, move, payoff, bribePaid), payoff + if bribePaid then bribe else 0)))))))) >>> (fromLens (\(observation, bribe, move) -> move) (curry (\((observation, bribe, move), (payoff, bribePaid)) -> (observation, bribe, move, payoff, bribePaid)))))
+-}
+generateGame "playingStagePlayer" ["name", "moves"] $ block ["observation", "bribe"] []
+  [line [[|observation|], [|bribe|]] [] [|dependentDecision name (const moves)|] ["move"] [[|payoff + if bribePaid then bribe else 0|]]]
+  [[|move|]] ["payoff", "bribePaid"]
 
 class Obfuscatable x y where
   obfuscate :: [x] -> y
@@ -57,14 +60,14 @@ attackerPayoff bribesAccepted bribe successfulAttackPayoff
   where numPlayers = length bribesAccepted
         numBribed  = length (filter id bribesAccepted)
 
-generateGame "fullThing" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "payoffParameter"] $ GBlock [] []
-  [QLine [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   QLine [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   QLine [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] (const False) | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
-   QLine [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+generateGame "fullThing" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "payoffParameter"] $ block [] []
+  [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   line [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
-testFullThing numPlayers reward costOfCapital = equilibrium (fullThing numPlayers reward costOfCapital 1 1000 0) void
+testFullThing numPlayers reward costOfCapital = equilibrium (fullThing numPlayers reward costOfCapital 10 1000 0) void
 -- with 10 players, reward = 5, costOfCapital = 0.046
 
 deviationPenalty i reward deposits payoffParameter = ((payoffInt payoffParameter reward deposits numPlayers) !! i)
@@ -74,13 +77,9 @@ deviationPenalty i reward deposits payoffParameter = ((payoffInt payoffParameter
 bribeStrategy i reward payoffParameter = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits payoffParameter >= bribe
 
 testBribeStrategy costOfCapital bribe payoffParameter = testFullThing numPlayers reward costOfCapital $
-  (replicate numPlayers $ Kleisli $ const $ certainly 10,
+  (replicate numPlayers $ Kleisli $ const $ certainly 5,
    Kleisli $ const $ certainly bribe,
    [bribeStrategy i reward payoffParameter | i <- [0 .. numPlayers - 1]],
    ())
    where reward = 5
          numPlayers = 10
-
--- TODO: investigate optimal bribe amount close to the payoff parameter 0
--- understand the other player deviations
--- certainly 0, certainly maxDeposit, certainly 0, certainly maxBribe
