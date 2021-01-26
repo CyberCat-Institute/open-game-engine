@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TemplateHaskell #-}
 
 module OpenGames.Examples.Consensus.DepositGame where
@@ -41,7 +42,7 @@ instance Obfuscatable Bool Int where
   obfuscate xs = length (filter id xs)
 
 payoffInt :: Double -> Double -> [Double] -> Int -> [Double]
-payoffInt payoffParameter reward deposits numHonest
+payoffInt safeDepositProportion reward deposits numHonest
   = if totalDeposit == 0
        then replicate (length deposits) 0
        else [(rewardShare deposit + deposit)*payoffScaler - deposit | deposit <- deposits]
@@ -49,7 +50,6 @@ payoffInt payoffParameter reward deposits numHonest
         m = fromIntegral numHonest
         totalDeposit = sum deposits
         outcomeScore = m / n
-        safeDepositProportion = payoffParameter
         payoffScaler = outcomeScore*(1 - safeDepositProportion) + safeDepositProportion
         rewardShare deposit = (deposit / totalDeposit)*reward
 
@@ -60,26 +60,59 @@ attackerPayoff bribesAccepted bribe successfulAttackPayoff
   where numPlayers = length bribesAccepted
         numBribed  = length (filter id bribesAccepted)
 
-generateGame "fullThing" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "payoffParameter"] $ block [] []
+generateGame "completeGame" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "safeDepositProportion"] $ block [] []
   [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
    line [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt safeDepositProportion reward deposits (obfuscate moves)) bribesAccepted |] ],
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
-testFullThing numPlayers reward costOfCapital = equilibrium (fullThing numPlayers reward costOfCapital 10 1000 0) void
+testFullThing numPlayers reward costOfCapital = equilibrium (completeGame numPlayers reward costOfCapital 10 1000 0) void
 -- with 10 players, reward = 5, costOfCapital = 0.046
 
-deviationPenalty i reward deposits payoffParameter = ((payoffInt payoffParameter reward deposits numPlayers) !! i)
-                                   - ((payoffInt payoffParameter reward deposits (numPlayers - 1)) !! i)
+deviationPenalty i reward deposits safeDepositProportion = ((payoffInt safeDepositProportion reward deposits numPlayers) !! i)
+                                   - ((payoffInt safeDepositProportion reward deposits (numPlayers - 1)) !! i)
   where numPlayers = length deposits
 
-bribeStrategy i reward payoffParameter = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits payoffParameter >= bribe
+bribeStrategy i reward safeDepositProportion = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits safeDepositProportion >= bribe
 
-testBribeStrategy costOfCapital bribe payoffParameter = testFullThing numPlayers reward costOfCapital $
+testBribeStrategy costOfCapital bribe safeDepositProportion = testFullThing numPlayers reward costOfCapital $
   (replicate numPlayers $ Kleisli $ const $ certainly 5,
    Kleisli $ const $ certainly bribe,
-   [bribeStrategy i reward payoffParameter | i <- [0 .. numPlayers - 1]],
+   [bribeStrategy i reward safeDepositProportion | i <- [0 .. numPlayers - 1]],
    ())
    where reward = 5
          numPlayers = 10
+
+-- Analysis
+-- 0 Starting point: No bribe; finding an equilibrium with interior solutions
+-- equilibrium of complete game; minDeposit = 0, maxDeposit = 10, steps = 0.1, epsilon = 0.01
+equilibriumCompleteGame numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion = equilibrium (completeGame numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion ) void
+
+
+-- Sanity tests with 2 players
+-- with 2 players, reward = 1, (NOTE depositMax 10), maxBribe= 20, successfulAttackPayoff=1000, safeDepositProportion=0
+test2player costOfCapital = equilibriumCompleteGame 2 1 costOfCapital 20 1000 0
+
+
+-- NE at  test2Strategy 0.05 5 5 0
+test2Strategy coc deposit1 deposit2 bribe =
+  test2player
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [(Kleisli $ const $ certainly True), (Kleisli $ const $ certainly True)]
+     , ())
+
+-- 10 players, reward = 20/9, (NOTE depositMax 10),  maxBribe= 20, successfulAttackPayoff=1000, safeDepositProportion=0
+test10players costOfCapital =  equilibriumCompleteGame 10 (20/9) costOfCapital  20 1000 0
+
+
+-- NE at test10Strategy 0.05 4 0
+test10Strategy costOfCapital depositN bribe =  test10players costOfCapital
+  (replicate 10 $ Kleisli $ const $ certainly 4
+   , Kleisli $ const $ certainly bribe
+   , replicate 10 $ Kleisli $ const $ certainly True
+   , ()
+   )
+
