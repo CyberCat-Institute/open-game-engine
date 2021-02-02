@@ -100,6 +100,7 @@ test2player costOfCapital = equilibriumCompleteGame 2 1 costOfCapital 20 1000 0
 
 
 -- NE at  test2Strategy 0.05 5 5 0
+-- NE breaks down at bribe=2.8
 test2Strategy coc deposit1 deposit2 bribe =
   test2player
     coc
@@ -107,6 +108,17 @@ test2Strategy coc deposit1 deposit2 bribe =
      , Kleisli $ const $ certainly bribe
      , [(Kleisli $ const $ certainly True), (Kleisli $ const $ certainly True)]
      , ())
+
+-- semi-smart strategy accepts profitable bribes for coc=0.05 + params of test2player
+-- models a successful attack - NE for deposit1=deposit2=0
+test2Strategy' coc deposit1 deposit2 bribe =
+  test2player
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+    , Kleisli $ const $ certainly bribe
+    , [Kleisli strategy, Kleisli strategy]
+    , ())
+    where strategy (_, bribe) = certainly $ if bribe >= 2.8 then False else True
 
 -- 10 players, reward = 20/9, (NOTE depositMax 10),  maxBribe= 20, successfulAttackPayoff=1000, safeDepositProportion=0
 test10players costOfCapital =  equilibriumCompleteGame 10 (20/9) costOfCapital  20 1000 0
