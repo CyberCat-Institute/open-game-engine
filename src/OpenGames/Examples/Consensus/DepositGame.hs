@@ -5,8 +5,7 @@
 module OpenGames.Examples.Consensus.DepositGame where
 
 import Control.Arrow (Kleisli(..))
-import Numeric.Probability.Distribution (certainly, T(..))
-import Numeric.Probability.Random (runSeed, pick)
+import Numeric.Probability.Distribution (certainly, uniform)
 
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
@@ -16,7 +15,6 @@ import OpenGames.Engine.DecisionClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
 
-import System.Random
 
 generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
   block ["costOfCapital"] []
