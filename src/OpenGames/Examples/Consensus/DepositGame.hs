@@ -1,10 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TemplateHaskell #-}
 
 module OpenGames.Examples.Consensus.DepositGame where
 
 import Control.Arrow (Kleisli(..))
-import Numeric.Probability.Distribution (certainly)
+import Numeric.Probability.Distribution (certainly, T(..))
+import Numeric.Probability.Random (runSeed, pick)
 
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
@@ -13,6 +15,8 @@ import OpenGames.Engine.OpticClass
 import OpenGames.Engine.DecisionClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
+
+import System.Random
 
 generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
   block ["costOfCapital"] []
@@ -73,7 +77,7 @@ testFullThing numPlayers reward costOfCapital = equilibrium (completeGame numPla
 deviationPenalty i reward deposits safeDepositProportion = ((payoffInt safeDepositProportion reward deposits numPlayers) !! i)
                                    - ((payoffInt safeDepositProportion reward deposits (numPlayers - 1)) !! i)
   where numPlayers = length deposits
-
+ 
 bribeStrategy i reward safeDepositProportion = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits safeDepositProportion >= bribe
 
 testBribeStrategy costOfCapital bribe safeDepositProportion = testFullThing numPlayers reward costOfCapital $
@@ -115,4 +119,27 @@ test10Strategy costOfCapital depositN bribe =  test10players costOfCapital
    , replicate 10 $ Kleisli $ const $ certainly True
    , ()
    )
+
+
+
+
+--- Understanding the different strategies and their behavior
+-- Test smart strategy
+test2SmartStrategy coc deposit1 deposit2 bribe =
+  test2player
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [bribeStrategy i 1 0 | i <- [0,1]]
+     , ())
+
+-- Test smart strategy against naive strategy
+test3SmartStrategy coc deposit1 deposit2 bribe =
+  test2player
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [bribeStrategy 0 1 0, Kleisli $ const $ certainly True]
+     , ())
+
 
