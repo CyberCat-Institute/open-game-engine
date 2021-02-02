@@ -71,13 +71,27 @@ generateGame "completeGame" ["numPlayers", "reward", "costOfCapital", "maxBribe"
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
+generateGame "randomAttacker" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter"] $ block [] []
+  [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   line [] [] [| nature (uniform [0, maxSuccessfulAttackPayoff]) |] ["successfulAttackPayoff"] [],
+   line [ [| deposits |], [| maxSuccessfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [] []
+
+------------------
+-- Analysis
+
+
 testFullThing numPlayers reward costOfCapital = equilibrium (completeGame numPlayers reward costOfCapital 10 1000 0) void
 -- with 10 players, reward = 5, costOfCapital = 0.046
 
+-- difference in payoffs if player i deviates from playing truthful
 deviationPenalty i reward deposits safeDepositProportion = ((payoffInt safeDepositProportion reward deposits numPlayers) !! i)
                                    - ((payoffInt safeDepositProportion reward deposits (numPlayers - 1)) !! i)
   where numPlayers = length deposits
- 
+
+-- Play true if payoff from being bribed is smaller than playing truthful
 bribeStrategy i reward safeDepositProportion = Kleisli $ \(deposits, bribe) -> certainly $ deviationPenalty i reward deposits safeDepositProportion >= bribe
 
 testBribeStrategy costOfCapital bribe safeDepositProportion = testFullThing numPlayers reward costOfCapital $
