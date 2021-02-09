@@ -26,7 +26,9 @@ type Stochastic = T Double
 type Vector = String -> Double
 
 data StochasticStatefulOptic s t a b where
-  StochasticStatefulOptic :: (s -> Stochastic (z, a)) -> (z -> b -> StateT Vector Stochastic t) -> StochasticStatefulOptic s t a b
+  StochasticStatefulOptic :: (s -> Stochastic (z, a))
+                          -> (z -> b -> StateT Vector Stochastic t)
+                          -> StochasticStatefulOptic s t a b
 
 instance Optic StochasticStatefulOptic where
   lens v u = StochasticStatefulOptic (\s -> return (s, v s)) (\s b -> return (u s b))

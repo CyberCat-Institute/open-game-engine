@@ -5,7 +5,7 @@
 module OpenGames.Examples.Consensus.DepositGame where
 
 import Control.Arrow (Kleisli(..))
-import Numeric.Probability.Distribution (certainly, uniform)
+import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
 
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
@@ -71,11 +71,13 @@ generateGame "completeGame" ["numPlayers", "reward", "costOfCapital", "maxBribe"
 
 generateGame "randomAttacker" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter"] $ block [] []
   [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   line [] [] [| nature (uniform [0, maxSuccessfulAttackPayoff]) |] ["successfulAttackPayoff"] [],
-   line [ [| deposits |], [| maxSuccessfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   line [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
+   line [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.0025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
    line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
+
+  {- attacker needs to be an EpsilonDecision !!! -}
 
 ------------------
 -- Analysis
@@ -166,4 +168,17 @@ test3SmartStrategy coc deposit1 deposit2 bribe =
      , [bribeStrategy 0 1 0, Kleisli $ const $ certainly True]
      , ())
 
+equilibriumRandomAttacker numPlayers reward costOfCapital maxBribe maxSuccessfulAttackPayoff safeDepositProportion = equilibrium (randomAttacker numPlayers reward costOfCapital maxBribe maxSuccessfulAttackPayoff safeDepositProportion) void
 
+test2playerRandomAttacker costOfCapital = equilibriumRandomAttacker 2 1 costOfCapital 20 1000 0
+
+test2StrategyRandomAttacker coc deposit1 deposit2 bribe =
+       test2playerRandomAttacker
+         coc
+         ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+         , ()
+         , Kleisli $ \(_, successfulAttackPayoff) -> case successfulAttackPayoff of
+                                                       0 -> certainly 0
+                                                       1000 -> certainly bribe
+         , [bribeStrategy 0 1 0, bribeStrategy 1 1 0]
+         , ())
