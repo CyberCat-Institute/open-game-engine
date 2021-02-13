@@ -7,11 +7,9 @@ module OpenGames.Examples.TheoryTest.Centipede where
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
-import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.OpticClass
-import OpenGames.Engine.DecisionClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
 
