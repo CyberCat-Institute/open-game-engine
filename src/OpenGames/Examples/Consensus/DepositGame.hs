@@ -43,6 +43,9 @@ instance Obfuscatable Bool [Bool] where
 instance Obfuscatable Bool Int where
   obfuscate xs = length (filter id xs)
 
+instance Obfuscatable (Bool, Double) Double where
+  obfuscate xs = sum [weight | (True, weight) <- xs]
+
 payoffInt :: Double -> Double -> [Double] -> Int -> [Double]
 payoffInt safeDepositProportion reward deposits numHonest
   = if totalDeposit == 0
@@ -54,6 +57,12 @@ payoffInt safeDepositProportion reward deposits numHonest
         outcomeScore = m / n
         payoffScaler = outcomeScore*(1 - safeDepositProportion) + safeDepositProportion
         rewardShare deposit = (deposit / totalDeposit)*reward
+
+payoffWeightedDeposits :: Double -> Double -> [Double] -> Double -> [Double]
+payoffWeightedDeposits safeDepositProportion reward deposits sumHonest
+  = [(deposit * sumHonest * reward) / (totalDeposits * totalDeposits) | deposit <- deposits]
+  where totalDeposits = sum deposits
+  -- TODO deal with totalDeposit==0, then hook it into the game
 
 attackerPayoff :: [Bool] -> Double -> Double -> Double
 attackerPayoff bribesAccepted bribe successfulAttackPayoff
@@ -334,7 +343,7 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
 []
 λ> test2StrategyEpsilonCertain 0.05 5 5 0
 []
-λ> 
+λ>
 
 --NE breaks down with bribe 2.8
 λ> test2Strategy 0.05 5 5 2.8
@@ -371,7 +380,7 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
 [DiagnosticInfo {player = "Player 1", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-2.475", optimalMove = "0.0", optimalPayoff = "2.775"},DiagnosticInfo {player = "Player 2", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-2.475", optimalMove = "0.0", optimalPayoff = "2.775"}]
 
 -- Turn to random attacker
--- Replicate finding of NE with no bribe 
+-- Replicate finding of NE with no bribe
 
 
 λ> test2StrategyRandom 0.05 5 5 0
@@ -419,4 +428,3 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
 []
 
 -}
- 
