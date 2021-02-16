@@ -152,9 +152,20 @@ test2Strategy coc deposit1 deposit2 bribe =
      , [(Kleisli $ const $ certainly True), (Kleisli $ const $ certainly True)]
      , ())
 
+-- test strategy where players always accept bribe
+test2Strategy' coc deposit1 deposit2 bribe =
+  test2player
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [(Kleisli $ const $ certainly False), (Kleisli $ const $ certainly False)]
+     , ())
+
+
+
 -- semi-smart strategy accepts profitable bribes for coc=0.05 + params of test2player
 -- models a successful attack - NE for deposit1=deposit2=0
-test2Strategy' coc deposit1 deposit2 bribe =
+test2StrategySemi coc deposit1 deposit2 bribe =
   test2player
     coc
     ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
@@ -194,8 +205,10 @@ test3SmartStrategy coc deposit1 deposit2 bribe =
     coc
     ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
      , Kleisli $ const $ certainly bribe
-     , [bribeStrategy 0 1 0, Kleisli $ const $ certainly True]
+     , [Kleisli strategy, Kleisli strategy]
      , ())
+    where strategy (_, bribe) = certainly $ if bribe >= 0.5 then False else True
+
 
 equilibriumRandomAttacker numPlayers reward costOfCapital maxBribe maxSuccessfulAttackPayoff safeDepositProportion = equilibrium (randomAttacker numPlayers reward costOfCapital maxBribe maxSuccessfulAttackPayoff safeDepositProportion) void
 
@@ -329,6 +342,12 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
 λ> test2StrategyEpsilonCertain 0.05 5 5 2.8
 [DiagnosticInfo {player = "Player 1", state = "([5.0,5.0],2.8)", unobservableState = "((((),([5.0,5.0],2.8)),[([5.0,5.0],2.8)]),([5.0,5.0],2.8))", strategy = "fromFreqs [(True,1.0)]", payoff = "0.5", optimalMove = "False", optimalPayoff = "0.5499999999999998"},DiagnosticInfo {player = "Player 2", state = "([5.0,5.0],2.8)", unobservableState = "((((),([5.0,5.0],2.8)),[([5.0,5.0],2.8)]),([5.0,5.0],2.8))", strategy = "fromFreqs [(True,1.0)]", payoff = "0.5", optimalMove = "False", optimalPayoff = "0.5499999999999998"}]
 
+
+
+-- NOTE pathological NE
+λ> test2Strategy' 0.05 0 0 0
+[]
+
 --No bribe not an eq with smart player strategies
 
 λ> test2SmartStrategy 0.05 5 5 0
@@ -389,6 +408,15 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
 [DiagnosticInfo {player = "Player 1", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-0.15874999999999978", optimalMove = "1.1", optimalPayoff = "0.44555327868852435"},DiagnosticInfo {player = "Player 2", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-0.15874999999999978", optimalMove = "1.1", optimalPayoff = "0.44555327868852435"}]
 [DiagnosticInfo {player = "Player 1", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-2.2499999999999937e-2", optimalMove = "1.9000000000000001", optimalPayoff = "0.34909420289855075"},DiagnosticInfo {player = "Player 2", state = "5.0e-2", unobservableState = "((((),()),[5.0e-2]),5.0e-2)", strategy = "fromFreqs [(5.0,1.0)]", payoff = "-2.2499999999999937e-2", optimalMove = "1.9000000000000001", optimalPayoff = "0.34909420289855075"}]
 ...
+
+
+-- NE with successful attack
+-- NOTE different strategies
+λ> test3SmartStrategy 0.05 0 0 0.5
+[]
+
+λ> test3SmartStrategy 0.05 0 0 0.6
+[]
 
 -}
  
