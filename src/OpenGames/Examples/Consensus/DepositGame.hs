@@ -34,6 +34,7 @@ generateGame "playingStagePlayer" ["name", "moves"] $ block ["observation", "bri
 class Obfuscatable x y where
   obfuscate :: [x] -> y
 
+-- NOTE Currently not in use
 instance Obfuscatable Bool [Bool] where
   obfuscate xs = if numHonest >= numCensor then replicate numPlayers True else map not xs
     where numPlayers = length xs
@@ -60,9 +61,10 @@ payoffInt safeDepositProportion reward deposits numHonest
 
 payoffWeightedDeposits :: Double -> Double -> [Double] -> Double -> [Double]
 payoffWeightedDeposits safeDepositProportion reward deposits sumHonest
-  = [(deposit * sumHonest * reward) / (totalDeposits * totalDeposits) | deposit <- deposits]
+  = if totalDeposits == 0
+       then replicate (length deposits) 0
+       else [(deposit * sumHonest * reward) / (totalDeposits * totalDeposits) | deposit <- deposits]
   where totalDeposits = sum deposits
-  -- TODO deal with totalDeposit==0, then hook it into the game
 
 attackerPayoff :: [Bool] -> Double -> Double -> Double
 attackerPayoff bribesAccepted bribe successfulAttackPayoff
@@ -78,6 +80,16 @@ generateGame "completeGame" ["numPlayers", "reward", "costOfCapital", "maxBribe"
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
+
+-- Using weighted deposits
+generateGame "completeGameWeighted" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "safeDepositProportion"] $ block [] []
+  [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   line [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits safeDepositProportion reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
+   line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [] []
+
+
 generateGame "randomAttacker" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter"] $ block [] []
   [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
    line [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
@@ -86,7 +98,16 @@ generateGame "randomAttacker" ["numPlayers", "reward", "costOfCapital", "maxBrib
    line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] []
 
-  {- attacker needs to be an EpsilonDecision !!! -}
+
+-- Using weighted deposits
+generateGame "randomAttackerWeighted" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter", "prob0Attacker"] $ block [] []
+  [line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayer ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   line [] [] [| nature (fromFreqs [(0, prob0Attacker), (maxSuccessfulAttackPayoff, (1.00 - prob0Attacker))]) |] ["successfulAttackPayoff"] [],
+   line [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits payoffParameter reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
+   line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [] []
+
 
 ---------
 -- replacing the attacker by an epsilon decision
@@ -329,6 +350,51 @@ test2SmartStrategyEpsilonRandomProb coc deposit1 deposit2 bribe prob=
                                                        1000 -> certainly bribe
          , [bribeStrategy i 1 0 | i <- [0,1]]
          , ())
+
+-- 1.3 Weighted deposits
+
+equilibriumWeighted numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion= equilibrium (completeGameWeighted numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion)  void
+
+test2playerWeighted costOfCapital = equilibriumWeighted 2 1 costOfCapital 20 1000 0  
+
+-- NE at  test2Strategy 0.05 5 5 0
+-- NE breaks down at bribe=2.8
+test2StrategyWeighted coc deposit1 deposit2 bribe =
+  test2playerWeighted
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [(Kleisli $ const $ certainly True), (Kleisli $ const $ certainly True)]
+     , ())
+
+-- test strategy where players always accept bribe
+test2StrategyWeighted' coc deposit1 deposit2 bribe =
+  test2playerWeighted
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+     , Kleisli $ const $ certainly bribe
+     , [(Kleisli $ const $ certainly False), (Kleisli $ const $ certainly False)]
+     , ())
+
+
+-- test strategy with players fixing a bribe acceptance strategy
+test2StrategySemiWeighted coc deposit1 deposit2 bribe acceptThreshold =
+  test2playerWeighted
+    coc
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+    , Kleisli $ const $ certainly bribe
+    , [Kleisli strategy, Kleisli strategy]
+    , ())
+    where strategy (_, bribe) = certainly $ if bribe >= acceptThreshold then False else True
+
+-- 1.4 Weighted deposits random attacker
+
+equilibriumRandomWeighted numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion prob0Att= equilibrium (randomAttackerWeighted numPlayers reward costOfCapital maxBribe successfulAttackPayoff safeDepositProportion prob0Att)  void
+
+test2playerRandomWeighted costOfCapital prob = equilibriumRandomWeighted 2 1 costOfCapital 20 1000 0 prob
+
+
+
 
 
 
