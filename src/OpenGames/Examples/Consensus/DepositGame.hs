@@ -393,6 +393,16 @@ equilibriumRandomWeighted numPlayers reward costOfCapital maxBribe successfulAtt
 
 test2playerRandomWeighted costOfCapital prob = equilibriumRandomWeighted 2 1 costOfCapital 20 1000 0 prob
 
+test2StrategySemiRandomWeighted  coc deposit1 deposit2 bribe acceptThreshold prob =
+  test2playerRandomWeighted
+    coc
+    prob
+    ([(Kleisli $ const $ certainly deposit1),(Kleisli $ const $ certainly deposit2)] -- deposit
+    , ()
+    , Kleisli $ const $ certainly bribe
+    , [Kleisli strategy, Kleisli strategy]
+    , ())
+    where strategy (_, bribe) = certainly $ if bribe >= acceptThreshold then False else True
 
 
 
@@ -419,7 +429,7 @@ test2playerRandomWeighted costOfCapital prob = equilibriumRandomWeighted 2 1 cos
 
 
 
--- NOTE pathological NE
+-- NOTE unstable NE
 λ> test2Strategy' 0.05 0 0 0
 []
 
