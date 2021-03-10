@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OpenGames.Examples.Governance.VotingGames2 where
+module OpenGames.Examples.Governance.InstitutionProcess where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
