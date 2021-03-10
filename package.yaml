@@ -54,7 +54,7 @@ library:
     - OpenGames.Examples.Governance.IrrigationRandom
     - OpenGames.Examples.Governance.IrrigationRandom2
     - OpenGames.Examples.Governance.VotingGames
-    - OpenGames.Examples.Governance.VotingGames2
+    - OpenGames.Examples.Governance.InstitutionProcess
     - OpenGames.Examples.PermitSale.PermitSale
     - OpenGames.Examples.RepetitionTest
     - OpenGames.Examples.Consensus.Simple
