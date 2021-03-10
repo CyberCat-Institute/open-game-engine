@@ -60,6 +60,7 @@ library:
     - OpenGames.Examples.Consensus.Simple
     - OpenGames.Examples.Consensus.Censor
     - OpenGames.Examples.Consensus.CensorStrategicAttacker
+    - OpenGames.Examples.Consensus.AndGate
   dependencies:
     - base >=4.7 && <5
     - mtl
