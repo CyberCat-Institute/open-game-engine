@@ -1,10 +1,13 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 module OpenGames.Examples.RepetitionTest where
 
 import OpenGames.Engine.PureOpenGames
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.Diagnostics
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Types
+import OpenGames.Preprocessor.Compile
+import OpenGames.Preprocessor.AbstractSyntax
 
 data StagePDTitForTatState = TitForTatState1 | TitForTatState2 deriving (Show)
 data StagePDGrimTriggerState = GrimTriggerState1 | GrimTriggerState2 deriving (Show)
@@ -27,10 +30,21 @@ stagePDPayoffs Defect Defect = (1, 1)
 repetitionTestDiscountFactor :: Double
 repetitionTestDiscountFactor = 0.1
 
+-- stagePDQQ = [game| titForTatState, grimTriggerState || payoff1, payoff2 =>>
+--
+--       move1 | payoff1 <- pureDecision [Cooperate, Defect] -< | titForTatState ;
+--       move2 | payoff2 <- pureDecision [Cooperate, Defect] -< | grimTriggerState ;
+--       move1, move2 | continuation1, continuation2
+--          <- fromFunctions id (\(move1, move2, continuation1, continuation2) ->
+--               let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
+--                                                             u2 + repetitionTestDiscountFactor*continuation2))
+--          -< | payoff1, payoff2
+--   <<= (continuation1, continuation2) || (stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1), (move1, move2) |]
+
 -- generateGame "stagePDTH" [] $  GBlock ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
---   [line [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
---    line [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
---    line [] ["payoff1", "payoff2"]
+--   [Line [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
+--    Line [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
+--    Line [] ["payoff1", "payoff2"]
 --          [|fromFunctions id (\(move1, move2, continuation1, continuation2) ->
 --            let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
 --                                                          u2 + repetitionTestDiscountFactor*continuation2))|]
@@ -42,10 +56,12 @@ stagePD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x 
 
 repeatedPDStates = [(a, b) | a <- [TitForTatState1, TitForTatState2], b <- [GrimTriggerState1, GrimTriggerState2]]
 
-generateGame "repeatedPDSrc" [] $
-  [line [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
+generateGame "repeatedPDTH" [] $
+  [Line [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
 
-repeatedPD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(moves, payoff1, payoff2) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), (TitForTatState1, GrimTriggerState1))) (\(moves, (payoff1, payoff2)) -> (moves, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((repeated 10 (0, 0) repeatedPDStates stagePD)))))) >>> (fromFunctions (\((), moves) -> moves) (\moves -> (moves, ())))))))) >>> (fromLens (\moves -> ()) (curry (\(moves, ()) -> moves))))
+repeatedPD = [game| || =>>
+  moves | <- repeated 10 (0, 0) repeatedPDStates stagePD -< payoff1, payoff2 | TitForTatState1, GrimTriggerState1 ;
+  <<= || |]
 
 repeatedPDTitForTat TitForTatState1 = Cooperate
 repeatedPDTitForTat TitForTatState2 = Defect

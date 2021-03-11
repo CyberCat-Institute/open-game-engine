@@ -32,7 +32,7 @@ rewards f c m Prosperous Cooperate Defect    Prosperous = (f*c/2 - c, f*c/2)
 rewards f c m Prosperous Defect    Cooperate Prosperous = (f*c/2, f*c/2 - c)
 rewards f c m Prosperous Defect    Defect    Prosperous = (0, 0)
 
-stageSource :: Block
+stageSource :: Block String String
 stageSource = Block {
   blockCovariantInputs = ["currentState"], blockContravariantOutputs = ["fst (rewards f c m currentState action1 action2 nextState) + gamma*continuation1", "snd (rewards f c m currentState action1 action2 nextState) + gamma*continuation2"],
   blockLines = [

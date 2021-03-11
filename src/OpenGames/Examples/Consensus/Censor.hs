@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes  #-}
 module OpenGames.Examples.Consensus.Censor where
 
 import Control.Arrow (Kleisli(..))
@@ -9,6 +10,7 @@ import OpenGames.Engine.DependentDecision
 import OpenGames.Engine.Diagnostics (player)
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.THSyntax
+import OpenGames.Preprocessor.Compile
 import Numeric.Probability.Distribution (certainly, fromFreqs, uniform)
 import Data.Ord (comparing)
 import Data.List (maximumBy)
@@ -37,22 +39,22 @@ payoffs censorPenalty (x, y, z) (Offline, Online, Online) = (-offlinePenalty*x/(
 payoffs censorPenalty (x, y, z) (Online, Offline, Online) = (-censorPenalty*x/(x+y+z), -offlinePenalty*y/(x+y+z), -censorPenalty*z/(x+y+z))
 payoffs censorPenalty (x, y, z) (Online, Online, Offline) = (-censorPenalty*x/(x+y+z), -censorPenalty*y/(x+y+z), -offlinePenalty*z/(x+y+z))
 
-generateGame "depositGame" [] (block ["costOfCapital"] []
-  [line [] [] [|dependentDecision "Dave"  (const [0.0 .. 10.0])|] ["daveStake"]  [[|-costOfCapital*daveStake|]],
-   line [] [] [|dependentDecision "Erika" (const [0.0 .. 10.0])|] ["erikaStake"] [[|-costOfCapital*erikaStake|]],
-   line [] [] [|dependentDecision "Frank" (const [0.0 .. 10.0])|] ["frankStake"] [[|-costOfCapital*frankStake|]]]
+generateGame "depositGame" [] (Block ["costOfCapital"] []
+  [Line [] [] [|dependentDecision "Dave"  (const [0.0 .. 10.0])|] ["daveStake"]  [[|-costOfCapital*daveStake|]],
+   Line [] [] [|dependentDecision "Erika" (const [0.0 .. 10.0])|] ["erikaStake"] [[|-costOfCapital*erikaStake|]],
+   Line [] [] [|dependentDecision "Frank" (const [0.0 .. 10.0])|] ["frankStake"] [[|-costOfCapital*frankStake|]]]
   [[|daveStake|], [|erikaStake|], [|frankStake|]] [])
 
-generateGame "censorGame" ["censorPenalty"] $ GBlock ["daveStake", "erikaStake", "frankStake", "bribe"] []
-  [line (map param ["daveStake", "bribe"]) [] [|dependentDecision "Dave" (const [Honest, Censor])|] ["daveMove"] [[|case daveMove of {Honest -> davePayoff; Censor -> davePayoff + bribe}|]],
-   line [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
-   line [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
-   line [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] [] [|fromFunctions (uncurry (payoffs censorPenalty)) id|] ["davePayoff", "erikaPayoff", "frankPayoff"] []]
-  ["daveMove"] []
+generateGame "censorGame" ["censorPenalty"] $ Block ["daveStake", "erikaStake", "frankStake", "bribe"] []
+  [Line (map param ["daveStake", "bribe"]) [] [|dependentDecision "Dave" (const [Honest, Censor])|] ["daveMove"] [[|case daveMove of {Honest -> davePayoff; Censor -> davePayoff + bribe}|]],
+   Line [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
+   Line [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
+   Line [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] [] [|fromFunctions (uncurry (payoffs censorPenalty)) id|] ["davePayoff", "erikaPayoff", "frankPayoff"] []]
+  [[|daveMove|]] []
 
-generateGame "fullCensorGame" ["censorPenalty"] $ block [] []
-  [line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
-   line (map param ["daveStake", "erikaStake", "frankStake"] ++ [[|0|]]) [] [|censorGame censorPenalty|] ["daveMove"] []]
+generateGame "fullCensorGame" ["censorPenalty"] $ Block [] []
+  [Line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
+   Line (map param ["daveStake", "erikaStake", "frankStake"] ++ [[|0|]]) [] [|censorGame censorPenalty|] ["daveMove"] []]
   [] []
 
 fullCensorGameEq censorPenalty a b c d e f =
@@ -63,14 +65,14 @@ bribeGameSrc = Block ["target", "move", "bribe"] []
   [Line ["target", "()"] [] "roleDecision [()]" ["dummy"] ["case move of {Honest -> 0; Censor -> bribe}"]]
   [] []
 
-generateGame "bribeGame" [] $ block ["target", "move", "bribe"] []
-  [line [param "target", [|()|]] [] [|roleDecision [()]|] ["dummy"] [[|case move of {Honest -> 0; Censor -> bribe}|]]]
+generateGame "bribeGame" [] $ Block ["target", "move", "bribe"] []
+  [Line [param "target", [|()|]] [] [|roleDecision [()]|] ["dummy"] [[|case move of {Honest -> 0; Censor -> bribe}|]]]
   [] []
 
-generateGame "censorBribeGame" ["censorPenalty", "bribeBudget"] $ block [] []
-  [line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
-   line [] [] [|nature (uniform [0, bribeBudget])|] ["bribe"] [],
-   line (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame censorPenalty|] ["daveMove"] []]
+generateGame "censorBribeGame" ["censorPenalty", "bribeBudget"] $ Block [] []
+  [Line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
+   Line [] [] [|nature (uniform [0, bribeBudget])|] ["bribe"] [],
+   Line (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame censorPenalty|] ["daveMove"] []]
    [] []
 
 censorBribeGameEq censorPenalty bribeBudget a b c d e f =
