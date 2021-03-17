@@ -43,6 +43,12 @@ compileLambda (Do sm) = DoE (map toStatement sm)
 compileLambda (Tuple f s r) = TupE (map (compileLambda) (f : s : r))
 compileLambda (Range range) = ArithSeqE (compileRange range)
 compileLambda (IfThenElse prd thn els) = CondE (compileLambda prd) (compileLambda thn) (compileLambda els)
+compileLambda (Ifix op left right) = InfixE (Just $ compileLambda left)
+                                            (VarE $ mkName op)
+                                            (Just $ compileLambda right)
+
+compileLambda (PFix "-" arg) = AppE (VarE (mkName "negate")) (compileLambda arg)
+compileLambda (PFix op arg) = error $ "unsupported prefix operator: " ++ op
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i

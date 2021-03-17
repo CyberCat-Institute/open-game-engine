@@ -39,7 +39,7 @@ lemonMarket = [game|
   || =>>
   quality | <- nature (fromFreqs [(Good, 1), (Bad, 4)]) -< | ;
   price   | lemonUtilitySeller quality price buy <- decision "seller" [Low, High] -< | quality ;
-  buy     | lemonUtilityBuyer quality price buy <- decision "buyer" [Buy, NotBuy] -< | price ;
+  buy     | (price + price) <- decision "buyer" [Buy, NotBuy] -< | price ;
   <<= ||
 |]
 

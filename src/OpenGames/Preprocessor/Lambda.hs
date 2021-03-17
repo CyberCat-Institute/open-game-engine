@@ -225,7 +225,7 @@ bracketed =
 
 
 term :: Parser Lambda
-term =  parens (try parseTuple <|> infixParser expr <|> expr)
+term =  parens (try parseTuple <|> expr)
     <|> ifExp
     <|> lambda
     <|> variable
@@ -234,10 +234,13 @@ term =  parens (try parseTuple <|> infixParser expr <|> expr)
     <|> brackets bracketed
     <|> doNotation
 
-expr :: Parser Lambda
-expr = do
+appl :: Parser Lambda
+appl = do
   es <- many1 term
   return (foldl1 App es)
+
+expr :: Parser Lambda
+expr =  infixParser appl
 
 data ParsedLine p e = MkParsedLine { covOut :: [p]
                                    , conIn :: [e]
