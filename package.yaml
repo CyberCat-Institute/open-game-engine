@@ -75,7 +75,6 @@ library:
     - parsec
     - QuickCheck
     - comonad
-    - haskell-src-meta
 tests:
   test-open-games:
     main: THTests

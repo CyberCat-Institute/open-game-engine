@@ -4,7 +4,6 @@ module OpenGames.Preprocessor.Parser where
 import Text.Parsec
 import Text.Parsec.String
 import Language.Haskell.TH
-import Language.Haskell.Meta.Parse
 import OpenGames.Preprocessor.Lambda
 
 type GameAST p e = ParsedBlock p e (ParsedLine p e)
@@ -26,4 +25,3 @@ realParser =  parseBlock parsePattern expr (parseLine parsePattern expr) <* eof
 
 parseLambda :: String -> Either ParseError (GameAST Pattern Lambda)
 parseLambda = parse realParser "realParser"
-
