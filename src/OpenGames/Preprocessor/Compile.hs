@@ -33,7 +33,7 @@ compileLambda (Lit l) = compileLiteral l
 compileLambda (Var s) | isUpper (head s)  = ConE (mkName s)
                       | otherwise         = VarE (mkName s)
 compileLambda (App f a) = AppE (compileLambda f) (compileLambda a)
-compileLambda (Lam var body) = LamE [VarP (mkName var)] (compileLambda body)
+compileLambda (Lam pat body) = LamE [compilePattern pat] (compileLambda body)
 compileLambda (LList ls) = ListE $ map compileLambda ls
 compileLambda (Do sm) = DoE (map toStatement sm)
   where
@@ -43,6 +43,16 @@ compileLambda (Do sm) = DoE (map toStatement sm)
 compileLambda (Tuple f s r) = TupE (map (compileLambda) (f : s : r))
 compileLambda (Range range) = ArithSeqE (compileRange range)
 compileLambda (IfThenElse prd thn els) = CondE (compileLambda prd) (compileLambda thn) (compileLambda els)
+compileLambda (Ifix op left right) = InfixE (Just $ compileLambda left)
+                                            (VarE $ mkName op)
+                                            (Just $ compileLambda right)
+
+compileLambda (PFix "-" arg) = AppE (VarE (mkName "negate")) (compileLambda arg)
+compileLambda (PFix op arg) = error $ "unsupported prefix operator: " ++ op
+compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
+                                               (NormalB (compileLambda val))
+                                               []]
+                                         (compileLambda body)
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i
@@ -95,6 +105,19 @@ parseLambdaAsExp input = case parseLambda input of
 game :: QuasiQuoter
 game = QuasiQuoter
      { quoteExp  = parseLambdaAsExp . dropWhile isSpace
+     , quotePat  = error "expected expr"
+     , quoteType = error "expected expr"
+     , quoteDec  = error "expected expr"
+     }
+
+parseVerboseGame :: String -> Q Exp
+parseVerboseGame input = case parseVerbose input of
+                           Left err ->  error (show err)
+                           Right v ->  (interpretOpenGame $ compileBlock $ compileAST $ convertGame v)
+
+opengame :: QuasiQuoter
+opengame = QuasiQuoter
+     { quoteExp  = parseVerboseGame . dropWhile isSpace
      , quotePat  = error "expected expr"
      , quoteType = error "expected expr"
      , quoteDec  = error "expected expr"

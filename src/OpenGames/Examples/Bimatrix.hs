@@ -26,12 +26,18 @@ generateGame "matchingPenniesTH" []
                         [Line [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
                          Line [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
 
+--
 -- Using Quasiquotes
-matchingPennies = [game|
-   || =>>
-  x | matchingPenniesMatrix1 x y <- reindex const (decision "player1" [Heads, Tails]) -< | ;
-  y | matchingPenniesMatrix2 x y <- reindex const (decision "player2" [Heads, Tails]) -< | ;
-   <<= ||
+matchingPennies = [opengame|
+
+    operation : reindex const (decision "player1" [Heads, Tails]) ;
+    returns : matchingPenniesMatrix1 x y ;
+    outputs : x ;
+
+    operation : reindex const (decision "player2" [Heads, Tails]) ;
+    returns : matchingPenniesMatrix2 x y ;
+    outputs : y ;
+
 |]
 
 matchingPenniesEquilibrium = equilibrium matchingPennies trivialContext

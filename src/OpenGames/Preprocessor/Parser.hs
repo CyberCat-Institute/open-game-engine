@@ -25,3 +25,7 @@ realParser =  parseBlock parsePattern expr (parseLine parsePattern expr) <* eof
 
 parseLambda :: String -> Either ParseError (GameAST Pattern Lambda)
 parseLambda = parse realParser "realParser"
+
+parseVerbose :: String -> Either ParseError (GameAST Pattern Lambda)
+parseVerbose = parse (parseVerboseSyntax parsePattern expr (parseVerboseLine parsePattern expr)) "verbose parser"
+
