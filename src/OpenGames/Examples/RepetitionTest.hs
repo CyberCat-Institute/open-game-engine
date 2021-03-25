@@ -30,16 +30,19 @@ stagePDPayoffs Defect Defect = (1, 1)
 repetitionTestDiscountFactor :: Double
 repetitionTestDiscountFactor = 0.1
 
--- stagePDQQ = [game| titForTatState, grimTriggerState || payoff1, payoff2 =>>
+-- stagePDQQ = [game|
+--   payoff1, payoff2 || titForTatState, grimTriggerState =>>
 --
---       move1 | payoff1 <- pureDecision [Cooperate, Defect] -< | titForTatState ;
---       move2 | payoff2 <- pureDecision [Cooperate, Defect] -< | grimTriggerState ;
---       move1, move2 | continuation1, continuation2
---          <- fromFunctions id (\(move1, move2, continuation1, continuation2) ->
---               let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
---                                                             u2 + repetitionTestDiscountFactor*continuation2))
---          -< | payoff1, payoff2
---   <<= (continuation1, continuation2) || (stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1), (move1, move2) |]
+--   move1 | payoff1 <- pureDecision [Cooperate, Defect] -< | titForTatState ;
+--   move2 | payoff2 <- pureDecision [Cooperate, Defect] -< | grimTriggerState ;
+--         | move1, move2 , continuation1, continuation2
+--           <- fromFunctions id (\(move1, move2, continuation1, continuation2) ->
+--                let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
+--                                                              u2 + repetitionTestDiscountFactor*continuation2))
+--           -< | payoff1, payoff2 ;
+--   <<=  (continuation1, continuation2)
+--   || (stagePDTitForTatTransition titForTatState move2, stagePDGrimTriggerTransition grimTriggerState move1), (move1, move2)
+--   |]
 
 -- generateGame "stagePDTH" [] $  GBlock ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
 --   [Line [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],

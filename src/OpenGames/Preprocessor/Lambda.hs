@@ -13,6 +13,8 @@ module OpenGames.Preprocessor.Lambda
   , parseLine
   , parseBlock
   , parsePattern
+  , parseVerboseSyntax
+  , parseVerboseLine
   ) where
 
 import           Data.Char
@@ -39,7 +41,7 @@ data LRange =
 data Lambda
   = Var Name
   | App Lambda Lambda
-  | Lam Name Lambda
+  | Lam Pattern Lambda
   | Lit Literal
   | LList [Lambda]
   | Do [(Maybe Name, Lambda)]
@@ -48,6 +50,7 @@ data Lambda
   | IfThenElse Lambda Lambda Lambda
   | Ifix String Lambda Lambda
   | PFix String Lambda
+  | LLet Pattern Lambda Lambda
   deriving ( Eq, Show )
 
 data Literal
@@ -64,24 +67,34 @@ data Pattern
   | PLit Literal        -- Match a literal exactly
   deriving (Eq, Show)
 
+langaugeKeywords = ["if", "then", "else", "data", "import", "do", "let", "in"
+                   , "inputs", "outputs"
+                   , "feedback", "returns"
+                   , "operation"
+                   ]
+
 modifiedHaskell :: LanguageDef st
 modifiedHaskell = emptyDef
                 { Tok.commentStart   = "{-"
                 , Tok.commentEnd     = "-}"
-                , Tok.commentLine    = "--"
+                , Tok.commentLine    = "//"
                 , Tok.nestedComments = True
                 , Tok.identStart     = letter
                 , Tok.identLetter    = alphaNum <|> oneOf "_'"
                 , Tok.opStart        = Tok.opLetter modifiedHaskell
                 , Tok.opLetter       = oneOf ":!#$%&*+./<=>?@\\^-~"
-                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "-<", ";"]
-                , Tok.reservedNames  = ["if", "then", "else", "data", "import", "do"]
+                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "-<", ";", "|", "<<=", "||", "=>>"]
+                , Tok.reservedNames  = langaugeKeywords
                 , Tok.caseSensitive  = True
                 }
 
 
 lexer :: Tok.TokenParser ()
 lexer = Tok.makeTokenParser modifiedHaskell
+
+colon = Tok.colon lexer
+
+semi = Tok.semi lexer
 
 reserved :: String -> Parser ()
 reserved = Tok.reserved lexer
@@ -121,14 +134,19 @@ operators = [ [Infix (mkInfix ">>=") AssocLeft]
             , [Infix (mkInfix "*>") AssocLeft
               ,Infix (mkInfix "<*") AssocLeft
               ,Infix (mkInfix "<*>") AssocLeft
+              ,Infix (mkInfix ">") AssocLeft
+              ,Infix (mkInfix "<") AssocLeft
+              ,Infix (mkInfix "<=") AssocNone
+              ,Infix (mkInfix ">=") AssocNone
               ]
             , [Prefix (reservedOp "-" *> pure (PFix "-"))]
             , [Infix (mkInfix "++") AssocRight]
-            , [Infix (mkInfix "+") AssocRight
-              ,Infix (mkInfix "-") AssocRight
+            , [Infix (mkInfix "+") AssocLeft
+              ,Infix (mkInfix "-") AssocLeft
               ,Infix (mkInfix "<>") AssocRight
               ]
-            , [Infix (mkInfix "*") AssocRight]
+            , [Infix (mkInfix "*") AssocLeft
+              ,Infix (mkInfix "/") AssocLeft]
             ]
 
 infixParser = buildExpressionParser operators
@@ -175,6 +193,16 @@ doNotation =
     statement = try ((Just <$> identifier <* reservedOp "<-") `pair` expr)
             <|> ((Nothing :: Maybe String,) <$> expr)
 
+parseLet :: Parser Lambda
+parseLet = do
+  reserved "let"
+  varName <- parsePattern
+  reservedOp "="
+  value <- expr
+  reserved "in"
+  body <- expr
+  pure (LLet varName value body)
+
 parseTuple :: Parser Lambda
 parseTuple = do
   f <- expr
@@ -186,7 +214,7 @@ parseTuple = do
 lambda :: Parser Lambda
 lambda = do
   reservedOp "\\"
-  args <- many1 identifier
+  args <- many1 parsePattern
   reservedOp "->"
   body <- expr
   return $ foldr Lam body args
@@ -233,6 +261,7 @@ term =  parens (try parseTuple <|> expr)
     <|> strLit
     <|> brackets bracketed
     <|> doNotation
+    <|> parseLet
 
 appl :: Parser Lambda
 appl = do
@@ -267,7 +296,30 @@ parseBlock parseP parseE lineParser =
                       <*> (commaSep parseP <* reservedOp "||")
                       <*> (commaSep parseE)
 
--- Utility function for testing a single parser
-doParse :: Parser a -> String -> Either ParseError a
-doParse p input = parse p "=>" input
+parseTwoLines :: String -> String -> Parser p -> Parser e -> Parser ([p], [e])
+parseTwoLines kw1 kw2 parseP parseE =
+    pair (reserved kw1 *> reservedOp ":" *> commaSep parseP <* Tok.semi lexer)
+         (reserved kw2 *> reservedOp ":" *> commaSep parseE <* Tok.semi lexer)
+
+parseInput = parseTwoLines "inputs" "feedback"
+
+parseOutput = parseTwoLines "returns" "outputs"
+
+parseDelimiter = colon *> many1 (string "-") <* colon
+
+parseVerboseLine :: Parser p -> Parser e -> Parser (ParsedLine p e)
+parseVerboseLine parseP parseE = do
+  (input, feedback) <- parseInput parseE parseP
+  program <- reserved "operation" *> colon *> parseE <* semi
+  (returns, outputs) <- parseOutput parseE parseP
+  pure $ MkParsedLine outputs returns program feedback input
+
+
+parseVerboseSyntax :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p e l)
+parseVerboseSyntax parseP parseE parseL =
+  do (input, feedback) <- parseInput parseP parseE
+     lines <- parseDelimiter *> many parseL <* parseDelimiter
+     (returns, output) <- parseOutput parseE parseP
+     return $ MkParsedBlock input feedback lines output returns
+
 
