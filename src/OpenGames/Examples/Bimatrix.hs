@@ -30,25 +30,14 @@ generateGame "matchingPenniesTH" []
 -- Using Quasiquotes
 matchingPennies = [opengame|
 
-    inputs : ;
-    feedback : ;
-    :-----------------------------:
-
-    inputs : ;
-    feedback : ;
     operation : reindex const (decision "player1" [Heads, Tails]) ;
     returns : matchingPenniesMatrix1 x y ;
     outputs : x ;
 
-    inputs : ;
-    feedback : ;
     operation : reindex const (decision "player2" [Heads, Tails]) ;
     returns : matchingPenniesMatrix2 x y ;
     outputs : y ;
 
-    :-----------------------------:
-    returns : ;
-    outputs : ;
 |]
 
 matchingPenniesEquilibrium = equilibrium matchingPennies trivialContext
