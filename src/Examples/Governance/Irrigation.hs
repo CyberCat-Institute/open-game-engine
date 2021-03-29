@@ -1,14 +1,14 @@
-module OpenGames.Examples.Governance.Irrigation where
+module Examples.Governance.Irrigation where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
-import           OpenGames.Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
+import           Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
 
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian
+import           Preprocessor.AbstractSyntax
 
 farmerWater :: Double -> FarmerMove -> Double
 farmerWater startLevel Crack = if startLevel >= 2 then 2 else startLevel
@@ -88,12 +88,12 @@ irrigationNoMonitoring2Src = Block [] []
 irrigationNoMonitoring2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2, dummy1) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ("farmer1", 10, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2), dummy1) -> (levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2, dummy1))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((), levelAfter1) -> levelAfter1) (\(levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2) -> ((levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\levelAfter1 -> (levelAfter1, ("farmer2", levelAfter1, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3, dummy3), dummy2) -> (levelAfter1, levelAfter2, levelAfter3, dummy3, dummy2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\(levelAfter1, levelAfter2) -> (levelAfter1, levelAfter2)) (\(levelAfter1, levelAfter2, levelAfter3, dummy3) -> ((levelAfter1, levelAfter2, levelAfter3, dummy3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(levelAfter1, levelAfter2) -> ((levelAfter1, levelAfter2), ("farmer3", levelAfter2, Shirk))) (\((levelAfter1, levelAfter2, levelAfter3), dummy3) -> (levelAfter1, levelAfter2, levelAfter3, dummy3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepMonitor)))))) >>> (fromFunctions (\((levelAfter1, levelAfter2), levelAfter3) -> (levelAfter1, levelAfter2, levelAfter3)) (\(levelAfter1, levelAfter2, levelAfter3) -> ((levelAfter1, levelAfter2, levelAfter3), ()))))))))) >>> (fromLens (\(levelAfter1, levelAfter2, levelAfter3) -> ()) (curry (\((levelAfter1, levelAfter2, levelAfter3), ()) -> (levelAfter1, levelAfter2, levelAfter3)))))
 
 {- Example usage
-> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
+> Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
 [DiagnosticInfo {player = "farmer1", state = "()", unobservableState = "(((),()),(\"farmer1\",10.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"},DiagnosticInfo {player = "farmer2", state = "()", unobservableState = "(((),8.0),(\"farmer2\",8.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"},DiagnosticInfo {player = "farmer3", state = "()", unobservableState = "(((),(8.0,6.0)),(\"farmer3\",6.0,False))", strategy = "fromFreqs [(Crack,1.0)]", payoff = "2.0", optimalMove = "Flood", optimalPayoff = "5.0"}]
 > let a = Kleisli (\x -> certainly Flood)
-> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
+> Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),(a,()))
 []
-> OpenGames.Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),((Kleisli (\x -> certainly Crack)),()))
+> Engine.OpticClass.equilibrium irrigationNoMonitoring2 void ((a,()),(a,()),((Kleisli (\x -> certainly Crack)),()))
 []
 -}
 
@@ -147,7 +147,7 @@ Output with monitorPayRate = 0.2, punishmentRate = 0.7
 > irrigationMonitor3Eq Work Crack Crack Flood
 [DiagnosticInfo {player = "farmer3", state = "()", unobservableState = "(((),(Work,8.0,6.0)),(\"farmer3\",6.0,Work))", strategy = "fromFreqs [(Flood,1.0)]", payoff = "0.5000000000000004", optimalMove = "Crack", optimalPayoff = "1.6"}]
 > :r
-[44 of 44] Compiling OpenGames.Examples.Governance.Irrigation ( /Users/juleshedges/Documents/Code/open-games-hs/src/OpenGames/Examples/Governance/Irrigation.hs, interpreted )
+[44 of 44] Compiling Examples.Governance.Irrigation ( /Users/juleshedges/Documents/Code/open-games-hs/src/OpenGames/Examples/Governance/Irrigation.hs, interpreted )
 Ok, 44 modules loaded.
 > irrigationMonitor3Eq Work Crack Crack Crack
 [DiagnosticInfo {player = "monitor", state = "()", unobservableState = "((),())", strategy = "fromFreqs [(Work,1.0)]", payoff = "-0.10000000000000009", optimalMove = "Shirk", optimalPayoff = "0.0"}]
@@ -406,7 +406,7 @@ rotatingStrategy = (Kleisli (const (certainly Work)),
                     (Kleisli (const (certainly Crack)), ()))
 
 {- Example usage
-> OpenGames.Engine.OpticClass.equilibrium irrigationRotatingMonitor void ((), (((rotatingStrategy, rotatingStrategy), rotatingStrategy), rotatingStrategy))
+> Engine.OpticClass.equilibrium irrigationRotatingMonitor void ((), (((rotatingStrategy, rotatingStrategy), rotatingStrategy), rotatingStrategy))
 []
 -}
 

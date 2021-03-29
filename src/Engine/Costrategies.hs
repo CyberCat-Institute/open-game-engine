@@ -1,4 +1,4 @@
-module OpenGames.Engine.Costrategies where
+module Engine.Costrategies where
 
 import Data.Profunctor
 

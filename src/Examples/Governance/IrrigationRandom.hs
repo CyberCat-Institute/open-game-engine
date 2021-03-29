@@ -1,14 +1,14 @@
-module OpenGames.Examples.Governance.IrrigationRandom where
+module Examples.Governance.IrrigationRandom where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
-import           OpenGames.Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
+import           Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
 
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian
+import           Preprocessor.AbstractSyntax
 
 
 monitorPayRate :: Double
@@ -118,15 +118,15 @@ rotatingStrategy3 = (Kleisli (const (certainly Work)),
                     (Kleisli (const (certainly Crack)), ()))
 
 
-testStrategyR = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy1, rotatingStrategy1),rotatingStrategy1))
+testStrategyR = Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy1, rotatingStrategy1),rotatingStrategy1))
 
 
-testStrategyR2 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy2))
+testStrategyR2 = Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy2))
 
-testStrategyR2' = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy1))
+testStrategyR2' = Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy1))
 
 
-testStrategyR3 = OpenGames.Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy3))
+testStrategyR3 = Engine.OpticClass.equilibrium irrigationRandomMonitor void ((),((rotatingStrategy2, rotatingStrategy2),rotatingStrategy3))
 
 
 

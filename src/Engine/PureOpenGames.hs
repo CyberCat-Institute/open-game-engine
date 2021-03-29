@@ -1,9 +1,9 @@
-module OpenGames.Engine.PureOpenGames where
+module Engine.PureOpenGames where
 
 -- Open games with pure strategies
 -- Generic over a monoid of truth-values, which can be used to return debugging information about a strategy profile
 
-import OpenGames.Engine.OpenGamesClass
+import Engine.OpenGamesClass
 
 data PureOpenGame m a x s y r = PureOpenGame
   {play        :: a -> x -> y,

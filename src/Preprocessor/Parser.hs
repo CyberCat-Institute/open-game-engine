@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveFunctor #-}
-module OpenGames.Preprocessor.Parser where
+module Preprocessor.Parser where
 
 import Text.Parsec
 import Text.Parsec.String
 import Language.Haskell.TH
-import OpenGames.Preprocessor.Lambda
+import Preprocessor.Lambda
 
 type GameAST p e = ParsedBlock p e (ParsedLine p e)
 

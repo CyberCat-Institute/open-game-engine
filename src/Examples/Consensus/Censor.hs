@@ -1,16 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes  #-}
-module OpenGames.Examples.Consensus.Censor where
+module Examples.Consensus.Censor where
 
 import Control.Arrow (Kleisli(..))
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
-import OpenGames.Engine.Diagnostics (player)
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Compile
+import Engine.OpticClass
+import Engine.OpenGamesClass
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.DependentDecision
+import Engine.Diagnostics (player)
+import Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
+import Preprocessor.Compile
 import Numeric.Probability.Distribution (certainly, fromFreqs, uniform)
 import Data.Ord (comparing)
 import Data.List (maximumBy)

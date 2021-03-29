@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module OpenGames.Preprocessor.TH (Variables(..)
+module Preprocessor.TH (Variables(..)
                                  , Expressions(..)
                                  , FreeOpenGame(..)
                                  , ReindexingExpression(..)
@@ -12,7 +12,7 @@ module OpenGames.Preprocessor.TH (Variables(..)
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import OpenGames.Preprocessor.Types
+import Preprocessor.Types
 
 combinePats :: [Pat] -> Pat
 combinePats [x] = x

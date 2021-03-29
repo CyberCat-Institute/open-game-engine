@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators, DataKinds, GADTs, PolyKinds, TypeFamilies #-}
 
-module OpenGames.Engine.BayesianDiagnosticsTLL where
+module Engine.BayesianDiagnosticsTLL where
 
 -- Bayesian open games with extra diagnostics and type-level lists for strategy profiles
 
@@ -8,8 +8,8 @@ import Data.List (maximumBy)
 import Data.Ord (comparing)
 import Numeric.Probability.Distribution hiding (map)
 
-import OpenGames.Engine.BayesianOpenGames (D, support, bayes, L (..), (>>>>), (&&&&), iso)
-import OpenGames.Engine.BayesianDiagnostics (DiagnosticInfo (..), C (..), cmap, lcancel, rcancel)
+import Engine.BayesianOpenGames (D, support, bayes, L (..), (>>>>), (&&&&), iso)
+import Engine.BayesianDiagnostics (DiagnosticInfo (..), C (..), cmap, lcancel, rcancel)
 
 infixr 6 :-
 data List ts where

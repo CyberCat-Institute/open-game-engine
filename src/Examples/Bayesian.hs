@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
-module OpenGames.Examples.Bayesian where
+module Examples.Bayesian where
 
 import Numeric.Probability.Distribution
 
-import OpenGames.Engine.BayesianDiagnostics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Compile
+import Engine.BayesianDiagnostics
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Preprocessor.Compile
 import Language.Haskell.TH.Syntax
 import GHC.Generics
 
@@ -70,7 +70,7 @@ bayesianPDEquilibrium = equilibrium bayesianPD trivialContext
 {--
 bayesianPDEquilibrium ((), certainly Confess, strategyPD2)
 
-strategyPD2 :: PDNature -> OpenGames.Engine.BayesianOpenGames.D PDMove
+strategyPD2 :: PDNature -> Engine.BayesianOpenGames.D PDMove
 strategyPD2 Rat =  certainly Confess
 strategyPD2 Omerta = certainly DontConfess
 --}

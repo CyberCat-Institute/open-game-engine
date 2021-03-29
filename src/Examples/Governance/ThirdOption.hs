@@ -1,12 +1,12 @@
-module OpenGames.Examples.Governance.ThirdOption where
+module Examples.Governance.ThirdOption where
 
-import           OpenGames.Engine.BayesianDiagnostics
-import           OpenGames.Examples.Governance.ChoosingRandomly (PDMove (..),
+import           Engine.BayesianDiagnostics
+import           Examples.Governance.ChoosingRandomly (PDMove (..),
                                                                  StagMove (..),
                                                                  pdMatrix,
                                                                  stagHunt,
                                                                  stagMatrix)
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Preprocessor.AbstractSyntax
 
 switch :: Maybe PDMove -> Maybe PDMove -> Either (PDMove, PDMove) ()
 switch (Just x) (Just y) = Left (x, y)

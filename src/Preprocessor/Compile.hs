@@ -2,16 +2,16 @@
 {-# Language NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes  #-}
 
-module OpenGames.Preprocessor.Compile where
+module Preprocessor.Compile where
 
 import Prelude hiding (lines)
 import Data.Char
-import OpenGames.Preprocessor.Parser
-import OpenGames.Preprocessor.Lambda
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.TH
-import OpenGames.Preprocessor.THSyntax
+import Preprocessor.Parser
+import Preprocessor.Lambda
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Preprocessor.TH
+import Preprocessor.THSyntax
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH as TH

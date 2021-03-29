@@ -1,4 +1,4 @@
-module OpenGames.Engine.PolyNumerical where
+module Engine.PolyNumerical where
 
 import Data.Poly
 

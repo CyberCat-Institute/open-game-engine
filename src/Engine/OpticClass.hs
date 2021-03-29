@@ -1,10 +1,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module OpenGames.Engine.OpticClass where
+module Engine.OpticClass where
 
 -- Experimental type classes for optics and contexts
 
-import           OpenGames.Engine.OpenGamesClass
+import           Engine.OpenGamesClass
 
 class Optic o where
   lens :: (s -> a) -> (s -> b -> t) -> o s t a b

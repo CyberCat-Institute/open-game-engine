@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, RankNTypes, FlexibleInstances #-}
 
-module OpenGames.Engine.PureNumerical where
+module Engine.PureNumerical where
 
 -- Trying to compute equilibria in smooth pure strategies using first order conditions + root finding
 

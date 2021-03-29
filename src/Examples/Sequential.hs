@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
-module OpenGames.Examples.Sequential where
+module Examples.Sequential where
 
 import GHC.Generics
-import OpenGames.Engine.BayesianDiagnostics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Compile
-import OpenGames.Preprocessor.AbstractSyntax
+import Engine.BayesianDiagnostics
+import Preprocessor.THSyntax
+import Preprocessor.Compile
+import Preprocessor.AbstractSyntax
 
 -- Game of perfect information, considered with Bayesian equilibrium because why not
 -- This example demonstrates that in pure strategies we are not detecting subgame perfect equilibria

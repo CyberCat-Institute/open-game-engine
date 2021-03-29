@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
-module OpenGames.Examples.LemonMarket where
+module Examples.LemonMarket where
 
 import GHC.Generics
 import Numeric.Probability.Distribution
 
-import OpenGames.Engine.BayesianDiagnostics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Compile
-import OpenGames.Preprocessor.AbstractSyntax
+import Engine.BayesianDiagnostics
+import Preprocessor.THSyntax
+import Preprocessor.Compile
+import Preprocessor.AbstractSyntax
 
 data LemonQuality = Good | Bad deriving (Eq, Ord, Show, Generic, Enum)
 data LemonPrice = Low | High deriving (Eq, Ord, Show, Generic, Enum)

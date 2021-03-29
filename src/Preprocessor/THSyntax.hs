@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts, MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OpenGames.Preprocessor.THSyntax ( LineWithContext(..)
+module Preprocessor.THSyntax ( LineWithContext(..)
                                        , SLine
                                        , QLine
                                        , compileBlock
@@ -13,9 +13,9 @@ module OpenGames.Preprocessor.THSyntax ( LineWithContext(..)
                                        where
 
 import Language.Haskell.TH.Syntax
-import OpenGames.Preprocessor.TH
-import OpenGames.Preprocessor.Types
-import OpenGames.Preprocessor.AbstractSyntax
+import Preprocessor.TH
+import Preprocessor.Types
+import Preprocessor.AbstractSyntax
 import Data.List (inits, tails)
 import Data.Bifunctor
 

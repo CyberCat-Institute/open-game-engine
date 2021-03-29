@@ -1,11 +1,11 @@
-module OpenGames.Examples.Governance.ChoosingGames where
+module Examples.Governance.ChoosingGames where
 
 import Data.List (sort)
 
-import OpenGames.Examples.Bimatrix (Coin(..), matchingPenniesMatrix1, matchingPenniesMatrix2, Coordination(..), meetingInNYMatrix)
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.StatefulPayoffs
+import Examples.Bimatrix (Coin(..), matchingPenniesMatrix1, matchingPenniesMatrix2, Coordination(..), meetingInNYMatrix)
+import Preprocessor.AbstractSyntax
+import Engine.OpenGamesClass
+import Engine.StatefulPayoffs
 
 matchingPenniesSrc = Block [] []
                            [Line [] [] "reindex const (agentDecision \"player1\" [Heads, Tails])" ["x"] ["matchingPenniesMatrix1 x y"],
@@ -101,7 +101,7 @@ prisonersDilemmaVotingMetagame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x
 prisonersDilemmaVotingMetagameEq = equilibrium prisonersDilemmaVotingMetagame () (const $ return ())
 
 {- Example usage
-> :m - OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood 
+> :m - Examples.EcologicalPublicGood.EcologicalPublicGood 
 > prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 0, (Defect, Defect)))
 []
 > prisonersDilemmaVotingMetagameEq ("player1", "player2", "player1", (const 0, (Cooperate, Cooperate)))

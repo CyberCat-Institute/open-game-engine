@@ -1,16 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DeriveGeneric #-}
-module OpenGames.Examples.SimpleAuction where
+module Examples.SimpleAuction where
 
 import Numeric.Probability.Distribution
 
 import GHC.Generics
-import OpenGames.Engine.BayesianDiagnostics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Types
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Compile
+import Engine.BayesianDiagnostics
+import Preprocessor.THSyntax
+import Preprocessor.Types
+import Preprocessor.AbstractSyntax
+import Preprocessor.Compile
 
 -- Second-price sealed bid auction
 

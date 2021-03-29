@@ -2,16 +2,16 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module OpenGames.Examples.Bimatrix where
+module Examples.Bimatrix where
 
 import GHC.Generics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Compile
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Preprocessor.Compile
 import Language.Haskell.TH.Syntax
-import OpenGames.Engine.BayesianDiagnostics
+import Engine.BayesianDiagnostics
 import Numeric.Probability.Distribution
-import qualified OpenGames.Engine.BayesianDiagnosticsTLL as TLL
+import qualified Engine.BayesianDiagnosticsTLL as TLL
 
 -- Matching pennies
 

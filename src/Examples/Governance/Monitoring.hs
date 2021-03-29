@@ -1,9 +1,9 @@
-module OpenGames.Examples.Governance.Monitoring where
+module Examples.Governance.Monitoring where
 
 import           Numeric.Probability.Distribution
-import           OpenGames.Engine.BayesianDiagnostics
-import           OpenGames.Preprocessor.AbstractSyntax
-import           OpenGames.Preprocessor.Preprocessor
+import           Engine.BayesianDiagnostics
+import           Preprocessor.AbstractSyntax
+import           Preprocessor.Preprocessor
 
 monitoringGame1Src   = Block [] []
                        [Line [] [] "reindex const (decision \"upstreamFarmer\" [Crack, Flood])" ["x"] ["payoff1 x"],

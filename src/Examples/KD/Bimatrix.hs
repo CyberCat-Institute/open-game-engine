@@ -1,9 +1,9 @@
-module OpenGames.Examples.KD.Bimatrix where
+module Examples.KD.Bimatrix where
 
 -- Bimatrix with code generated from the KD editor
 
-import OpenGames.Engine.BayesianDiagnosticsTLL
-import OpenGames.Examples.Bimatrix
+import Engine.BayesianDiagnosticsTLL
+import Examples.Bimatrix
 
 matchingPenniesKD = let a = decision "player1" [Heads, Tails]
                         b = a

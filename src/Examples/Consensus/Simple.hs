@@ -1,13 +1,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OpenGames.Examples.Consensus.Simple where
+module Examples.Consensus.Simple where
 
 import Control.Arrow (Kleisli(..))
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.DecisionClass
-import OpenGames.Engine.StatefulBayesian
+import Preprocessor.AbstractSyntax
+import Engine.OpticClass
+import Engine.OpenGamesClass
+import Engine.DecisionClass
+import Engine.StatefulBayesian
 import Numeric.Probability.Distribution
 import Data.Ord (comparing)
 import Data.List (maximumBy)

@@ -2,19 +2,19 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TemplateHaskell #-}
 
-module OpenGames.Examples.TheoryTest.Centipede where
+module Examples.TheoryTest.Centipede where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Types
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Compile
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
+import Preprocessor.THSyntax
+import Preprocessor.Types
+import Preprocessor.AbstractSyntax
+import Preprocessor.Compile
+import Engine.OpenGamesClass
+import Engine.OpticClass
+import Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
+import Engine.DependentDecision
 import Language.Haskell.TH
 
 

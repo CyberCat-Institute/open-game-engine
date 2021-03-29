@@ -10,7 +10,7 @@ For background on open games, see these two papers:
 
 I hope that this tool will be usable without in-depth knowledge of how it works or how open games work, but I can't make any promises.
 
-From a user's perspective, the examples in `OpenGames.Examples` are intended to be self-documenting. Studying the modules in that directory will be more effective than any documentation I could write.
+From a user's perspective, the examples in `Examples` are intended to be self-documenting. Studying the modules in that directory will be more effective than any documentation I could write.
 
 When I have time I plan to write a paper describing how the preprocessor works.
 
@@ -22,9 +22,9 @@ Other contributions not recorded by GitHub (because this is a copy of a private 
 
 ## The preprocessor
 
-In order to use the preprocessor, create a value of type `OpenGames.Preprocessor.AbstractSyntax.Block`, and then interactively (in GHCi) apply the function `OpenGames.Preprocessor.Preprocessor.compileBlock`. The resulting `Show` instance will result in a string containing Haskell code. Copy this code from the terminal into a file that makes the appropriate imports from `OpenGames.Engine`.
+In order to use the preprocessor, create a value of type `Preprocessor.AbstractSyntax.Block`, and then interactively (in GHCi) apply the function `Preprocessor.Preprocessor.compileBlock`. The resulting `Show` instance will result in a string containing Haskell code. Copy this code from the terminal into a file that makes the appropriate imports from `Engine`.
 
-Examples of blocks can be seen in `OpenGames.Examples`, and in each case the resulting generated code can be seen right after the block definition.
+Examples of blocks can be seen in `Examples`, and in each case the resulting generated code can be seen right after the block definition.
 
 The scoping rules for blocks are quite complicated, and reflect the topological rules for string diagrams of open games:
 * Block inputs and line outputs (both covariant and contravariant) are variables, which are brought into scope (I think they could be general patterns, but I haven't tested it properly)
@@ -40,7 +40,7 @@ The preprocessor does no scope or type checking, so if you make a mistake then y
 ## Using the Template Haskell code generator
 
 In addition to using `Block`, one can use `QBlock` and `QLine` by importing
-`OpenGames.Preprocessor.THSyntax` and add `{-# LANGUAGE TemplateHaskell #-}` at the top of the file
+`Preprocessor.THSyntax` and add `{-# LANGUAGE TemplateHaskell #-}` at the top of the file
 as a language pragma. This allows to define blocks _inline_ without copy pasting generated code
 through GHCI using a syntax very similar to the one for `Block`. In order to generate the code
 for a `QBlock` or a list of `QLine`, you need to call the function `generateGame` at the top

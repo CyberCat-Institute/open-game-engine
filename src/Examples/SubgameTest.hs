@@ -1,16 +1,16 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 
-module OpenGames.Examples.SubgameTest where
+module Examples.SubgameTest where
 
--- import OpenGames.Preprocessor.AbstractSyntax
+-- import Preprocessor.AbstractSyntax
 import Language.Haskell.TH.Syntax
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Types
-import OpenGames.Preprocessor.Compile
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.SubgamePerfect
-import OpenGames.Engine.Diagnostics -- only used for instance Monoid Bool
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Preprocessor.Types
+import Preprocessor.Compile
+import Engine.OpenGamesClass
+import Engine.SubgamePerfect
+import Engine.Diagnostics -- only used for instance Monoid Bool
 
 -- Ultimatum game
 

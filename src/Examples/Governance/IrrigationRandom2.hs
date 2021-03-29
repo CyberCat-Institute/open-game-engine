@@ -1,16 +1,16 @@
-module OpenGames.Examples.Governance.IrrigationRandom2 where
+module Examples.Governance.IrrigationRandom2 where
 
 import           Control.Arrow (Kleisli(..))
 import           Data.List
 import           Numeric.Probability.Distribution
 
-import           OpenGames.Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
+import           Examples.Governance.Monitoring (FarmerMove (..), MonitorMove (..))
 
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import           OpenGames.Engine.DependentDecision
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import           Engine.DependentDecision
+import           Preprocessor.AbstractSyntax
 
 
 monitorPayRate :: Double
@@ -84,7 +84,7 @@ irrigationRandomRoleSimple = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) (
 
 -- Testing strategies
 
-testStrategyRD =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole void
+testStrategyRD =  Engine.OpticClass.equilibrium irrigationRandomRole void
                     ((),
                       Kleisli (const (certainly Work)),
                     (Kleisli (const (certainly Crack)), ()),
@@ -94,7 +94,7 @@ testStrategyRD =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole v
 
 
 
-testStrategyRD2 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole void
+testStrategyRD2 =  Engine.OpticClass.equilibrium irrigationRandomRole void
                     ((),
                      Kleisli (\(x,()) -> case x of {"farmerA" -> certainly Shirk; _ -> certainly Work}),
                     (Kleisli (const (certainly Crack)), ()),
@@ -102,7 +102,7 @@ testStrategyRD2 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole 
                     (Kleisli (const (certainly Crack)), ()))
 
 
-testStrategyRD3 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole void
+testStrategyRD3 =  Engine.OpticClass.equilibrium irrigationRandomRole void
                     ((),
                       Kleisli (const (certainly Shirk)),
                     (Kleisli (const (certainly Flood)), ()),
@@ -111,7 +111,7 @@ testStrategyRD3 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRole 
 
 -- Testing of game with fixed roles -- special equilibrium
 
-testStrategy4 =  OpenGames.Engine.OpticClass.equilibrium irrigationRandomRoleSimple void
+testStrategy4 =  Engine.OpticClass.equilibrium irrigationRandomRoleSimple void
                   ((),
                      Kleisli (\(x,()) -> case x of {"player3" -> certainly Work; _ -> certainly Shirk}),
                     (Kleisli (const (certainly Flood)), ()),

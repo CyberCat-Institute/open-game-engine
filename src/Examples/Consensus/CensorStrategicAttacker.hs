@@ -1,18 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
-module OpenGames.Examples.Consensus.CensorStrategicAttacker where
+module Examples.Consensus.CensorStrategicAttacker where
 
 import Control.Arrow (Kleisli(..))
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
-import OpenGames.Engine.Diagnostics (player)
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.THSyntax
+import Engine.OpticClass
+import Engine.OpenGamesClass
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.DependentDecision
+import Engine.Diagnostics (player)
+import Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
 import Numeric.Probability.Distribution (certainly, fromFreqs, uniform, T)
 import Data.Ord (comparing)
 import Data.List (maximumBy)
-import OpenGames.Examples.Consensus.Censor
+import Examples.Consensus.Censor
 
 generateGame "censorGame2" ["censorPenalty"] $
   Block ["daveStake", "erikaStake", "frankStake", "bribe"] []

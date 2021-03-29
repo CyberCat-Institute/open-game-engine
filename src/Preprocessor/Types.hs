@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
-module OpenGames.Preprocessor.Types where
+module Preprocessor.Types where
 
 import Data.List (intercalate)
 import Language.Haskell.TH

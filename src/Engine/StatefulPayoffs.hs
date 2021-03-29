@@ -1,11 +1,11 @@
-module OpenGames.Engine.StatefulPayoffs where
+module Engine.StatefulPayoffs where
 
 -- Puting coplay into a state monad with payoff vectors as a state variable
 -- This augments a game with an imperative program running backwards in time
 -- An experimental pragmatic solution to a practical difficulty with agent identity
 
-import           OpenGames.Engine.Diagnostics
-import           OpenGames.Engine.OpenGamesClass
+import           Engine.Diagnostics
+import           Engine.OpenGamesClass
 
 import           Control.Monad.State
 import           Data.List                       (maximumBy)
@@ -64,10 +64,10 @@ agentDecision agent ys = StatefulPayoffGame {
                               (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
                            in if u (a h) >= optimalPayoff then []
                                                           else [DiagnosticInfo {player = show agent,
-                                                                                OpenGames.Engine.Diagnostics.state = show h,
+                                                                                Engine.Diagnostics.state = show h,
                                                                                 unobservableState = "",
                                                                                 strategy = show (a h),
-                                                                                OpenGames.Engine.Diagnostics.payoff = show (u (a h)),
+                                                                                Engine.Diagnostics.payoff = show (u (a h)),
                                                                                 optimalMove = show (optimalPlay),
                                                                                 optimalPayoff = show (optimalPayoff)}]}
 
@@ -81,9 +81,9 @@ roleDecision ys = StatefulPayoffGame {
                                        (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
                                     in if u (a agent h) >= optimalPayoff then []
                                                                          else [DiagnosticInfo {player = show agent,
-                                                                                               OpenGames.Engine.Diagnostics.state = show h,
+                                                                                               Engine.Diagnostics.state = show h,
                                                                                                unobservableState = "",
                                                                                                strategy = show (a agent h),
-                                                                                               OpenGames.Engine.Diagnostics.payoff = show (u (a agent h)),
+                                                                                               Engine.Diagnostics.payoff = show (u (a agent h)),
                                                                                                optimalMove = show (optimalPlay),
                                                                                                optimalPayoff = show (optimalPayoff)}]}

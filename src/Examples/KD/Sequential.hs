@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds #-}
-module OpenGames.Examples.KD.Sequential where
+module Examples.KD.Sequential where
 
-import OpenGames.Engine.BayesianDiagnosticsTLL
-import OpenGames.Examples.Sequential
-import OpenGames.Engine.BayesianOpenGames
+import Engine.BayesianDiagnosticsTLL
+import Examples.Sequential
+import Engine.BayesianOpenGames
 
 -- https://kdmoncatog.glitch.me/#pixels=PxXU%0APxQU%0APrrU&context=P%20:%20-%3E%20X%20r%0AQ%20:%20X%20-%3E%20Y%20r%0AU%20:%20X%20Y%20r%20r%20-%3E%0Ax%20:%20X%20-%3E%20X%20X%20
 

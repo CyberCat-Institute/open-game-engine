@@ -1,17 +1,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module OpenGames.Examples.Consensus.AndGate where
+module Examples.Consensus.AndGate where
 
 import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
 
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Engine.OpenGamesClass
+import Engine.OpticClass
+import Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
+import Engine.DependentDecision
 
-import OpenGames.Examples.Consensus.DepositGame (depositStagePlayer, playingStagePlayer, attackerPayoff)
+import Examples.Consensus.DepositGame (depositStagePlayer, playingStagePlayer, attackerPayoff)
 
 obfuscateAndGate :: [Bool] -> Bool
 obfuscateAndGate = and

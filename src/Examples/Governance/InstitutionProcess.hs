@@ -1,17 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OpenGames.Examples.Governance.InstitutionProcess where
+module Examples.Governance.InstitutionProcess where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
 
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import           OpenGames.Engine.DependentDecision
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import           Engine.DependentDecision
 
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Preprocessor.AbstractSyntax
 
 --------------------------
 -- 0. Payoffs
@@ -183,8 +183,8 @@ dictatorInstSrc = Block [] []
 dictatorInst = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, inst, discard, effort) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, inst, discard, effort), ()) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, inst, discard, effort) -> ((tech, inst, discard, effort), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, ())) (\((tech, inst, discard, effort), ()) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "dictator" (const ["cr", "wa"]))))))) >>> (fromFunctions (\(tech, inst) -> (tech, inst)) (\(tech, inst, discard, effort) -> ((tech, inst, discard, effort), effort)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, inst) -> ((tech, inst), regimeChoice tech inst)) (\((tech, inst, discard), effort) -> (tech, inst, discard, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((cropGame +++ wageGame )))))) >>> (fromFunctions (\((tech, inst), discard) -> (tech, inst, discard)) (\(tech, inst, discard) -> ((tech, inst, discard), ()))))))))) >>> (fromLens (\(tech, inst, discard) -> ()) (curry (\((tech, inst, discard), ()) -> (tech, inst, discard)))))
 
 -- 6 eq checks
-eqCropGame = OpenGames.Engine.OpticClass.equilibrium cropGameComplete void
-eqWageGame = OpenGames.Engine.OpticClass.equilibrium wageGameComplete void
-eqBranchGame = OpenGames.Engine.OpticClass.equilibrium branchingGame void
-eqRandomInstGame = OpenGames.Engine.OpticClass.equilibrium randomInst void
-eqDictatorInstGame = OpenGames.Engine.OpticClass.equilibrium dictatorInst void
+eqCropGame = Engine.OpticClass.equilibrium cropGameComplete void
+eqWageGame = Engine.OpticClass.equilibrium wageGameComplete void
+eqBranchGame = Engine.OpticClass.equilibrium branchingGame void
+eqRandomInstGame = Engine.OpticClass.equilibrium randomInst void
+eqDictatorInstGame = Engine.OpticClass.equilibrium dictatorInst void

@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveGeneric #-}
 
-module OpenGames.Examples.Signalling where
+module Examples.Signalling where
 
 import GHC.Generics
 import Numeric.Probability.Distribution
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Compile
-import OpenGames.Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
+import Preprocessor.Compile
+import Preprocessor.AbstractSyntax
 
-import OpenGames.Engine.BayesianDiagnostics
+import Engine.BayesianDiagnostics
 
 data Productivity = LowProductivity | HighProductivity deriving (Eq, Ord, Show, Generic)
 data Effort = LowEffort | HighEffort deriving (Eq, Ord, Show, Generic)

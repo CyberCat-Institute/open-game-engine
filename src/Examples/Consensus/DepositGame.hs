@@ -2,20 +2,20 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TemplateHaskell #-}
 
-module OpenGames.Examples.Consensus.DepositGame where
+module Examples.Consensus.DepositGame where
 
 import Control.Arrow (Kleisli(..))
 import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
 
 import Language.Haskell.TH
 
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.DecisionClass
-import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
+import Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
+import Engine.OpenGamesClass
+import Engine.OpticClass
+import Engine.DecisionClass
+import Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
+import Engine.DependentDecision
 
 
 generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $

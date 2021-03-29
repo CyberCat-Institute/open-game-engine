@@ -1,12 +1,12 @@
-module OpenGames.Examples.KD.LemonMarket where
+module Examples.KD.LemonMarket where
 
 -- Lemon market generated from KD editor
 -- https://kdmoncatog.glitch.me/#pixels=NxQQQU%0ANxSyPU%0ANxSyBU%0ANxSrrU&context=N:%20-%3E%20Q%0Ax:%20Q%20-%3E%20Q%20Q%0Ay:%20P%20-%3E%20P%20P%0AS:%20Q%20-%3E%20P%20r%0AB:%20P%20-%3E%20B%20r%0AU:%20Q%20P%20B%20r%20r%20-%3E%0A
 
 import Numeric.Probability.Distribution
 
-import OpenGames.Engine.BayesianDiagnosticsTLL
-import OpenGames.Engine.BayesianDiagnostics (trivialContext)
+import Engine.BayesianDiagnosticsTLL
+import Engine.BayesianDiagnostics (trivialContext)
 
 data LemonQuality = Good | Bad deriving (Eq, Ord, Show)
 data LemonPrice = Low | High deriving (Eq, Ord, Show)

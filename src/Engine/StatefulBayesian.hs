@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module OpenGames.Engine.StatefulBayesian where
+module Engine.StatefulBayesian where
 
 -- Subsumes both BayesianDiagnostics and StatefulPayoffs
 
@@ -15,11 +15,11 @@ import           Numeric.Probability.Distribution   hiding (lift)
 
 import           Data.List                          (maximumBy)
 import           Data.Ord                           (comparing)
-import           OpenGames.Engine.BayesianOpenGames (bayes, support)
-import           OpenGames.Engine.DecisionClass
-import           OpenGames.Engine.Diagnostics
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.SubgamePerfect    (KleisliContext (..),
+import           Engine.BayesianOpenGames (bayes, support)
+import           Engine.DecisionClass
+import           Engine.Diagnostics
+import           Engine.OpticClass
+import           Engine.SubgamePerfect    (KleisliContext (..),
                                                      KleisliOptic (..))
 
 type Stochastic = T Double
@@ -100,8 +100,8 @@ instance Decision (Kleisli Stochastic) StochasticStatefulOpenGame where
 {-
 roleDecision and dependentDecision are wrong but are kept here for backward compatibility with older examples
 Intended usage:
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.DependentDecision
 -}
 
 roleDecision :: (Eq x, Show x, Ord y, Show y) => [y] -> StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, x) () y Double

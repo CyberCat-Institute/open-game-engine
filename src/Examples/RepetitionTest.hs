@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
-module OpenGames.Examples.RepetitionTest where
+module Examples.RepetitionTest where
 
-import OpenGames.Engine.PureOpenGames
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.Diagnostics
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Types
-import OpenGames.Preprocessor.Compile
-import OpenGames.Preprocessor.AbstractSyntax
+import Engine.PureOpenGames
+import Engine.OpenGamesClass
+import Engine.Diagnostics
+import Preprocessor.THSyntax
+import Preprocessor.Types
+import Preprocessor.Compile
+import Preprocessor.AbstractSyntax
 
 data StagePDTitForTatState = TitForTatState1 | TitForTatState2 deriving (Show)
 data StagePDGrimTriggerState = GrimTriggerState1 | GrimTriggerState2 deriving (Show)
@@ -79,7 +79,7 @@ False
 -}
 
 {- More data:
-> let k (x, _) = OpenGames.Engine.PureOpenGames.coplay (repeated 10 (0, 0) repeatedPDStates stagePD) (repeatedPDTitForTat, repeatedPDGrimTrigger, ()) x ()
-> [((s1, s2), OpenGames.Engine.PureOpenGames.equilibrium stagePD (s1, s2) k (repeatedPDTitForTat, repeatedPDGrimTrigger, ())) | s1 <- [TitForTatState1, TitForTatState2], s2 <- [GrimTriggerState1, GrimTriggerState2]]
+> let k (x, _) = Engine.PureOpenGames.coplay (repeated 10 (0, 0) repeatedPDStates stagePD) (repeatedPDTitForTat, repeatedPDGrimTrigger, ()) x ()
+> [((s1, s2), Engine.PureOpenGames.equilibrium stagePD (s1, s2) k (repeatedPDTitForTat, repeatedPDGrimTrigger, ())) | s1 <- [TitForTatState1, TitForTatState2], s2 <- [GrimTriggerState1, GrimTriggerState2]]
 [((TitForTatState1,GrimTriggerState1),False),((TitForTatState1,GrimTriggerState2),False),((TitForTatState2,GrimTriggerState1),False),((TitForTatState2,GrimTriggerState2),True)]
 -}

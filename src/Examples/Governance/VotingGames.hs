@@ -1,14 +1,14 @@
-module OpenGames.Examples.Governance.VotingGames where
+module Examples.Governance.VotingGames where
 
 import           Control.Arrow (Kleisli(..))
 import           Numeric.Probability.Distribution
 
 
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import           OpenGames.Engine.DependentDecision
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import           Engine.DependentDecision
+import           Preprocessor.AbstractSyntax
 
 --------------------------
 -- 0. Types and parameters

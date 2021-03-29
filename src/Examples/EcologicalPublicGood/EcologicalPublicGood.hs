@@ -1,9 +1,9 @@
-module OpenGames.Examples.EcologicalPublicGood.EcologicalPublicGood where
+module Examples.EcologicalPublicGood.EcologicalPublicGood where
 
 import Numeric.Probability.Distribution
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Engine.BayesianOpenGames (L (..), (>>>>))
-import OpenGames.Engine.BayesianDiagnostics
+import Preprocessor.AbstractSyntax
+import Engine.BayesianOpenGames (L (..), (>>>>))
+import Engine.BayesianDiagnostics
 
 type D = T Double
 

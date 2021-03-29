@@ -1,11 +1,11 @@
-module OpenGames.Preprocessor.Preprocessor where
+module Preprocessor.Preprocessor where
 
 -- This file is where the magic happens
 
 import Data.List (inits, tails)
 
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.Types
+import Preprocessor.AbstractSyntax
+import Preprocessor.Types
 
 sequentialTrivialL, sequentialTrivialR, simultaneousTrivialL, simultaneousTrivialR :: FreeOpenGame String String -> FreeOpenGame String String -> FreeOpenGame String String
 sequentialTrivialL g h   = Reindex UnitIntroL (Sequential g h) -- \x -> ((), x)

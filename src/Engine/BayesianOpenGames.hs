@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module OpenGames.Engine.BayesianOpenGames where
+module Engine.BayesianOpenGames where
 
 -- Bayesian open games implemented via Riley optics
 -- All numbers are rational
@@ -10,8 +10,8 @@ import           Data.List                        (maximumBy)
 import           Data.Ord                         (comparing)
 import           Numeric.Probability.Distribution hiding (map)
 
-import           OpenGames.Engine.Diagnostics
-import           OpenGames.Engine.OpenGamesClass
+import           Engine.Diagnostics
+import           Engine.OpenGamesClass
 
 -- Probability monad
 

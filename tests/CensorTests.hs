@@ -3,13 +3,13 @@
 module CensorTests where
 
 import Control.Arrow (Kleisli(..))
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.OpenGamesClass
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
-import OpenGames.Engine.Diagnostics
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.THSyntax
+import Engine.OpticClass
+import Engine.OpenGamesClass
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.DependentDecision
+import Engine.Diagnostics
+import Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
 import Numeric.Probability.Distribution (certainly, fromFreqs, uniform, T(..))
 import Data.Ord (comparing)
 import Data.List (maximumBy)
@@ -117,7 +117,7 @@ penaltiesWithMinimumBudget :: (Double
      -> OpticOpenGame
           StochasticStatefulOptic
           StochasticStatefulContext
-          [OpenGames.Engine.Diagnostics.DiagnosticInfo]
+          [Engine.Diagnostics.DiagnosticInfo]
           ((Kleisli Stochastic () Double, Kleisli Stochastic () Double,
             Kleisli Stochastic () Double),
            (),

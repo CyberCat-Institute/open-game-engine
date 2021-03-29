@@ -14,24 +14,24 @@ import Test.Hspec as Spec
 import Test.QuickCheck
 import Language.Haskell.TH.Syntax as TH
 
-import OpenGames.Preprocessor.THSyntax as THS
-import OpenGames.Preprocessor.Preprocessor as Pre
-import OpenGames.Preprocessor.TH
-import OpenGames.Preprocessor.Lambda
-import OpenGames.Preprocessor.Compile
-import OpenGames.Preprocessor.Parser
-import OpenGames.Preprocessor.AbstractSyntax as ABS
+import Preprocessor.THSyntax as THS
+import Preprocessor.Preprocessor as Pre
+import Preprocessor.TH
+import Preprocessor.Lambda
+import Preprocessor.Compile
+import Preprocessor.Parser
+import Preprocessor.AbstractSyntax as ABS
 
-import OpenGames.Examples.SimpleAuction
-import OpenGames.Examples.Bimatrix
-import OpenGames.Examples.Bayesian as B
-import OpenGames.Examples.LemonMarket
-import OpenGames.Examples.ResaleMarket
-import OpenGames.Examples.Sequential
-import OpenGames.Examples.Signalling
+import Examples.SimpleAuction
+import Examples.Bimatrix
+import Examples.Bayesian as B
+import Examples.LemonMarket
+import Examples.ResaleMarket
+import Examples.Sequential
+import Examples.Signalling
 
 import Numeric.Probability.Distribution
-import OpenGames.Engine.BayesianDiagnostics
+import Engine.BayesianDiagnostics
 
 btest = "t |                 <- nature (uniform [Rat, Omerta])                                -< | ;"
      ++ "x | pdMatrix1 x y   <- reindex const (decision \"prisoner1\" [Confess, DontConfess]) -< | ;"

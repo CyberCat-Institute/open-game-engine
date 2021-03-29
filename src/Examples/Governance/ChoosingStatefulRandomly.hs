@@ -1,8 +1,8 @@
-module OpenGames.Examples.Governance.ChoosingStatefulRandomly where
+module Examples.Governance.ChoosingStatefulRandomly where
 
 import           Numeric.Probability.Distribution
-import           OpenGames.Engine.StatefulBayesian
-import           OpenGames.Preprocessor.AbstractSyntax
+import           Engine.StatefulBayesian
+import           Preprocessor.AbstractSyntax
 
 type Player = String
 

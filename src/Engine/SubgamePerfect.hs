@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs, MultiParamTypeClasses, FlexibleInstances #-}
 
-module OpenGames.Engine.SubgamePerfect where
+module Engine.SubgamePerfect where
 
 -- Experimental approach to detecting subgame perfection
 
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.DecisionClass
-import OpenGames.Engine.Diagnostics -- for instance Monoid Bool
+import Engine.OpticClass
+import Engine.DecisionClass
+import Engine.Diagnostics -- for instance Monoid Bool
 
 data KleisliOptic m s t a b where
   KleisliOptic :: (s -> m (z, a)) -> (z -> b -> m t) -> KleisliOptic m s t a b

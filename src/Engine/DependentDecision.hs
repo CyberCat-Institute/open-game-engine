@@ -1,24 +1,24 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-
-This is a patch on top of OpenGames.Engine.StatefulBayesian
+This is a patch on top of Engine.StatefulBayesian
 Intended usage:
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
-import OpenGames.Engine.DependentDecision
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.DependentDecision
 -}
 
-module OpenGames.Engine.DependentDecision where
+module Engine.DependentDecision where
 
 import Control.Arrow
-import OpenGames.Engine.OpticClass
-import OpenGames.Engine.Diagnostics
+import Engine.OpticClass
+import Engine.Diagnostics
 import           Control.Monad.State                hiding (state)
 import           Control.Monad.Trans.Class
 import           Data.List                          (maximumBy)
 import           Data.Ord                           (comparing)
-import           OpenGames.Engine.BayesianOpenGames (bayes, support)
+import           Engine.BayesianOpenGames (bayes, support)
 import           Numeric.Probability.Distribution   hiding (lift)
-import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
+import Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
 
 type Agent = String
 

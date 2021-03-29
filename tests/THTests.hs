@@ -14,22 +14,22 @@ import Test.Hspec
 import Test.QuickCheck
 import Language.Haskell.TH.Syntax
 
-import OpenGames.Preprocessor.THSyntax as THS
-import OpenGames.Preprocessor.Preprocessor as Pre
-import OpenGames.Preprocessor.TH
-import OpenGames.Preprocessor.AbstractSyntax as ABS
+import Preprocessor.THSyntax as THS
+import Preprocessor.Preprocessor as Pre
+import Preprocessor.TH
+import Preprocessor.AbstractSyntax as ABS
 
-import OpenGames.Examples.SimpleAuction
-import OpenGames.Examples.Bimatrix
-import OpenGames.Examples.Bayesian as B
-import OpenGames.Examples.LemonMarket
-import OpenGames.Examples.ResaleMarket
-import OpenGames.Examples.RepetitionTest
-import OpenGames.Examples.Sequential
-import OpenGames.Examples.Signalling
+import Examples.SimpleAuction
+import Examples.Bimatrix
+import Examples.Bayesian as B
+import Examples.LemonMarket
+import Examples.ResaleMarket
+import Examples.RepetitionTest
+import Examples.Sequential
+import Examples.Signalling
 
 import Numeric.Probability.Distribution
-import OpenGames.Engine.BayesianDiagnostics
+import Engine.BayesianDiagnostics
 
 instance Arbitrary Coordination where
   arbitrary = bool GCT ES <$> arbitrary

@@ -1,15 +1,15 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module OpenGames.Examples.PermitSale.PermitSale where
+module Examples.PermitSale.PermitSale where
 
 import qualified Control.Arrow as CA
 import           Numeric.Probability.Distribution
-import qualified OpenGames.Engine.StatefulPayoffs as SP
-import           OpenGames.Engine.OpenGamesClass
-import           OpenGames.Engine.OpticClass
-import           OpenGames.Engine.StatefulBayesian
-import           OpenGames.Preprocessor.AbstractSyntax
-import           OpenGames.Preprocessor.Preprocessor
+import qualified Engine.StatefulPayoffs as SP
+import           Engine.OpenGamesClass
+import           Engine.OpticClass
+import           Engine.StatefulBayesian
+import           Preprocessor.AbstractSyntax
+import           Preprocessor.Preprocessor
 
 
 -------------------------------

@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskell, DeriveGeneric, QuasiQuotes #-}
 
-module OpenGames.Examples.ResaleMarket where
+module Examples.ResaleMarket where
 
 import GHC.Generics
 import Numeric.Probability.Distribution
 
-import OpenGames.Engine.BayesianDiagnostics
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Preprocessor.THSyntax
-import OpenGames.Preprocessor.Compile
+import Engine.BayesianDiagnostics
+import Preprocessor.AbstractSyntax
+import Preprocessor.THSyntax
+import Preprocessor.Compile
 
 -- Public good resale market
 

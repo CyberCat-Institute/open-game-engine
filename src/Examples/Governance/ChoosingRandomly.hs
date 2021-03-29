@@ -1,8 +1,8 @@
-module OpenGames.Examples.Governance.ChoosingRandomly where
+module Examples.Governance.ChoosingRandomly where
 
 import Numeric.Probability.Distribution
-import OpenGames.Preprocessor.AbstractSyntax
-import OpenGames.Engine.BayesianDiagnostics
+import Preprocessor.AbstractSyntax
+import Engine.BayesianDiagnostics
 
 majority2 :: (Fractional prob) => Either () () -> Either () () -> T prob (Either () ())
 majority2 (Left ()) (Left ()) = certainly (Left ())
@@ -52,10 +52,10 @@ randomMetagameEq = equilibrium metagame trivialContext
 > :t randomMetagameEq 
 randomMetagameEq
   :: (T Rational (Either () ()), T Rational (Either () ()), (),
-      ((T Rational OpenGames.Examples.Governance.ChoosingRandomly.PDMove,
-        T Rational OpenGames.Examples.Governance.ChoosingRandomly.PDMove),
+      ((T Rational Examples.Governance.ChoosingRandomly.PDMove,
+        T Rational Examples.Governance.ChoosingRandomly.PDMove),
        (T Rational StagMove, T Rational StagMove)))
-     -> [OpenGames.Engine.BayesianDiagnostics.DiagnosticInfo]
+     -> [Engine.BayesianDiagnostics.DiagnosticInfo]
 > randomMetagameEq (certainly (Right ()), certainly (Right ()), (), ((certainly Defect, certainly Defect), (certainly Stag, certainly Stag)))
 []
 > randomMetagameEq (certainly (Right ()), certainly (Right ()), (), ((certainly Defect, certainly Cooperate), (certainly Stag, certainly Stag)))
@@ -63,7 +63,7 @@ randomMetagameEq
 > randomMetagameEq (certainly (Right ()), certainly (Right ()), (), ((certainly Cooperate, certainly Cooperate), (certainly Stag, certainly Stag)))
 []
 > :r -- parameters changed here
-[38 of 38] Compiling OpenGames.Examples.Governance.ChoosingRandomly ( /Users/jules/Desktop/Git/open-games-hs-private/src/OpenGames/Examples/Governance/ChoosingRandomly.hs, interpreted )
+[38 of 38] Compiling Examples.Governance.ChoosingRandomly ( /Users/jules/Desktop/Git/open-games-hs-private/src/Examples/Governance/ChoosingRandomly.hs, interpreted )
 Ok, 38 modules loaded.
 > randomMetagameEq (certainly (Right ()), certainly (Right ()), (), ((certainly Defect, certainly Defect), (certainly Stag, certainly Stag)))
 []
@@ -80,7 +80,7 @@ DiagnosticInfo {player = "player2", observedState = "()", unobservedState = "(((
 DiagnosticInfo {player = "player1", observedState = "()", unobservedState = "((),())", strategy = "fromFreqs [(Right (),1 % 1)]", payoff = "2 % 1", optimalMove = "Left ()", optimalPayoff = "5 % 2"}
 DiagnosticInfo {player = "player2", observedState = "()", unobservedState = "((),Right ())", strategy = "fromFreqs [(Right (),1 % 1)]", payoff = "2 % 1", optimalMove = "Left ()", optimalPayoff = "5 % 2"}
 > :r -- parameters changed back here
-[38 of 38] Compiling OpenGames.Examples.Governance.ChoosingRandomly ( /Users/jules/Desktop/Git/open-games-hs-private/src/OpenGames/Examples/Governance/ChoosingRandomly.hs, interpreted )
+[38 of 38] Compiling Examples.Governance.ChoosingRandomly ( /Users/jules/Desktop/Git/open-games-hs-private/src/Examples/Governance/ChoosingRandomly.hs, interpreted )
 Ok, 38 modules loaded.
 > mapM_ print $ randomMetagameEq (certainly (Right ()), certainly (Right ()), (), ((certainly Cooperate, certainly Cooperate), (certainly Stag, certainly Stag)))
 > mapM_ print $ randomMetagameEq (certainly (Left ()), certainly (Left ()), (), ((certainly Cooperate, certainly Cooperate), (certainly Stag, certainly Stag)))

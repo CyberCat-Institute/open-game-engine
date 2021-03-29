@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}
 
-module OpenGames.Preprocessor.AbstractSyntax where
+module Preprocessor.AbstractSyntax where
 
 import Control.Comonad
 import Data.Bifunctor

@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 
 -- A parser for Lambda Calculus
-module OpenGames.Preprocessor.Lambda
+module Preprocessor.Lambda
   ( Lambda(..)
   , Literal(..)
   , LRange(..)

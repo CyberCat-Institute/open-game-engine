@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module OpenGames.Engine.PureNumerical3 where
+module Engine.PureNumerical3 where
 
 data SmoothContext p x y = SmoothContext (p, x) ((p, y) -> y)
 

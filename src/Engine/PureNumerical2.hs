@@ -1,8 +1,8 @@
 {-# LANGUAGE RankNTypes #-}
 
-module OpenGames.Engine.PureNumerical2 where
+module Engine.PureNumerical2 where
 
-import OpenGames.Engine.PureNumerical (stackelbergPayoffs)
+import Engine.PureNumerical (stackelbergPayoffs)
 
 -- Second attempt
 

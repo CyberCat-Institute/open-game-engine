@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module OpenGames.Engine.BayesianDiagnostics where
+module Engine.BayesianDiagnostics where
 
 -- This is a different implementation of bayesian open games that constrains the quantified type to be in Show
 -- which is needed for getting more useful diagnostic information
@@ -11,7 +11,7 @@ import Data.List (maximumBy)
 import Data.Ord (comparing)
 import Numeric.Probability.Distribution
 
-import OpenGames.Engine.BayesianOpenGames hiding (C, trivialContext, cmap, lcancel, rcancel, play, equilibrium)
+import Engine.BayesianOpenGames hiding (C, trivialContext, cmap, lcancel, rcancel, play, equilibrium)
 
 data C prob x s y r where C :: (Show a) => T prob (a, x) -> (a -> y -> T prob r) -> C prob x s y r
 

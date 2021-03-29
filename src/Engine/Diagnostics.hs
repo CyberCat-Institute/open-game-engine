@@ -1,4 +1,4 @@
-module OpenGames.Engine.Diagnostics where
+module Engine.Diagnostics where
 
 -- Open games in this implementation are paramterised over a monoid of return values of the equilibrium function
 -- Here we introduce a datatype of diagnostic information that records useful information about failures of equilibirum
