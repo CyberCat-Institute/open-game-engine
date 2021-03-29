@@ -3,7 +3,6 @@ module Preprocessor.Parser where
 
 import Text.Parsec
 import Text.Parsec.String
-import Language.Haskell.TH
 import Preprocessor.Lambda
 
 type GameAST p e = ParsedBlock p e (ParsedLine p e)
@@ -28,4 +27,3 @@ parseLambda = parse realParser "realParser"
 
 parseVerbose :: String -> Either ParseError (GameAST Pattern Lambda)
 parseVerbose = parse (parseVerboseSyntax parsePattern expr (parseVerboseLine parsePattern expr)) "verbose parser"
-

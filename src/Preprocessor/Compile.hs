@@ -4,17 +4,17 @@
 
 module Preprocessor.Compile where
 
-import Prelude hiding (lines)
-import Data.Char
 import Preprocessor.Parser
 import Preprocessor.Lambda
 import Preprocessor.THSyntax
 import Preprocessor.AbstractSyntax
 import Preprocessor.TH
-import Preprocessor.THSyntax
+
+import Data.Char
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH as TH
+import Prelude hiding (lines)
 
 compileLiteral :: Literal -> Exp
 compileLiteral (LInt i) = LitE $ IntegerL i
@@ -53,6 +53,7 @@ compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
                                                (NormalB (compileLambda val))
                                                []]
                                          (compileLambda body)
+
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i
@@ -97,6 +98,7 @@ parseLambdaAsOpenGame input =
     Left _ -> Nothing
     Right v -> Just $ compileBlock $ compileAST $ convertGame v
 
+
 parseLambdaAsExp :: String -> Q Exp
 parseLambdaAsExp input = case parseLambda input of
                            Left err -> error (show err)
@@ -110,6 +112,7 @@ game = QuasiQuoter
      , quoteDec  = error "expected expr"
      }
 
+
 parseVerboseGame :: String -> Q Exp
 parseVerboseGame input = case parseVerbose input of
                            Left err ->  error (show err)
@@ -122,4 +125,3 @@ opengame = QuasiQuoter
      , quoteType = error "expected expr"
      , quoteDec  = error "expected expr"
      }
-

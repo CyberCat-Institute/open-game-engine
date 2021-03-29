@@ -203,6 +203,7 @@ parseLet = do
   body <- expr
   pure (LLet varName value body)
 
+
 parseTuple :: Parser Lambda
 parseTuple = do
   f <- expr
@@ -322,5 +323,3 @@ parseVerboseSyntax parseP parseE parseL =
      lines <- many parseL
      (returns, output) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
      return $ MkParsedBlock input feedback lines output returns
-
-
