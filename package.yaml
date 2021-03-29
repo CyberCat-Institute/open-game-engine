@@ -2,13 +2,15 @@ name: open-games-hs
 version: '0.1.0.0'
 synopsis: Haskell implementation of open games
 category: Math
-author: Jules Hedges & other contributors
-maintainer: juleshedges.invariant@gmail.com
-copyright: 2020 Jules Hedges & other contributors
+author: Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer: philipp.zahn@protonmail
+copyright: Jules Hedges, André Videla, Philipp Zahn & other contributors
 license: AGPL
-github: jules-hedges/open-games-hs
+github: https://github.com/philipp-zahn/open-games-hs
 extra-source-files:
 - README.md
+
+
 library:
   source-dirs: src
   exposed-modules:
@@ -27,7 +29,8 @@ library:
     - Examples.Bimatrix
     - Examples.Bayesian
     - Examples.Sequential
-  dependencies:
+
+dependencies:
     - base >=4.7 && <5
     - mtl
     - transformers
@@ -39,6 +42,7 @@ library:
     - parsec
     - QuickCheck
     - comonad
+
 tests:
   test-open-games:
     main: THTests
