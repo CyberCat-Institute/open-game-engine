@@ -1,3 +1,12 @@
+# Refactored version
+
+This repo is a refactored and simplified implementation on the basis of [this](https://github.com/jules-hedges/open-game-engine) version by Jules Hedges. 
+
+It will serve as a basis for several specialized applications. 
+
+
+
+
 # Open games in Haskell
 
 This is a Haskell combinator library implementing open games, a battery of examples, and a code generation tool for making the combinator library practical to work with.
