@@ -5,7 +5,11 @@ module Examples.Bayesian where
 
 import Numeric.Probability.Distribution
 
-import Engine.BayesianDiagnostics
+import GHC.Generics
+import Engine.BayesianGames
+import Engine.OpenGames
+import Engine.OpticClass
+
 import Preprocessor.THSyntax
 import Preprocessor.AbstractSyntax
 import Preprocessor.Compile
@@ -17,13 +21,13 @@ import GHC.Generics
 data PDNature = Rat | Omerta deriving (Eq, Ord, Show)
 data PDMove = Confess | DontConfess deriving (Eq, Ord, Show)
 
-pdMatrix1 :: PDMove -> PDMove -> Rational
+pdMatrix1 :: PDMove -> PDMove -> Double
 pdMatrix1 Confess Confess = -5
 pdMatrix1 Confess DontConfess = -1
 pdMatrix1 DontConfess Confess = -10
 pdMatrix1 DontConfess DontConfess = 0
 
-pdMatrix2 :: PDNature -> PDMove -> PDMove -> Rational
+pdMatrix2 :: PDNature -> PDMove -> PDMove -> Double
 pdMatrix2 Rat Confess Confess = -5
 pdMatrix2 Rat Confess DontConfess = -10
 pdMatrix2 Rat DontConfess Confess = -1
@@ -36,8 +40,8 @@ pdMatrix2 Omerta DontConfess DontConfess = -2
 -- using TH
 generateGame "bayesianPDTH" []
                    [Line [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
-                   ,Line [] [] [|reindex const (decision "prisoner1" [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
-                   ,Line [[|t|]] [] [|decision "prisoner2" [Confess, DontConfess]|] ["y"] [[|pdMatrix2 t x y|]]
+                   ,Line [] [] [|dependentDecision "prisoner1" (const [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
+                   ,Line [[|t|]] [] [|dependentDecision "prisoner2" (\o -> [Confess, DontConfess])|] ["y"] [[|pdMatrix2 t x y|]]
                    ]
 
 -- Using Quasiquotes
@@ -46,23 +50,15 @@ bayseianInline = [game|
     t | <- nature (uniform [Rat, Omerta])
         -< | ;
     x | pdMatrix1 x y
-        <- reindex const (decision "prisoner1" [Confess, DontConfess])
+        <- dependentDecision "prisoner1" (const [Confess, DontConfess])
         -< |;
     y | pdMatrix2 t x y
-        <- decision "prisoner2" [Confess, DontConfess]
+        <- dependentDecision "prisoner2" (\o -> [Confess, DontConfess])
         -< | t ;
         <<= ||
   |]
 
--- Using TH
-generateGame "bayesianPD" []
-                   [Line [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
-                   ,Line [] [] [|reindex const (decision "prisoner1" [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
-                   ,Line [[|t|]] [] [|decision "prisoner2" [Confess, DontConfess]|] ["y"] [[|pdMatrix2 t x y|]]
-                   ]
-
-
-bayesianPDEquilibrium = equilibrium bayesianPD trivialContext
+bayesianPDEquilibrium strat  = evaluate bayesianPDTH strat void
 
 -----------------
 -- Eq. strategies
@@ -81,7 +77,7 @@ strategyPD2 Omerta = certainly DontConfess
 data BOSType = BOSType1 | BOSType2 deriving (Eq, Ord, Show, Generic)
 data BOSMove = BayesianB | BayesianS deriving (Eq, Ord, Show, Generic)
 
-bos_bayesian_matrix1, bos_bayesian_matrix2 :: BOSType -> BOSMove -> BOSMove -> Rational
+bos_bayesian_matrix1, bos_bayesian_matrix2 :: BOSType -> BOSMove -> BOSMove -> Double
 bos_bayesian_matrix1 BOSType1 BayesianB BayesianB = 2
 bos_bayesian_matrix1 BOSType1 BayesianS BayesianS = 1
 bos_bayesian_matrix1 BOSType1 _ _ = 0
@@ -100,14 +96,14 @@ bayesianBOS = [game|
     t1, t2 | <- nature (do {t1 <- uniform [BOSType1, BOSType2];
                             t2 <- uniform [BOSType1, BOSType2];
                             return (t1, t2)}) -< | ;
-         x | bos_bayesian_matrix1 t1 x y <- decision "man" [BayesianB, BayesianS] -< | t1;
-         y | bos_bayesian_matrix2 t2 x y <- decision "woman" [BayesianB, BayesianS] -< | t2;
+         x | bos_bayesian_matrix1 t1 x y <- dependentDecision "man" (\t -> [BayesianB, BayesianS]) -< | t1;
+         y | bos_bayesian_matrix2 t2 x y <- dependentDecision "woman"(\t -> [BayesianB, BayesianS]) -< | t2;
     <<= ||
     |]
 -- Using TH
 generateGame "bayesianBOSTH" []
                     [Line []       [] [|nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})|] ["t1", "t2"] []
-                    ,Line [[|t1|]] [] [|decision "man" [BayesianB, BayesianS]|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
-                    ,Line [[|t2|]] [] [|decision "woman" [BayesianB, BayesianS]|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
+                    ,Line [[|t1|]] [] [|dependentDecision "man" (\t -> [BayesianB, BayesianS])|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
+                    ,Line [[|t2|]] [] [|dependentDecision "woman"(\t -> [BayesianB, BayesianS])|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
                     ]
-bayesianBOSEquilibrium = equilibrium bayesianBOS trivialContext
+bayesianBOSEquilibrium strat = evaluate bayesianBOS strat void

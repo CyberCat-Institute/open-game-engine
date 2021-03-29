@@ -1,86 +1,53 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
-
 module Examples.Bimatrix where
 
-import GHC.Generics
+
+import Engine.BayesianGames
+import Engine.OpenGames
 import Preprocessor.THSyntax
 import Preprocessor.AbstractSyntax
 import Preprocessor.Compile
-import Language.Haskell.TH.Syntax
-import Engine.BayesianDiagnostics
-import Numeric.Probability.Distribution
-import qualified Engine.BayesianDiagnosticsTLL as TLL
 
--- Matching pennies
+-----------------------
+-- 0. Types and payoffs
+
+
 
 data Coin = Heads | Tails deriving (Eq, Ord, Show)
 
-matchingPenniesMatrix1, matchingPenniesMatrix2 :: Coin -> Coin -> Rational
+matchingPenniesMatrix1, matchingPenniesMatrix2 :: Coin -> Coin -> Double
 matchingPenniesMatrix1 x y = if x == y then 1 else 0
 matchingPenniesMatrix2 x y = if x == y then 0 else 1
 
--- Using TH
+---------------------
+-- 1. Using TH syntax
 generateGame "matchingPenniesTH" []
-                        [Line [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
-                         Line [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
+                        [Line [] [] [|dependentDecision "player1" (const [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
+                         Line [] [] [|dependentDecision "player2" (const [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
 
---
--- Using Quasiquotes
+
+------------------------------------
+-- 2. Using Quasiquotes - new parser
+
 matchingPennies = [opengame|
 
-    operation : reindex const (decision "player1" [Heads, Tails]) ;
+    operation : dependentDecision "player1" (const [Heads, Tails]) ;
     returns : matchingPenniesMatrix1 x y ;
     outputs : x ;
 
-    operation : reindex const (decision "player2" [Heads, Tails]) ;
+    operation : dependentDecision "player1" (const [Heads, Tails]) ;
     returns : matchingPenniesMatrix2 x y ;
     outputs : y ;
 
 |]
 
-matchingPenniesEquilibrium = equilibrium matchingPennies trivialContext
-
-
--- Meeting in New York
-
-data Coordination = GCT | ES deriving (Eq, Ord, Show, Generic)
-
-meetingInNYMatrix :: Coordination -> Coordination -> Rational
-meetingInNYMatrix x y = if x == y then 1 else 0
-
--- Using TH
-generateGame "meetingInNYTH" []
-                        [Line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix x y|]],
-                         Line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix x y|]]]
-
--- Using Quasiquotes
-meetingInNY = [game| || =>>
-  x | meetingInNYMatrix x y <- reindex const (decision "player1" [GCT, ES]) -< | ;
-  y | meetingInNYMatrix x y <- reindex const (decision "player2" [GCT, ES]) -< | ;
+------------------------------------
+-- 3. Using Quasiquotes - old parser
+  
+matchingPenniesOldQQ = [game| || =>>
+  x | matchingPenniesMatrix1 x y <- dependentDecision "player1" (const [Heads, Tails]) -< | ;
+  y | matchingPenniesMatrix2 x y <- dependentDecision "player2" (const [Heads, Tails]) -< | ;
   <<= ||
 |]
-
-meetingInNYEquilibrium = equilibrium meetingInNY trivialContext
-
--- Adding a third player
-
-meetingInNYMatrix3 :: Coordination -> Coordination -> Coordination -> Rational
-meetingInNYMatrix3 x y z = if x == y && x == z then 1 else 0
-
--- Using TH
-generateGame "meetingInNY3TH" []
-                        [Line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix3 x y z|]],
-                         Line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix3 x y z|]],
-                         Line [] [] [|reindex const (decision "player3" [GCT, ES])|] ["z"] [[|meetingInNYMatrix3 x y z|]]]
-
--- Using Quasiquotes
-meetingInNY3 = [game| || =>>
-  x | meetingInNYMatrix3 x y z <- reindex const (decision "player1" [GCT, ES]) -< | ;
-  y | meetingInNYMatrix3 x y z <- reindex const (decision "player2" [GCT, ES]) -< | ;
-  z | meetingInNYMatrix3 x y z <- reindex const (decision "player3" [GCT, ES]) -< | ;
-   <<= ||
-|]
-
-meetingInNYEquilibrium3 = equilibrium meetingInNY3 trivialContext

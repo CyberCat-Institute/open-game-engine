@@ -12,57 +12,21 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
-    - Engine.OpenGamesClass
+    - Engine.BayesianGames
     - Engine.Diagnostics
-    - Engine.PureOpenGames
-    - Engine.BayesianOpenGames
-    - Engine.BayesianDiagnostics
-    - Engine.BayesianDiagnosticsTLL
-    - Engine.StatefulPayoffs
+    - Engine.OpenGames
     - Engine.OpticClass
-    - Engine.SubgamePerfect
-    - Engine.DecisionClass
-    - Engine.StatefulBayesian
-    - Engine.DependentDecision
-    - Engine.PureNumerical
-    - Engine.PureNumerical2
-    - Engine.PureNumerical3
-    - Engine.PolyNumerical
+    - Engine.TLL
+    - Preprocessor.AbstractSyntax
+    - Preprocessor.Compile
+    - Preprocessor.Lambda
+    - Preprocessor.Parser
     - Preprocessor.THSyntax
     - Preprocessor.TH
-    - Preprocessor.Compile
-    - Preprocessor.AbstractSyntax
-    - Preprocessor.Preprocessor
-    - Preprocessor.Parser
-    - Preprocessor.Lambda
+    - Preprocessor.Types
     - Examples.Bimatrix
-    - Examples.Sequential
     - Examples.Bayesian
-    - Examples.Signalling
-    - Examples.SimpleAuction
-    - Examples.LemonMarket
-    - Examples.ResaleMarket
-    - Examples.KD.Bimatrix
-    - Examples.KD.Sequential
-    - Examples.KD.LemonMarket
-    - Examples.EcologicalPublicGood.EcologicalPublicGood
-    - Examples.Governance.Monitoring
-    - Examples.Governance.ChoosingGames
-    - Examples.Governance.ChoosingRandomly
-    - Examples.Governance.ChoosingStatefulRandomly
-    - Examples.Governance.ThirdOption
-    - Examples.SubgameTest
-    - Examples.Governance.Irrigation
-    - Examples.Governance.IrrigationRandom
-    - Examples.Governance.IrrigationRandom2
-    - Examples.Governance.VotingGames
-    - Examples.Governance.InstitutionProcess
-    - Examples.PermitSale.PermitSale
-    - Examples.RepetitionTest
-    - Examples.Consensus.Simple
-    - Examples.Consensus.Censor
-    - Examples.Consensus.CensorStrategicAttacker
-    - Examples.Consensus.AndGate
+    - Examples.Sequential
   dependencies:
     - base >=4.7 && <5
     - mtl
