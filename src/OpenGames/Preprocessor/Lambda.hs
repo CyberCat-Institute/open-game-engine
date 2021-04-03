@@ -321,7 +321,5 @@ parseVerboseSyntax :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p 
 parseVerboseSyntax parseP parseE parseL =
   do (input, feedback) <- try (parseInput parseP parseE <* parseDelimiter) <|> pure ([], [])
      lines <- many parseL
-     (returns, output) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
-     return $ MkParsedBlock input feedback lines output returns
-
-
+     (returns, output) <- option ([], []) (parseDelimiter *> parseOutput parseP parseE)
+     return $ MkParsedBlock input feedback lines returns output
