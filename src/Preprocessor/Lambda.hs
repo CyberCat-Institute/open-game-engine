@@ -67,7 +67,7 @@ data Pattern
   | PLit Literal        -- Match a literal exactly
   deriving (Eq, Show)
 
-langaugeKeywords = ["if", "then", "else", "data", "import", "do", "let", "in"
+languageKeywords = ["if", "then", "else", "data", "import", "do", "let", "in"
                    , "inputs", "outputs"
                    , "feedback", "returns"
                    , "operation"
@@ -84,7 +84,7 @@ modifiedHaskell = emptyDef
                 , Tok.opStart        = Tok.opLetter modifiedHaskell
                 , Tok.opLetter       = oneOf ":!#$%&*+./<=>?@\\^-~"
                 , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "-<", ";", "|", "<<=", "||", "=>>"]
-                , Tok.reservedNames  = langaugeKeywords
+                , Tok.reservedNames  = languageKeywords
                 , Tok.caseSensitive  = True
                 }
 
