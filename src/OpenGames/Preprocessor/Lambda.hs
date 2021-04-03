@@ -305,7 +305,7 @@ parseTwoLines kw1 kw2 parseP parseE =
 
 parseInput = parseTwoLines "inputs" "feedback"
 
-parseOutput = parseTwoLines "returns" "outputs"
+parseOutput = parseTwoLines "outputs" "returns" 
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
@@ -313,7 +313,7 @@ parseVerboseLine :: Parser p -> Parser e -> Parser (ParsedLine p e)
 parseVerboseLine parseP parseE = do
   (input, feedback) <- option ([], []) (parseInput parseE parseP)
   program <- reserved "operation" *> colon *> parseE <* semi
-  (returns, outputs) <- option ([], []) (parseOutput parseE parseP)
+  (outputs,returns) <- option ([], []) (parseOutput parseP parseE)
   pure $ MkParsedLine outputs returns program feedback input
 
 
@@ -321,5 +321,5 @@ parseVerboseSyntax :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p 
 parseVerboseSyntax parseP parseE parseL =
   do (input, feedback) <- try (parseInput parseP parseE <* parseDelimiter) <|> pure ([], [])
      lines <- many parseL
-     (returns, output) <- option ([], []) (parseDelimiter *> parseOutput parseP parseE)
-     return $ MkParsedBlock input feedback lines returns output
+     (outputs,returns) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
+     return $ MkParsedBlock input feedback lines returns outputs
