@@ -8,6 +8,7 @@
 
 module Examples.Auctions.SequentialAuction where
 
+import Control.Arrow (Kleisli(..))
 import Data.List
 import Language.Haskell.TH
 import System.Console.Haskeline
@@ -17,9 +18,11 @@ import Engine.AtomicGames
 import Engine.BayesianGames
 import Engine.OpenGames
 import Engine.OpticClass
+import Engine.TLL
 import Preprocessor.THSyntax
 import Preprocessor.AbstractSyntax
 import Preprocessor.Compile
+
 
 
 
@@ -155,7 +158,6 @@ transformPayments k noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-
 bidding3 k noLotteries paymentFunction = [opengame| 
 
    inputs    :      ;
@@ -208,22 +210,7 @@ bidding3 k noLotteries paymentFunction = [opengame|
    outputs   :      ;
    returns   :      ;
    |]
-
- {--  
-generateGame "bidding3" ["k","noLotteries","paymentFunction"] $
-  block [] []
-   [line [] [] [|natureDrawsTypeStage "Alice"|] ["aliceValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Bob"|]   ["bobValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Carol"|] ["carolValue"] []
-   ,line [[|aliceValue|]] [] [|dependentDecision "Alice" (const [0,20 .. 60])|] ["aliceDec"] [[|setPayoff aliceValue payments|]]
-   ,line [[|bobValue|]]   [] [|dependentDecision "Bob"   (const [0,20 .. 60])|] ["bobDec"]   [[|setPayoff bobValue   payments|]]
-   ,line [[|carolValue|]] [] [|dependentDecision "Carol" (const [0,20 .. 60])|] ["carolDec"] [[|setPayoff carolValue payments|]]
-   ,line [[|[("Alice",aliceDec),("Bob",bobDec),("Carol",carolDec)]|]] []
-         [|transformPayments k noLotteries paymentFunction |]  ["payments"] []
-   ]
-    [] []
-  
--------------
+ 
 -- B Analysis
 -------------
 
@@ -361,4 +348,4 @@ equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setP
 -- But the alternative threshold strategy is
 -- mapM print $ equilibriumGame3KMax 1 1 thresholdStrat3'
 
--}
+
