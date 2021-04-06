@@ -88,4 +88,5 @@ uniformDist = uniform
 distFromList = fromFreqs
 
 -- pure action (no randomization)
+pureAction :: a -> Stochastic a
 pureAction = certainly 
