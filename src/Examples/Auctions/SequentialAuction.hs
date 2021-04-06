@@ -128,8 +128,9 @@ natureDrawsTypeStage name = [opengame|
     returns   :    ;
   |]
 
+-- Transforms the payments into a random reshuffling
 transformPayments k noLotteries paymentFunction = [opengame|
-  
+
    inputs    : bids ;
    feedback  :      ;
 
@@ -147,38 +148,68 @@ transformPayments k noLotteries paymentFunction = [opengame|
    returns   :      ;
    :-----------------:
 
-   outputs   : shuffledBids ;
+   outputs   : payments ;
    returns   :      ;
   |]
 
-  {-- 
--- Simple component which transforms the relevant payoffs
-generateGame "transformPayments" ["k","noLotteries","paymentFunction"] $
-  block ["bids"] []
-   [line [[|bids|]] [] [|liftStochastic $ shuffleBids|] ["shuffledBids"] []
-   ,line [[|shuffledBids|]] [] [|fromFunctions (auctionPayment paymentFunction k noLotteries) id|] ["payments"] []]
-    [[|payments|]] []
 
- 
--- Instantiates the types drawn, bids, and computes the final allocation
-generateGame "bidding5" ["k","noLotteries","paymentFunction"] $
-  block [] []
-   [line [] [] [|natureDrawsTypeStage "Alice"|] ["aliceValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Bob"|]   ["bobValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Carol"|] ["carolValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Dan"|]   ["danValue"] []
-   ,line [] [] [|natureDrawsTypeStage "Emily"|] ["emilyValue"] []
-   ,line [[|aliceValue|]] [] [|dependentDecision "Alice" (const [0,20 .. 60])|] ["aliceDec"] [[|setPayoff aliceValue payments|]]
-   ,line [[|bobValue|]]   [] [|dependentDecision "Bob"   (const [0,20 .. 60])|] ["bobDec"]   [[|setPayoff bobValue   payments|]]
-   ,line [[|carolValue|]] [] [|dependentDecision "Carol" (const [0,20 .. 60])|] ["carolDec"] [[|setPayoff carolValue payments|]]
-   ,line [[|danValue|]]   [] [|dependentDecision "Dan"   (const [0,20 .. 60])|] ["danDec"]   [[|setPayoff danValue   payments|]]
-   ,line [[|emilyValue|]] [] [|dependentDecision "Emily" (const [0,20 .. 60])|] ["emilyDec"] [[|setPayoff emilyValue payments|]]
-   ,line [[|[("Alice",aliceDec),("Bob",bobDec),("Carol",carolDec),("Dan",danDec),("Emily",emilyDec)]|]] []
-         [|transformPayments k noLotteries paymentFunction |]  ["payments"] []
-   ]
-    [] []
 
 -- Instantiates a simplified version with three players
+
+bidding3 k noLotteries paymentFunction = [opengame| 
+
+   inputs    :      ;
+   feedback  :      ;
+
+   :-----------------:
+   inputs    :      ;
+   feedback  :      ;
+   operation : natureDrawsTypeStage "Alice" ;
+   outputs   :  aliceValue ;
+   returns   :      ;
+
+   inputs    :      ;
+   feedback  :      ;
+   operation : natureDrawsTypeStage "Bob" ;
+   outputs   :  bobValue ;
+   returns   :      ;
+
+   inputs    :      ;
+   feedback  :      ;
+   operation : natureDrawsTypeStage "Carol" ;
+   outputs   :  carolValue ;
+   returns   :      ;
+
+   inputs    :  aliceValue    ;
+   feedback  :      ;
+   operation :  dependentDecision "Alice" (const [0,20..60]) ;
+   outputs   :  aliceDec ;
+   returns   :  setPayoff aliceValue payments  ;
+
+   inputs    :  bobValue    ;
+   feedback  :      ;
+   operation :  dependentDecision "Bob" (const [0,20..60]) ;
+   outputs   :  bobDec ;
+   returns   :  setPayoff bobValue payments  ;
+
+   inputs    :  carolValue    ;
+   feedback  :      ;
+   operation :  dependentDecision "Carol" (const [0,20..60]) ;
+   outputs   :  carolDec ;
+   returns   :  setPayoff carolValue payments  ;
+
+   inputs    :  [("Alice",aliceDec),("Bob",bobDec),("Carol",carolDec)]  ;
+   feedback  :      ;
+   operation :   transformPayments k noLotteries paymentFunction ;
+   outputs   :  payments ;
+   returns   :      ;
+   :-----------------:
+
+   outputs   :      ;
+   returns   :      ;
+   |]
+
+ {--  
 generateGame "bidding3" ["k","noLotteries","paymentFunction"] $
   block [] []
    [line [] [] [|natureDrawsTypeStage "Alice"|] ["aliceValue"] []
@@ -191,7 +222,7 @@ generateGame "bidding3" ["k","noLotteries","paymentFunction"] $
          [|transformPayments k noLotteries paymentFunction |]  ["payments"] []
    ]
     [] []
-
+  
 -------------
 -- B Analysis
 -------------
