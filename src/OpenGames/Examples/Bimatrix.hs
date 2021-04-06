@@ -31,7 +31,7 @@ generateGame "matchingPenniesTH" []
 matchingPennies = [opengame|
 
     operation : reindex const (decision "player1" [Heads, Tails]) ;
-    returns : matchingPenniesMatrix1 x y ;
+    returns : matchingPenniesMatrix1 x $ y ;
     outputs : x ;
 
     operation : reindex const (decision "player2" [Heads, Tails]) ;

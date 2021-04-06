@@ -83,7 +83,7 @@ modifiedHaskell = emptyDef
                 , Tok.identLetter    = alphaNum <|> oneOf "_'"
                 , Tok.opStart        = Tok.opLetter modifiedHaskell
                 , Tok.opLetter       = oneOf ":!#$%&*+./<=>?@\\^-~"
-                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "-<", ";", "|", "<<=", "||", "=>>"]
+                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "$", "-<", ";", "|", "<<=", "||", "=>>"]
                 , Tok.reservedNames  = langaugeKeywords
                 , Tok.caseSensitive  = True
                 }
@@ -130,7 +130,8 @@ contents p = do
 mkInfix :: String -> Parser (Lambda -> Lambda -> Lambda)
 mkInfix op = reservedOp op >> pure (Ifix op)
 
-operators = [ [Infix (mkInfix ">>=") AssocLeft]
+operators = [ [Infix (mkInfix "$") AssocRight]
+            , [Infix (mkInfix ">>=") AssocLeft]
             , [Infix (mkInfix "*>") AssocLeft
               ,Infix (mkInfix "<*") AssocLeft
               ,Infix (mkInfix "<*>") AssocLeft
