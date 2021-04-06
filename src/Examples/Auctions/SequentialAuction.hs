@@ -218,7 +218,6 @@ bidding3 k noLotteries paymentFunction = [opengame|
 -- 0 Strategies
 
 -- Truthful bidding
-stratBidderTruth :: Kleisli Stochastic (a,b) b
 stratBidderTruth   = Kleisli $ (\(_,x) -> pureAction x)
 
 -- Bidding strategy with threshold 50 and value 10
@@ -231,7 +230,7 @@ stratBidderThreshold' = Kleisli $ (\(_,x) -> case () of
                                                 | otherwise ->  pureAction 20)
 
 
-{--
+
 -- Complete strategy for truthful bidding for 3 players
 truthfulStrat3 ::
   List
@@ -308,4 +307,4 @@ equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setP
 -- mapM print $ equilibriumGame3KMax 1 1 thresholdStrat3'
 
 
--}
+
