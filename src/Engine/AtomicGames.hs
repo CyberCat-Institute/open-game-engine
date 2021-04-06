@@ -60,7 +60,7 @@ forwardFunction function = [opengame|
     feedback  :   ;
 
     :-----:
-    inputs    :   ;
+    inputs    : x  ;
     feedback  :   ;
     operation : fromFunctions function id ;
     outputs   : y ;
