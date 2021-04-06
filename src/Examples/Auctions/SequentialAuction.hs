@@ -218,51 +218,20 @@ bidding3 k noLotteries paymentFunction = [opengame|
 -- 0 Strategies
 
 -- Truthful bidding
-stratBidderTruth   = Kleisli $ (\(_,x) -> certainly x)
+stratBidderTruth :: Kleisli Stochastic (a,b) b
+stratBidderTruth   = Kleisli $ (\(_,x) -> pureAction x)
 
 -- Bidding strategy with threshold 50 and value 10
-stratBidderThreshold = Kleisli $ (\(_,x) -> if x >= 50 then certainly 20 else certainly 10)
+stratBidderThreshold = Kleisli $ (\(_,x) -> if x >= 50 then pureAction 20 else pureAction 10)
 
 -- Bidding with different threshold
 stratBidderThreshold' = Kleisli $ (\(_,x) -> case () of
-                                              _ | x < 30 -> certainly 0
-                                                | x == 30 -> certainly 10 
-                                                | otherwise ->  certainly 20)
+                                              _ | x < 30 -> pureAction 0
+                                                | x == 30 -> pureAction 10 
+                                                | otherwise ->  pureAction 20)
 
 
-
--- Complete strategy for truthful bidding for 5 players
-truthfulStrat5 ::
-  List
-   '[ Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
-truthfulStrat5 =
-     stratBidderTruth
-  ::- stratBidderTruth
-  ::- stratBidderTruth
-  ::- stratBidderTruth
-  ::- stratBidderTruth
-  ::- Nil
-
--- Complete strategy for threshold bidding 5 players
-thresholdStrat5 ::
-  List
-   '[ Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
-thresholdStrat5 =
-     stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- Nil
-
+{--
 -- Complete strategy for truthful bidding for 3 players
 truthfulStrat3 ::
   List
@@ -286,7 +255,7 @@ thresholdStrat3 =
   ::- stratBidderThreshold
   ::- stratBidderThreshold
   ::- Nil
-  
+
 -- Complete strategy for threshold' bidding 3 players
 thresholdStrat3' ::
   List
@@ -303,12 +272,7 @@ thresholdStrat3' =
 -- 1 Equilibria
 -- follows payment rule in  Proposal (https://notes.ethereum.org/@barnabe/S1eUmr72I)
 
--- 1.0 Eq. game with 5 players
--- Interacting with the outside world
-equilibriumGame5 k noLotteries strat = evaluate (bidding5 k noLotteries setPayment) strat void
-
-
--- 1.1 Eq. game with 3 players
+-- 1.0 Eq. game with 3 players
 equilibriumGame3 k noLotteries strat = evaluate (bidding3 k noLotteries setPayment) strat void
 
 
@@ -316,12 +280,7 @@ equilibriumGame3 k noLotteries strat = evaluate (bidding3 k noLotteries setPayme
 -- 2 Equilibria
 -- follows k-price auction
 
--- 2.0 Eq. game with 5 players
--- Interacting with the outside world
-equilibriumGame5KMax k noLotteries strat = evaluate (bidding5 k noLotteries setPaymentKMax) strat void
-
-
--- 2.1 Eq. game with 3 players
+-- 2.0 Eq. game with 3 players
 equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setPaymentKMax) strat void
 
 
@@ -349,3 +308,4 @@ equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setP
 -- mapM print $ equilibriumGame3KMax 1 1 thresholdStrat3'
 
 
+-}
