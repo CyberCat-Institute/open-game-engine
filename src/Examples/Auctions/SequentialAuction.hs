@@ -13,7 +13,7 @@ import Language.Haskell.TH
 import System.Console.Haskeline
 import Text.Read
 
-
+import Engine.AtomicGames
 import Engine.BayesianGames
 import Engine.OpenGames
 import Engine.OpticClass
@@ -128,8 +128,30 @@ natureDrawsTypeStage name = [opengame|
     returns   :    ;
   |]
 
+transformPayments k noLotteries paymentFunction = [opengame|
   
+   inputs    : bids ;
+   feedback  :      ;
 
+   :-----------------:
+   inputs    : bids ;
+   feedback  :      ;
+   operation : liftStochasticForward shuffleBids ;
+   outputs   : shuffledBids ;
+   returns   :      ;
+
+   inputs    : shuffledBids ;
+   feedback  :      ;
+   operation : forwardFunction (auctionPayment paymentFunction k noLotteries) ;
+   outputs   : payments ;
+   returns   :      ;
+   :-----------------:
+
+   outputs   : shuffledBids ;
+   returns   :      ;
+  |]
+
+  {-- 
 -- Simple component which transforms the relevant payoffs
 generateGame "transformPayments" ["k","noLotteries","paymentFunction"] $
   block ["bids"] []
@@ -137,7 +159,7 @@ generateGame "transformPayments" ["k","noLotteries","paymentFunction"] $
    ,line [[|shuffledBids|]] [] [|fromFunctions (auctionPayment paymentFunction k noLotteries) id|] ["payments"] []]
     [[|payments|]] []
 
-  {--
+ 
 -- Instantiates the types drawn, bids, and computes the final allocation
 generateGame "bidding5" ["k","noLotteries","paymentFunction"] $
   block [] []
