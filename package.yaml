@@ -43,6 +43,7 @@ dependencies:
     - parsec
     - QuickCheck
     - comonad
+    - haskeline
 
 tests:
   test-open-games:
