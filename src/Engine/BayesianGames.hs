@@ -85,5 +85,7 @@ liftStochastic f = OpenGame {
 uniformDist = uniform
 
 -- tailored distribution from a list
-
 distFromList = fromFreqs
+
+-- pure action (no randomization)
+pureAction = certainly 
