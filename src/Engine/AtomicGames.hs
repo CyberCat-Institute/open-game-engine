@@ -1,7 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Examples.Decision where
+
+module Engine.AtomicGames where
 
 import Language.Haskell.TH
 

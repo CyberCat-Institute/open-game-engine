@@ -14,6 +14,7 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
+    - Engine.AtomicGames
     - Engine.BayesianGames
     - Engine.Diagnostics
     - Engine.OpenGames
