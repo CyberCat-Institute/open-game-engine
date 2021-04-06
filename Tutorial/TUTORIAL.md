@@ -124,7 +124,7 @@ It is not accidental that the internal structure closely resembles the outer str
 NOTE: For the compiler to work, the order of the fields must be kept intact. For instance, `operation` has to preceed `returns`. However, fields are optional. That is, if, for instance, there is no input, one ignore that field.
 
 Recall that our goal is to model each component as a possible standalone open game which can be connected.  
-The main difference between the outer and inner layer is that the each Line requires an operation field. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which, given some possible prior observation, and an action space (a list of possible actions to take), and information that is returned (his payoff), models a single agent who chooses an action. 
+The main difference between the outer and inner layer is that the each Line requires an operation field. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which -- given some possible prior observation, an action space (a list of possible actions to take), and information that is returned (his payoff) -- models a single agent who chooses an action. 
 
 What action? For now, you can think about the agent maximizing his expected payoffs. In principle, we can also consider other decision criteria. But for simplicity, we will stick to the maximization for now.     
 
@@ -141,36 +141,229 @@ NOTE: We expect that the syntax above is easier to grasp for people without much
 
 ### Building blocks
 
-After having laid out the basic structure of interal 
+After having laid out the basic structure of how an open game looks like, a natural question is what is the universe of operations that one can supply?  
 
-What elements do we need?
+Of course, there is no conclusive answer as one can introduce new operators. You can cook together your own components. After all, that is the whole point of modelling through programming. 
+
+But one needs to start somewhere. So, here is a basic list of three things you might want to do. In our experience that gets you a long way. 
 
 * decisions
 
 * functions
 
-* nature
+* moves of nature
 
-* payoff information -> 
+We will cover each of them. 
 
-TODO find the right abstraction
+#### Decisions
+
+Decisions are one of the central building blocks for compositional game theory. They model a single player.
+
+We consider two variants depicted below.
+
+        decision actionSpace payoffFunction playerName = [opengame|
+
+            inputs    : x ;
+            feedback  :   ;
+
+            :-----:
+            inputs    : x ;
+            feedback  :   ;
+            operation : dependentDecision playerName (\y -> actionSpace) ;
+            outputs   : y ;
+            returns   : payoffFunction y x r ;
+            :-----:
+
+            outputs   : y ;
+            returns   : r ;
+
+        |]
+
+ The `decision` game is a parameterized decision problem which requires three external parameters: An action space, a payoff function and a player name. The latter is just a string. It is needed to identify a player in a larger game and to knit different payoffs at different stages together. Moreover, as a side effect when we come to the analysis part of a game, names help to structure the analytics which we can derive from a game.
+
+Here is the second version:
+
+        decisionNoObs actionSpace payoffFunction playerName = [opengame|
+
+            inputs    :   ;
+            feedback  :   ;
+
+            :-----:
+            inputs    :   ;
+            feedback  :   ;
+            operation : dependentDecision playerName (\y -> actionSpace) ;
+            outputs   : y ;
+            returns   : payoffFunction y ;
+            :-----:
+
+            outputs   : y ;
+            returns   : r ;
+
+        |]
+
+The difference is that the second version does not require a prior observation. This becomes handy when modelling, for instance, simultaneous move games where players do not observation anything prior to their decision. 
+
+#### Functions
+
+What is special about functions is that they represent non-strategic objects. They are transforming information without adding strategic content. 
+
+Recall, an open game in general has two inputs and two outputs on each side of the box, mirroring the flow of information in two directions: past (left in the diagram) to future (right in the diagram). As we have two possibilities in which we can transform information (from past to future and from the future to the past), we also have two functions operators.
+
+        forwardFunction function = [opengame|
+
+            inputs    : x ;
+            feedback  :   ;
+
+            :-----:
+            inputs    :   ;
+            feedback  :   ;
+            operation : fromFunctions function id ;
+            outputs   : y ;
+            returns   :   ;
+            :-----:
+
+            outputs  : y ;
+            returns  :   ;
+
+        |]
+
+`forwardFunction` transforms information from the past into the future. It requires as an input a function. If you wonder about a practical example, think about a voting game where a number of players vote on an outcome. 
+
+The exact voting rule can then be modelled as a `forwardFunction` game taking as inputs the votes and outputting a result. To foreshadow some "design patterns" of how you want to go about modelling in this framework, let us consider why you would want to lift the voting rule to an open game. 
+
+There are other ways of modelling the voting rule. We could add it as an additional line to the players (we will discuss an example and the different consequences below). However, it may makes sense to embed the voting rule in an open game as it then can also be switched out easily against a different component. Say, the voting rule entails a random draw in case of a tie. And now you want to consider a different voting rule in which a specific player is pivotal in the case of tie (similar to the US Vice-President in the Senate). 
+
+Thus you want to turn a previously non-strategic component into a strategic component. In that case you can just switch out that line in the representation -- and you are done. Thus as rule-of-thumb. If you model an interaction and you consider turning elements into more complicated, strategic components later but want to go for something simpler first, modelling these components as own open games eases modular substitution with other components down the road. We will see more of this kind of discussion below.
+
+As promised there is a second function operation. 
+
+        backwardFunction function = [opengame|
+
+            inputs    :   ;
+            feedback  : s ;
+
+            :-----:
+            inputs    :   ;
+            feedback  :   ;
+            operation : fromFunctions id function ;
+            outputs   : s ;
+            returns   : r ;
+            :-----:
+
+            outputs  :    ;
+            returns  :  r ;
+
+        |]
+
+`backwardFunction` transforms input from the future into output to the past. You may find that weired at first. Why do we want to transform information back from the future? But consider a player who makes decisions over time. One application of the `backwardFunction` in that context is that we use it to transform the payoffs from the future, i.e. we can discount it. Or, say an agent receives transfers from multiple agents who move after him. Then we can use `backwardFunction` to aggregate these transfer according to some rule.  
+
+NOTE: Both, `forwardFunction` and `backwardFunction` require a function as input. Thus, one can also think about this type of open game as a "lifting" of a standard function into an open game. 
+
+#### Moves of nature
+
+Many interesting games contain elements of chance. Moreover, the traditional approach to model games of uncertainty a la Harsanyi requires moves of nature which determine the players' types. 
+
+There are two ways in which you can embed nature into the game. Let us begin with the simplest one: 
+
+        natureDraw distribution =  [opengame|
+
+            inputs    :   ;
+            feedback  :   ;
+
+            :-----:
+            inputs    :   ;
+            feedback  :   ;
+            operation : nature distribution ;
+            outputs   : draw ;
+            returns   :   ;
+            :-----:
+
+            outputs  :  draw  ;
+            returns  :    ;
+
+        |]
+
+`natureDraw` takes a probability distribution as input and outputs a single draw from that distribution. 
+
+
+        liftStochasticForward process =  [opengame|
+
+            inputs    : x ;
+            feedback  :   ;
+
+            :-----:
+            inputs    : x ;
+            feedback  :   ;
+            operation : liftStochastic process;
+            outputs   : draw ;
+            returns   :   ;
+            :-----:
+
+            outputs   : draw  ;
+            returns   :   ;
+
+        |]
+
+`liftStochasticForward` is generalized version of `natureDraw` as it implements a functional stochastic process.[^liftStoch] It is also a generalization of `forwardFunction` which only allows deterministic processes. 
+
+NOTE: We are still in the context of representing a strategic interaction. We mentioned above, one analogy is to think about the representation in terms of open games as a piping system. To push this analogy further, note that at this stage the piping is about "potentiality". So far, we are not creating any concrete information, we are just setting up how information would be flushed through our game.
+
+We reiterate this here, as in our experience the probabilistic components introduced above can lead to confusion. The above `natureDraw` and `liftStochasticForward` are *not* specific draws. They represent stochastic processes before we draw from them.
+
+Later, when we start analyzing games and, say, consider specific outcomes for a given strategies, we might indeed encounter specific draws from these processes. But not for now.
+
+This also completes the open games specific constructions one needs for representing games. There is one last piece of thing we need to get you running: We need a way to specify payoff functions as well as stochastic processes. We will describe this in the next section.
+
+#### Haskell auxiliaries 
+
+So far, our system is embedded in Haskell in a way that minimizes your direct contact with Haskell. In the future we may put that contact to actually zero. But for now, you will need to express some components in Haskell. Luckily, the elements we need are relatively simple. 
+
+Let us begin with the definition of functions. We need functions in order to describe the payoffs of players and to supply the `forwardFunction` as well as `backwardFunction` with inputs. 
+
+The syntax in Haskell is straightforward: 
+
+    functionName arg1 arg2 ... argN = functionBody
+
+In Haskell you declare a function using the equal sign. On the left hand side you declare the name of the function first, followed by arguments. On the right hand side, you declare the function body using the available arguments. For instance, generating the average of two values:
+
+    average x y = (x + y) / 2
+
+Or, closer to home, a utility function for one player of the Prisoner's Dilemma:
+
+    pdPayoffs x y | x == Cooperate && y == Cooperate = 3 
+                  | x == Cooperate && y == Defect    = 0
+                  | x == Defect    && y == Cooperate = 4
+                  | x == Defect    && y == Defect    = 1
+
+(Not necessarily the most simplest way of defining such a function but hopefully easy to understand for people with no background in Haskell so far)
+
+The second element needed is the feeding of stochastic processes. We make our lives very simple here: There are two convenience functions `uniformDist` as well as `distFromList` which help to build distributions. 
+
+`uniformDist` does what the name suggests. It creates a uniform distribution given some lists of inputs. For instance, for a dice you would define:
+
+    dice = uniformDist [1,2,3,4,5,6] 
+
+To create a tailored, finite distribution you can use `distFromList` which expects a list of outcome, probability pairs. For example, a coin can be implemented as:
+
+    coin = distFromList [("Head", 0.5), ("Tail", 0.5)]
+
+TODO: Additional info probability -- maybe later if we change the underlying module
+TODO: How to implement stochastic processes?
 
 ## Examples
 
-### Decision Problem
-### Piping of information flow
-### Single decision
+### Single decision problem
 ### Simultaneous moves
 ### Sequential moves
 ### Mixed strategies
 ### Incomplete information and updating -> single player and auction
-### Piping together different modules 
+### Piping together different modules: Voting game 
 
 ## Analyzing Games
 
 ### Overview
 
-After all that work, what can you actually do with a game that is represented? You can analyze it in different ways. 
+After all that work, what can you actually do with a game that is represented You can analyze it in different ways. 
 
 0. You can check whether a given strategy tuple, that you need to come-up with!, is an equilibrium. You will receive a message like this, if it is:
 
@@ -206,6 +399,9 @@ NOTE: If you are familiar with game theory, then most what we describe here prob
 
 As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy is really a function 
 
+[^liftStoch]:
+Note that the `liftStochastic` could be used to implement the `natureDraw` function by consider a constant stochastic process. Still, we think models are more transparent and easier to read if we distinguish between these two operations.
+
 # Appendix
 
 ## Alternative syntax
@@ -213,3 +409,4 @@ As many teachers of game theory can attest to, for beginning students it is ofte
 ## Extensions
 
 ### Different decision criteria
+

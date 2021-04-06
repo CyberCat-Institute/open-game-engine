@@ -59,8 +59,7 @@ dependentDecision name ys = OpenGame {
                   in deviationsInContext 0 name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
 
-
-
+-- Support functionality for constructing open games
 fromLens :: (x -> y) -> (x -> r -> s) -> StochasticStatefulBayesianOpenGame '[] '[] x s y r
 fromLens v u = OpenGame {
   play = \Nil -> StochasticStatefulOptic (\x -> return (x, v x)) (\x r -> return (u x r)),
@@ -80,3 +79,11 @@ liftStochastic f = OpenGame {
   play = \Nil -> StochasticStatefulOptic (\x -> do {y <- f x; return ((), y)}) (\() () -> return ()),
   evaluate = \_ _ -> Nil}
 
+-- Support functionality for stochastic processes (also interface to the probability module in use)
+
+-- uniform distribution
+uniformDist = uniform
+
+-- tailored distribution from a list
+
+distFromList = fromFreqs

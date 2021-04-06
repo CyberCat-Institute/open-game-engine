@@ -24,10 +24,10 @@ decision actionSpace payoffFunction playerName = [opengame|
     feedback  :   ;
     operation : dependentDecision playerName (\y -> actionSpace) ;
     outputs   : y ;
-    returns   : payoffFunction y ;
+    returns   : payoffFunction y x r ;
     :-----:
 
-    outputs  : x ;
+    outputs  : y ;
     returns  : r ;
 
 |]
@@ -46,13 +46,88 @@ decisionNoObs actionSpace payoffFunction playerName = [opengame|
     returns   : payoffFunction y ;
     :-----:
 
-    outputs  : x ;
+    outputs  : y ;
     returns  : r ;
 
 |]
 
 
-  
+-- 2. "Forward" (covariant) function: from past to future
+forwardFunction function = [opengame|
+
+    inputs    : x ;
+    feedback  :   ;
+
+    :-----:
+    inputs    :   ;
+    feedback  :   ;
+    operation : fromFunctions function id ;
+    outputs   : y ;
+    returns   :   ;
+    :-----:
+
+    outputs  : y ;
+    returns  :   ;
+
+|]
+
+ -- 3. "Backward" (contravariant) function: from future to past
+backwardFunction function = [opengame|
+
+    inputs    :   ;
+    feedback  : s ;
+
+    :-----:
+    inputs    :   ;
+    feedback  :   ;
+    operation : fromFunctions id function ;
+    outputs   : s ;
+    returns   : r ;
+    :-----:
+
+    outputs  :    ;
+    returns  :  r ;
+
+|]
+
+-- 4. Drawing from a probability distribution
+natureDraw distribution =  [opengame|
+
+    inputs    :   ;
+    feedback  :   ;
+
+    :-----:
+    inputs    :   ;
+    feedback  :   ;
+    operation : nature distribution ;
+    outputs   : draw ;
+    returns   :  ;
+    :-----:
+
+    outputs   :  draw  ;
+    returns   :    ;
+
+|]
+
+-- 5. lift a stochasticProcess forward
+liftStochasticForward process =  [opengame|
+
+    inputs    : x ;
+    feedback  :   ;
+
+    :-----:
+    inputs    : x ;
+    feedback  :   ;
+    operation : liftStochastic process;
+    outputs   : draw ;
+    returns   :   ;
+    :-----:
+
+    outputs   : draw  ;
+    returns   :    ;
+
+|]
+
 
 generateGame "pureDecision2" ["actionSpace","payoffFunction","playerName"] $
   (Block ["observation"] []
