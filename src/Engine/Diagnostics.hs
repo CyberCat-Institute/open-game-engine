@@ -89,16 +89,16 @@ instance Apply Concat String (String -> String) where
 generateOutput :: forall xs.
                ( MapL   PrintOutput xs     (ConstMap String xs)
                , FoldrL Concat String (ConstMap String xs)
-               ) => List xs -> String
-generateOutput hlist =
+               ) => List xs -> IO ()
+generateOutput hlist = putStrLn $
   "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
 
 -- output equilibrium relevant information
 generateIsEq :: forall xs.
                ( MapL   PrintIsEq xs     (ConstMap String xs)
                , FoldrL Concat String (ConstMap String xs)
-               ) => List xs -> String
-generateIsEq hlist =
+               ) => List xs -> IO ()
+generateIsEq hlist = putStrLn $
   "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
 
 
