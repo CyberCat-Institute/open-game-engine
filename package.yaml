@@ -45,6 +45,19 @@ dependencies:
     - comonad
     - haskeline
 
+executables:
+  open-games-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - open-games-hs
+
+
+
 tests:
   test-open-games:
     main: THTests
