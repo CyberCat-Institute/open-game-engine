@@ -16,6 +16,7 @@ import Text.Read
 
 import Engine.AtomicGames
 import Engine.BayesianGames
+import Engine.Diagnostics
 import Engine.OpenGames
 import Engine.OpticClass
 import Engine.TLL
@@ -45,12 +46,12 @@ reservePrice = 1
 -- 1 Preliminary stuff
 
 -- Order bids from large to small
-allocation :: [(String, Values)] -> [(String, Values)]
-allocation  = sortBy (flip (\(_,v1) (_,v2) -> compare v1 v2 ))
+orderAllocation :: [(String, Values)] -> [(String, Values)]
+orderAllocation  = sortBy (flip (\(_,v1) (_,v2) -> compare v1 v2 ))
 
 -- Determine k-max bid
 kMaxBid :: Int -> [(String, Values)] ->  Values
-kMaxBid k ls = snd $  allocation ls !! (k-1)
+kMaxBid k ls = snd $  orderAllocation ls !! (k-1)
 
 -- k- price auction rule, i.e. the sequence for winning bidders is ignored, winners always pay k-highest price
 setPaymentKMax :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
@@ -96,14 +97,19 @@ setPayoff (name,value) payments =
 
 
 
--- Determine the payments given k slots being allocated through auction; and _noLotteries_ slots through lottery
+-- Determine the payments given k-highest price (1,2..) and no of winnerSlots being allocated through auction; and _noLotteries_ slots through lottery
 auctionPayment :: (Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)])
-                 -- ^ Payment function 
-                 -> Int -> Int -> [(String, Values)]
+                 -- ^ Payment function
+                 -> Int -> Int -> Int -> [(String, Values)]
                  -- ^ Parameters
                  -> [(String, Values)]
-auctionPayment paymentFunction k noLotteries ls  = paymentFunction reservePrice kmax noLotteries 0 0 (auctionWinner kmax ls)
-   where kmax = kMaxBid k ls
+auctionPayment paymentFunction kPrice winnerSlots noLotteries ls =
+  if kMax > kThreshold
+     then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinner kThreshold ls)
+     else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinner kThreshold ls)
+  where kMax = kMaxBid kPrice ls
+        kThreshold = kMaxBid winnerSlots ls
+
 
 
 -- Random shuffle of bids
@@ -132,7 +138,7 @@ natureDrawsTypeStage name = [opengame|
   |]
 
 -- Transforms the payments into a random reshuffling
-transformPayments k noLotteries paymentFunction = [opengame|
+transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    : bids ;
    feedback  :      ;
@@ -146,7 +152,7 @@ transformPayments k noLotteries paymentFunction = [opengame|
 
    inputs    : shuffledBids ;
    feedback  :      ;
-   operation : forwardFunction (auctionPayment paymentFunction k noLotteries) ;
+   operation : forwardFunction (auctionPayment paymentFunction kPrice kSlots noLotteries) ;
    outputs   : payments ;
    returns   :      ;
    :-----------------:
@@ -158,7 +164,7 @@ transformPayments k noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding3 k noLotteries paymentFunction = [opengame| 
+bidding3 kPrice kSlots noLotteries paymentFunction = [opengame| 
 
    inputs    :      ;
    feedback  :      ;
@@ -202,7 +208,7 @@ bidding3 k noLotteries paymentFunction = [opengame|
 
    inputs    :  [("Alice",aliceDec),("Bob",bobDec),("Carol",carolDec)]  ;
    feedback  :      ;
-   operation :   transformPayments k noLotteries paymentFunction ;
+   operation :   transformPayments kPrice kSlots noLotteries paymentFunction ;
    outputs   :  payments ;
    returns   :      ;
    :-----------------:
@@ -269,10 +275,8 @@ thresholdStrat3' =
 
 ---------------
 -- 1 Equilibria
--- follows payment rule in  Proposal (https://notes.ethereum.org/@barnabe/S1eUmr72I)
-
 -- 1.0 Eq. game with 3 players
-equilibriumGame3 k noLotteries strat = evaluate (bidding3 k noLotteries setPayment) strat void
+equilibriumGame3 kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSlots noLotteries setPayment) strat void
 
 
 ---------------
@@ -280,7 +284,7 @@ equilibriumGame3 k noLotteries strat = evaluate (bidding3 k noLotteries setPayme
 -- follows k-price auction
 
 -- 2.0 Eq. game with 3 players
-equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setPaymentKMax) strat void
+equilibriumGame3KMax kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSlots noLotteries setPaymentKMax) strat void
 
 
 
@@ -288,23 +292,23 @@ equilibriumGame3KMax k noLotteries strat = evaluate (bidding3 k noLotteries setP
 -- 2 Interactive session
 
 
--- 3 players with 1 auction slot and 1 lottery slot - truthful bidding - not an eq
--- (equilibriumGame3 1 1 truthfulStrat3)
+-- 3 players with 1 auction slot, 2nd highest price, and 1 lottery slot - truthful bidding - not an eq
+-- generateIsEq $ equilibriumGame3 2 1 1 truthfulStrat3
 
--- 3 players with 1 auction slot and 1 lottery slot - threshold bidding - not an eq
--- (equilibriumGame3 1 1 thresholdStrat3)
+-- 3 players with 1 auction slot, 2nd highest price is paid, and 1 lottery slot - threshold bidding - is an eq
+-- generateIsEq $ equilibriumGame3 2 1 1 thresholdStrat3
 
 -- NOTE how to come from the non equilibrium to the equilibrium
 -- Let us illustrate this with a different payment rule
 
 -- 3 players with 1 auction slot and 1 lottery slot AND 2nd price rule - strategies before not an equilibrium
--- mapM print $ equilibriumGame3KMax 1 1 thresholdStrat3
+-- generateIsEq $ equilibriumGame3KMax 2 1 1 thresholdStrat3
 
 -- Truthful bidding is also not an equilibrium
--- mapM print $ equilibriumGame3KMax 1 1 truthfulStrat3
+-- generateIsEq $ equilibriumGame3KMax 2 1 1 truthfulStrat3
 
--- But the alternative threshold strategy is
--- mapM print $ equilibriumGame3KMax 1 1 thresholdStrat3'
+-- But the alternative threshold strategy is an equilibrium
+-- generateIsEq $ equilibriumGame3KMax 2 1 1 thresholdStrat3'
 
 
 
