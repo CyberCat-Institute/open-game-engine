@@ -47,6 +47,15 @@ iso f g = L (\x -> return ((), f x)) (\() r -> return (g r))
   u (Left a) r   = ul a r
   u (Right a') r = um a' r
 
+(+++++) :: (Num prob) => L prob x s y r -> L prob x' s' y' r'
+                      -> L prob (Either x x') (Either s s') (Either y y') (Either r r')
+(+++++) (L vl ul) (L vm um) = L v u where
+  v (Left x)   = do {(a, y) <- vl x; return (Left a, Left y)}
+  v (Right x') = do {(a', y') <- vm x'; return (Right a', Right y')}
+  u (Left a)   (Left r)   = do {s <- ul a r; return (Left s)}
+  u (Right a') (Right r') = do {s' <- um a' r'; return (Right s')}
+  u _          _          = error "Use Idris instead"
+
 -- Contexts
 
 data C prob x s y r where C :: T prob (a, x) -> (a -> y -> T prob r) -> C prob x s y r
