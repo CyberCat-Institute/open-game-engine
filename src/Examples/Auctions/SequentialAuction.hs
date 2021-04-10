@@ -38,7 +38,7 @@ import Preprocessor.Compile
 
 type Values = Double 
 
-values = [10,30,60]
+values = [20,30,60]
 
 reservePrice = 1
 
@@ -63,14 +63,6 @@ setPaymentKMax resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,w
            if noLottery > lotteriesGiven then (name,resPrice) : setPaymentKMax resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
                                          else (name,0) : setPaymentKMax resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
 
-
--- Mark the auctionWinners 
-auctionWinner :: Values -> [(String, Values)] -> [(String, Values,Bool)]
-auctionWinner kmax []= []
-auctionWinner kmax ls@((name,b):bs)=
-  if b < kmax then (name,b,False) : auctionWinner kmax bs
-              else (name,b,True)  : auctionWinner kmax bs
-
 -- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
 setPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
 setPayment _        _    _         _             _               []                     = []
@@ -82,6 +74,14 @@ setPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winne
       else
            if noLottery > lotteriesGiven then (name,resPrice) : setPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
                                          else (name,0) : setPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+
+
+-- Mark the auctionWinners 
+auctionWinner :: Values -> [(String, Values)] -> [(String, Values,Bool)]
+auctionWinner kmax []= []
+auctionWinner kmax ls@((name,b):bs)=
+  if b < kmax then (name,b,False) : auctionWinner kmax bs
+              else (name,b,True)  : auctionWinner kmax bs
 
 -- Select the payment for a player given the list of payments
 selectPayoffs :: String -> [(String,Values)] -> Values
@@ -98,6 +98,7 @@ setPayoff (name,value) payments =
 
 
 -- Determine the payments given k-highest price (1,2..) and no of winnerSlots being allocated through auction; and _noLotteries_ slots through lottery
+-- NOTE the restriction of k-highest price and number of slots
 auctionPayment :: (Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)])
                  -- ^ Payment function
                  -> Int -> Int -> Int -> [(String, Values)]
@@ -216,7 +217,7 @@ bidding3 kPrice kSlots noLotteries paymentFunction = [opengame|
    outputs   :      ;
    returns   :      ;
    |]
- 
+
 -- B Analysis
 -------------
 
@@ -231,8 +232,8 @@ stratBidderThreshold = Kleisli $ (\(_,x) -> if x >= 50 then pureAction 20 else p
 
 -- Bidding with different threshold
 stratBidderThreshold' = Kleisli $ (\(_,x) -> case () of
-                                              _ | x < 30 -> pureAction 0
-                                                | x == 30 -> pureAction 10 
+                                              _ | x < 30    -> pureAction 0
+                                                | x == 30   -> pureAction 10 
                                                 | otherwise ->  pureAction 20)
 
 
@@ -282,7 +283,6 @@ equilibriumGame3 kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSl
 ---------------
 -- 2 Equilibria
 -- follows k-price auction
-
 -- 2.0 Eq. game with 3 players
 equilibriumGame3KMax kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSlots noLotteries setPaymentKMax) strat void
 
@@ -297,9 +297,6 @@ equilibriumGame3KMax kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice
 
 -- 3 players with 1 auction slot, 2nd highest price is paid, and 1 lottery slot - threshold bidding - is an eq
 -- generateIsEq $ equilibriumGame3 2 1 1 thresholdStrat3
-
--- NOTE how to come from the non equilibrium to the equilibrium
--- Let us illustrate this with a different payment rule
 
 -- 3 players with 1 auction slot and 1 lottery slot AND 2nd price rule - strategies before not an equilibrium
 -- generateIsEq $ equilibriumGame3KMax 2 1 1 thresholdStrat3
