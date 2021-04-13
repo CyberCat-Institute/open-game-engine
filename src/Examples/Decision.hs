@@ -2,11 +2,9 @@
 module Examples.Decision where
 
 import GHC.Generics
-import Engine.Engine
 
-import Preprocessor.THSyntax
-import Preprocessor.Compile
-import Preprocessor.AbstractSyntax
+import Engine.Engine
+import Preprocessor.Preprocessor
 
 
 -- A single decision with no prior input or output

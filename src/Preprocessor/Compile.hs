@@ -1,8 +1,22 @@
-{-# Language TemplateHaskell #-}
 {-# Language NamedFieldPuns #-}
+{-# Language TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes  #-}
 
-module Preprocessor.Compile where
+module Preprocessor.Compile
+  ( compileLiteral
+  , compileRange
+  , compileLambda
+  , compilePattern
+  , compLine
+  , convertGame
+  , compileGameLine
+  , compileAST
+  , parseLambdaAsOpenGame
+  , parseLambdaAsExp
+  , game
+  , parseVerboseGame
+  , opengame
+  ) where
 
 import Preprocessor.Parser
 import Preprocessor.Lambda
