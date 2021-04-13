@@ -2,10 +2,19 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Engine.OpticClass where
+module Engine.OpticClass
+  ( Stochastic(..)
+  , Vector(..)
+  , StochasticStatefulOptic(..)
+  , StochasticStatefulContext(..)
+  , Optic(..)
+  , Precontext(..)
+  , Context(..)
+  , ContextAdd(..)
+  , identity
+  ) where
 
 
 import           Control.Monad.State                hiding (state)

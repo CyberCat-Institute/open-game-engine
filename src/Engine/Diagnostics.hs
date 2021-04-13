@@ -1,13 +1,19 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds, GADTs, TypeFamilies, FlexibleInstances, FlexibleContexts, PolyKinds, ScopedTypeVariables, MultiParamTypeClasses, UndecidableInstances, TypeApplications #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeApplications #-}
 
 
-
-module Engine.Diagnostics (  DiagnosticInfoBayesian(..)
-                          , generateOutput
-                          , generateIsEq
-                          )
-                         where
+module Engine.Diagnostics
+  ( DiagnosticInfoBayesian(..)
+  , generateOutput
+  , generateIsEq
+  ) where
 
 import Engine.OpticClass
 import Engine.TLL

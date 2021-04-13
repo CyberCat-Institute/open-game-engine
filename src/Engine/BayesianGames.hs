@@ -1,7 +1,24 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds, GADTs, TypeSynonymInstances, TypeFamilies, FlexibleInstances, FlexibleContexts, PolyKinds, ScopedTypeVariables, MultiParamTypeClasses, UndecidableInstances, TypeOperators, TypeApplications #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Engine.BayesianGames where
+module Engine.BayesianGames
+  ( StochasticStatefulBayesianOpenGame(..)
+  , Agent(..)
+  , dependentDecision
+  , fromLens
+  , fromFunctions
+  , nature
+  , liftStochastic
+  , uniformDist
+  , distFromList
+  , pureAction
+  ) where
 
 
 import           Control.Arrow                      hiding ((+:+))

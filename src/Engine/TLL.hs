@@ -1,10 +1,29 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators, DataKinds, GADTs, TypeFamilies, FlexibleInstances, FlexibleContexts, PolyKinds, ScopedTypeVariables, MultiParamTypeClasses, UndecidableInstances, FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                 #-}
 
 
 -- Parts of this file were written by Sjoerd Visscher 
 
-module Engine.TLL where
+module Engine.TLL
+  ( List(..)
+  , Apply(..)
+  , Unappend(..)
+  , MapL(..)
+  , FoldrL(..)
+  , ConstMap(..)
+  , SequenceList(..)
+  , type (+:+)
+  , (+:+)
+  ) where
 
 import Control.Applicative
 
