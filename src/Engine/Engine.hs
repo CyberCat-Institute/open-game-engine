@@ -5,6 +5,7 @@ module Engine.Engine
   , decisionNoObs
   , forwardFunction
   , backwardFunction
+  , nature
   , natureDraw
   , liftStochasticForward
   , StochasticStatefulBayesianOpenGame(..)
@@ -15,6 +16,7 @@ module Engine.Engine
   , uniformDist
   , distFromList
   , pureAction
+  , playDeterministically
   , DiagnosticInfoBayesian(..)
   , generateOutput
   , generateIsEq
@@ -41,12 +43,15 @@ module Engine.Engine
   , SequenceList(..)
   , type (+:+)
   , (+:+)
+  , Kleisli(..)
   ) where
 
 -- | File organizes the imports of the engine to streamline the import of relevant functionality
 import Engine.AtomicGames
-import Engine.BayesianGames hiding (nature, liftStochastic)
+import Engine.BayesianGames hiding (liftStochastic)
 import Engine.OpenGames
 import Engine.OpticClass
 import Engine.Diagnostics
 import Engine.TLL
+
+import Control.Arrow (Kleisli(..))

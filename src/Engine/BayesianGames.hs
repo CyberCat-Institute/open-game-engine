@@ -18,6 +18,7 @@ module Engine.BayesianGames
   , uniformDist
   , distFromList
   , pureAction
+  , playDeterministically
   ) where
 
 
@@ -105,5 +106,7 @@ uniformDist = uniform
 distFromList = fromFreqs
 
 -- pure action (no randomization)
-pureAction :: a -> Stochastic a
-pureAction = certainly 
+pureAction x = Kleisli $ const $ certainly x
+
+playDeterministically :: a -> Stochastic a
+playDeterministically = certainly
