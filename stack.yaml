@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-14.16
+resolver: lts-15.1
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,7 +39,8 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps:
+  - probability-0.2.6@sha256:6d85d961d85fd5d1a35b90fe77510f6fcc6a8f20e8ed503219c38378de9cb3cd,2857
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
