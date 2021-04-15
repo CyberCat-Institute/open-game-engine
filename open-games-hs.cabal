@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 423512277b5605e2b09ecf2044fbf21a0e500581b84ef2a5b12f4ccd192a3a5c
+-- hash: 01a335bb1197311c765623f443942d26376b00cc29bb0382303d63fcbc7fdf7d
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -81,6 +81,7 @@ library
   other-modules:
       OpenGames.Engine.Costrategies
       OpenGames.Examples.Consensus.DepositGame
+      OpenGames.Examples.Test
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
       Paths_open_games_hs
