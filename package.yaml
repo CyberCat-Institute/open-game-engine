@@ -30,6 +30,7 @@ library:
     - Preprocessor.Types
     - Examples.Bimatrix
     - Examples.Bayesian
+    - Examples.Decision
     - Examples.Sequential
 
 dependencies:

@@ -193,7 +193,7 @@ Here is the second version:
             feedback  :   ;
             operation : dependentDecision playerName (\y -> actionSpace) ;
             outputs   : y ;
-            returns   : payoffFunction y ;
+            returns   : payoffFunction y r;
             :-----:
 
             outputs   : y ;
@@ -345,12 +345,14 @@ The second element needed is the feeding of stochastic processes. We make our li
 
 To create a tailored, finite distribution you can use `distFromList` which expects a list of outcome, probability pairs. For example, a coin can be implemented as:
 
-    coin = distFromList [("Head", 0.5), ("Tail", 0.5)]
+    coin = distFromList [("Head", 1), ("Tail", 1)]
 
 TODO: Additional info probability -- maybe later if we change the underlying module
 TODO: How to implement stochastic processes?
 
 ## Examples
+
+In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again.
 
 ### Single decision problem
 ### Simultaneous moves
@@ -362,17 +364,33 @@ TODO: How to implement stochastic processes?
 ## Analyzing Games
 
 ### Overview
+TODO: Say something about the construction of the strategies 
+
 
 After all that work, what can you actually do with a game that is represented You can analyze it in different ways. 
 
-0. You can check whether a given strategy tuple, that you need to come-up with!, is an equilibrium. You will receive a message like this, if it is:
+0. You can check whether a given strategy tuple (that you need to come-up with!) is an equilibrium. You will receive a message like this, if it is:
+        
+        ----Analytics begin----
+        Strategies are in equilibrium
+        NEWGAME: 
+        ----Analytics end----
 
-xxx
-
+ 
 and a message like this, if it is not:
 
-xxx
+        ----Analytics begin----
+        Strategies are NOT in equilibrium. Consider the following profitable deviations: 
 
+        Player: player1
+        Optimal move: 5.0
+        Current Strategy: fromFreqs [(4.0,1.0)]
+        Optimal Payoff: 0.0
+        Current Payoff: -1.0
+        Observable State: ()
+        Unobservable State: "((),())
+
+As you can see, the message contains information about the particular aspects of a specific strategy. It outputs such information for the whole strategy tuple. 
 If your game depends on outside parameters, you can check for a whole class of parameters
 
 xxx
@@ -390,14 +408,45 @@ Here is an example:
 
 
 ### Supplying strategies
+TODO Explain better Kleisli types used
 
-If you want to check for equilibria, you need to supply strategies. Which means that you need to supply a function for each move that can be made. Which means you need to know how to define functions in our system. 
+
+If you want to check for equilibria, you need to supply strategies. The strategies you need to supply are akin to behavioral strategies in classical game theory. Which means that you need to supply a function for each move that can be made. Which means you need to know how to define functions in our system. 
 
 Note, that even if there are no previous moves, no previous information to observe on which a strategy would be conditioned, you still supply a function -- just a constant function. This may look strange at the beginning but in essence it helps to make the system over all more uniform. And do not worry! You will not notice it much because we provide syntactic sugar which allow you to forget about this if you want to. 
 
 NOTE: If you are familiar with game theory, then most what we describe here probably makes sense to you. After all, if we take the Ultimatum Game, what you have to supply for the receiver is a function: given the offer by the sender, should the receiver accept or reject? Similarly, in a Bayesian Game like an auction, if one player observes her type, her strategy is function from her type space into the allowed bids. 
 
-As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy is really a function 
+As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy often really is a function.
+
+
+#### Construction of a single strategy
+
+The strategies you need to supply are expected to be of a certain "shape" or more precisely, type:
+
+     Kleisli Stochastic a b
+
+This type is from a relatively advanced part of Haskell. You do not need to worry about it to much. The reason for its use in our framework is that it makes several problems easier. 
+
+At the same time it is probably not easiest to grasp what is going on. 
+
+
+#### Construction of the complete strategy tuple
+
+In order to check an equilibrium, you need to supply a strategy for each player (and each occasion where a move can be made). So, once you have the construction for each single player working you still need to put them together into a "tuple".
+
+For the combined strategies, we are essentially constructing a list. The construction is as such:
+
+    stratTuple = strat1 ::- strat2 ::- ... ::- stratN ::- Nil
+
+The `::-` is a particular list constructor (in other contexts of referred to as `cons`). The constructor takes a single element and adds it to an existing list, i.e.:
+    
+    _element_ ::- _existingList_ 
+
+Note, each list has a `Nil` as a last element. 
+
+NOTE: In case you wonder, this is not the standard list implementation. In Haskell lists only allow elements of the same type. The list constructor above allows heterogenous types. The reason for this change is simple: The shape of strategies can differ starkly for different players. Some may be required to provide a single action, others a function which depends on several observations. 
+
 
 [^liftStoch]:
 Note that the `liftStochastic` could be used to implement the `natureDraw` function by consider a constant stochastic process. Still, we think models are more transparent and easier to read if we distinguish between these two operations.
