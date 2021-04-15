@@ -83,7 +83,7 @@ modifiedHaskell = emptyDef
                 , Tok.identLetter    = alphaNum <|> oneOf "_'"
                 , Tok.opStart        = Tok.opLetter modifiedHaskell
                 , Tok.opLetter       = oneOf ":!#$%&*+./<=>?@\\^-~"
-                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "-<", ";", "|", "<<=", "||", "=>>"]
+                , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "$", "-<", ";", "|", "<<=", "||", "=>>"]
                 , Tok.reservedNames  = langaugeKeywords
                 , Tok.caseSensitive  = True
                 }
@@ -130,7 +130,8 @@ contents p = do
 mkInfix :: String -> Parser (Lambda -> Lambda -> Lambda)
 mkInfix op = reservedOp op >> pure (Ifix op)
 
-operators = [ [Infix (mkInfix ">>=") AssocLeft]
+operators = [ [Infix (mkInfix "$") AssocRight]
+            , [Infix (mkInfix ">>=") AssocLeft]
             , [Infix (mkInfix "*>") AssocLeft
               ,Infix (mkInfix "<*") AssocLeft
               ,Infix (mkInfix "<*>") AssocLeft
@@ -304,7 +305,7 @@ parseTwoLines kw1 kw2 parseP parseE =
 
 parseInput = parseTwoLines "inputs" "feedback"
 
-parseOutput = parseTwoLines "returns" "outputs"
+parseOutput = parseTwoLines "outputs" "returns" 
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
@@ -312,7 +313,7 @@ parseVerboseLine :: Parser p -> Parser e -> Parser (ParsedLine p e)
 parseVerboseLine parseP parseE = do
   (input, feedback) <- option ([], []) (parseInput parseE parseP)
   program <- reserved "operation" *> colon *> parseE <* semi
-  (returns, outputs) <- option ([], []) (parseOutput parseE parseP)
+  (outputs,returns) <- option ([], []) (parseOutput parseP parseE)
   pure $ MkParsedLine outputs returns program feedback input
 
 
@@ -320,7 +321,5 @@ parseVerboseSyntax :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p 
 parseVerboseSyntax parseP parseE parseL =
   do (input, feedback) <- try (parseInput parseP parseE <* parseDelimiter) <|> pure ([], [])
      lines <- many parseL
-     (returns, output) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
-     return $ MkParsedBlock input feedback lines output returns
-
-
+     (outputs,returns) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
+     return $ MkParsedBlock input feedback lines returns outputs
