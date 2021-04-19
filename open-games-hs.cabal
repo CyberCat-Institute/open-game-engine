@@ -1,0 +1,115 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: e7ed0e3c2e3cf595ab366f436c069435a9df623deba5fe7ed4df16cd0db0cb4c
+
+name:           open-games-hs
+version:        0.1.0.0
+synopsis:       Haskell implementation of open games
+category:       Math
+homepage:       https://github.com/https://github.com/philipp-zahn/open-games-hs#readme
+bug-reports:    https://github.com/https://github.com/philipp-zahn/open-games-hs/issues
+author:         Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer:     philipp.zahn@protonmail
+copyright:      Jules Hedges, André Videla, Philipp Zahn & other contributors
+license:        AGPL
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/https://github.com/philipp-zahn/open-games-hs
+
+library
+  exposed-modules:
+      Engine.AtomicGames
+      Engine.BayesianGames
+      Engine.Diagnostics
+      Engine.Engine
+      Engine.OpenGames
+      Engine.OpticClass
+      Engine.TLL
+      Preprocessor.AbstractSyntax
+      Preprocessor.Compile
+      Preprocessor.Lambda
+      Preprocessor.Parser
+      Preprocessor.THSyntax
+      Preprocessor.TH
+      Preprocessor.Types
+      Examples.Bimatrix
+      Examples.Bayesian
+      Examples.Decision
+      Examples.Sequential
+  other-modules:
+      OpenGames.Engine.BayesianOpenGames
+      OpenGames.Examples.Bimatrix
+      Preprocessor.Preprocessor
+      Paths_open_games_hs
+  hs-source-dirs:
+      src
+  build-depends:
+      QuickCheck
+    , ad
+    , base >=4.7 && <5
+    , comonad
+    , mtl
+    , parsec
+    , poly
+    , probability
+    , profunctors
+    , template-haskell
+    , transformers
+  default-language: Haskell2010
+
+executable open-games-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_open_games_hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , ad
+    , base >=4.7 && <5
+    , comonad
+    , mtl
+    , open-games-hs
+    , parsec
+    , poly
+    , probability
+    , profunctors
+    , template-haskell
+    , transformers
+  default-language: Haskell2010
+
+test-suite test-open-games
+  type: exitcode-stdio-1.0
+  main-is: THTests.hs
+  other-modules:
+      ArrowTest
+      CensorTests
+      Paths_open_games_hs
+  hs-source-dirs:
+      tests
+  ghc-options: -main-is THTests
+  build-depends:
+      QuickCheck
+    , ad
+    , base
+    , comonad
+    , hspec
+    , mtl
+    , open-games-hs
+    , parsec
+    , poly
+    , probability
+    , profunctors
+    , template-haskell
+    , transformers
+  default-language: Haskell2010

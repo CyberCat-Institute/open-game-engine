@@ -5,12 +5,12 @@
 
 packages:
 - completed:
-    hackage: probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
+    hackage: probability-0.2.6@sha256:6d85d961d85fd5d1a35b90fe77510f6fcc6a8f20e8ed503219c38378de9cb3cd,2857
     pantry-tree:
       size: 2711
-      sha256: ee8953628fe301a29be9ef64ebd96f8c704969fec2b4e0b39243e6499911b767
+      sha256: 3ff942c55282f5e60db3f86ec1a0f69fd0134648838c23a990f1c72b8914602c
   original:
-    hackage: probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
+    hackage: probability-0.2.6@sha256:6d85d961d85fd5d1a35b90fe77510f6fcc6a8f20e8ed503219c38378de9cb3cd,2857
 snapshots:
 - completed:
     size: 533053
