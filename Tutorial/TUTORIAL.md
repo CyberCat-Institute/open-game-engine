@@ -354,10 +354,14 @@ TODO: How to implement stochastic processes?
 
 In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again.
 
-### Single decision problem
-### Simultaneous moves
-### Sequential moves
-### Mixed strategies
+
+[Single Decision](open-games-hs/src/Examples/Decision.hs)
+
+
+[Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs)
+
+
+### Sequential move games 
 ### Incomplete information and updating -> single player and auction
 ### Piping together different modules: Voting game 
 
