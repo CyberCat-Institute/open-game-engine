@@ -28,7 +28,7 @@ library:
     - Preprocessor.THSyntax
     - Preprocessor.TH
     - Preprocessor.Types
-    - Examples.Bimatrix
+    - Examples.SimultaneousMoves
     - Examples.Bayesian
     - Examples.Decision
     - Examples.Sequential

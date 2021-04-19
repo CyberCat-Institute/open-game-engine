@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e7ed0e3c2e3cf595ab366f436c069435a9df623deba5fe7ed4df16cd0db0cb4c
+-- hash: 82651bfeda4e7342084850a9ec28d35afaa12090eb27ef03df20079b28c5f2a9
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -41,13 +41,11 @@ library
       Preprocessor.THSyntax
       Preprocessor.TH
       Preprocessor.Types
-      Examples.Bimatrix
+      Examples.SimultaneousMoves
       Examples.Bayesian
       Examples.Decision
       Examples.Sequential
   other-modules:
-      OpenGames.Engine.BayesianOpenGames
-      OpenGames.Examples.Bimatrix
       Preprocessor.Preprocessor
       Paths_open_games_hs
   hs-source-dirs:
