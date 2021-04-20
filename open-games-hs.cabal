@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 82651bfeda4e7342084850a9ec28d35afaa12090eb27ef03df20079b28c5f2a9
+-- hash: 8f246346c599ce8c7f11b5e5978bdfaf4877fa021eae0b44b15e295743faf259
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -41,12 +41,12 @@ library
       Preprocessor.THSyntax
       Preprocessor.TH
       Preprocessor.Types
+      Preprocessor.Preprocessor
       Examples.SimultaneousMoves
       Examples.Bayesian
       Examples.Decision
       Examples.Sequential
   other-modules:
-      Preprocessor.Preprocessor
       Paths_open_games_hs
   hs-source-dirs:
       src
@@ -76,32 +76,6 @@ executable open-games-exe
     , ad
     , base >=4.7 && <5
     , comonad
-    , mtl
-    , open-games-hs
-    , parsec
-    , poly
-    , probability
-    , profunctors
-    , template-haskell
-    , transformers
-  default-language: Haskell2010
-
-test-suite test-open-games
-  type: exitcode-stdio-1.0
-  main-is: THTests.hs
-  other-modules:
-      ArrowTest
-      CensorTests
-      Paths_open_games_hs
-  hs-source-dirs:
-      tests
-  ghc-options: -main-is THTests
-  build-depends:
-      QuickCheck
-    , ad
-    , base
-    , comonad
-    , hspec
     , mtl
     , open-games-hs
     , parsec

@@ -28,6 +28,7 @@ library:
     - Preprocessor.THSyntax
     - Preprocessor.TH
     - Preprocessor.Types
+    - Preprocessor.Preprocessor
     - Examples.SimultaneousMoves
     - Examples.Bayesian
     - Examples.Decision
@@ -58,15 +59,3 @@ executables:
     - open-games-hs
 
 
-
-tests:
-  test-open-games:
-    main: THTests
-    source-dirs: tests
-    dependencies:
-      - open-games-hs
-      - template-haskell
-      - base
-      - probability
-      - hspec
-      - QuickCheck
