@@ -32,7 +32,7 @@ library:
     - Examples.SimultaneousMoves
     - Examples.Bayesian
     - Examples.Decision
-    - Examples.Sequential
+    - Examples.SequentialMoves
 
 dependencies:
     - base >=4.7 && <5
