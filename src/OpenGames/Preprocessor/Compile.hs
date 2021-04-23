@@ -53,6 +53,12 @@ compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
                                                (NormalB (compileLambda val))
                                                []]
                                          (compileLambda body)
+compileLambda (LComp stmts) = CompE (map compileStmt stmts)
+
+compileStmt :: LStmt -> Stmt
+compileStmt (LBindS pat exp) = BindS (compilePattern pat) (compileLambda exp)
+compileStmt (LNoBindS exp) = NoBindS (compileLambda exp)
+compileStmt (LLetS pat exp) = LetS [ValD (compilePattern pat) (NormalB $ compileLambda exp) []]
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i

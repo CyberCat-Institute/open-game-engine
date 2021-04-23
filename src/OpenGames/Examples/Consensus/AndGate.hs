@@ -38,7 +38,7 @@ successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff
 andGateGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon = [opengame|
   inputs : replicate numPlayers costOfCapital ;
   feedback : discard1 ;
-  operation : population (map (\n -> depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon) [1 .. numPlayers]) ;
+  operation : population [ depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon | n <- [1 .. numPlayers]] ;
   outputs : deposits ;
   returns : replicate numPlayers unit ;
 

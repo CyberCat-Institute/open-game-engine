@@ -5,6 +5,7 @@
 module OpenGames.Preprocessor.Lambda
   ( Lambda(..)
   , Literal(..)
+  , LStmt(..)
   , LRange(..)
   , Pattern(..)
   , ParsedBlock(..)
@@ -51,13 +52,21 @@ data Lambda
   | Ifix String Lambda Lambda
   | PFix String Lambda
   | LLet Pattern Lambda Lambda
-  deriving ( Eq, Show )
+  | LComp [LStmt]
+  deriving (Eq, Show)
+
+data LStmt
+  = LBindS Pattern Lambda
+  | LNoBindS Lambda
+  | LLetS Pattern Lambda
+  deriving (Eq, Show)
+
 
 data Literal
   = LInt Integer
   | LBool Bool
   | LString String
-  deriving ( Eq, Show )
+  deriving (Eq, Show)
 
 data Pattern
   = PVar Name           -- Just a variable
@@ -252,6 +261,16 @@ bracketed =
       })
   <|> pure (LList [])
 
+comprehension :: Parser Lambda
+comprehension = do
+  e <- expr
+  reservedOp "|"
+  LComp <$> ((++ [LNoBindS e]) <$> (sepBy1 parseStmt comma))
+    where
+      parseStmt :: Parser LStmt
+      parseStmt = LBindS <$> parsePattern <*> (reservedOp "<-" *> expr)
+              <|> LLetS <$> (reserved "let" *> parsePattern) <*> expr
+              <|> LNoBindS <$> expr
 
 term :: Parser Lambda
 term =  parens (try parseTuple <|> expr)
@@ -260,7 +279,7 @@ term =  parens (try parseTuple <|> expr)
     <|> variable
     <|> number
     <|> strLit
-    <|> brackets bracketed
+    <|> brackets (try comprehension <|> bracketed)
     <|> doNotation
     <|> parseLet
 
@@ -305,7 +324,7 @@ parseTwoLines kw1 kw2 parseP parseE =
 
 parseInput = parseTwoLines "inputs" "feedback"
 
-parseOutput = parseTwoLines "outputs" "returns" 
+parseOutput = parseTwoLines "outputs" "returns"
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
