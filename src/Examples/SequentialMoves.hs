@@ -74,7 +74,7 @@ rockPaperScissorsSeqReduced = [opengame|
 -- 1.  Analysis
 
 -- | Equilibrium definition
-isEquilibriumPrisonersDilemma strat = generateIsEq $ evaluate rockPaperScissorsSeqReduced  strat void
+isEquilibriumRPSSeq strat = generateIsEq $ evaluate rockPaperScissorsSeqReduced  strat void
 
 
 -- | Fix an arbitrary strategy by player 1
@@ -94,4 +94,4 @@ stratPlayer2 = Kleisli $ optimalReplyPlayer2
 stratTuple actionPlayer1 = stratPlayer1 actionPlayer1 ::- stratPlayer2 ::- Nil
 
 -- Example usage
---  isEquilibriumPrisonersDilemma (stratTuple Rock)
+--  isEquilibriumSeq (stratTuple Rock)
