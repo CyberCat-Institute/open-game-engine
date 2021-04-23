@@ -19,11 +19,11 @@ import Preprocessor.Preprocessor
 -- 1. Types and payoffs
 
 -- 1.0. Prisoner's dilemma
-data Action = Cooperate | Defect
+data ActionPD = Cooperate | Defect
   deriving (Eq, Ord, Show)
 
 -- | Payoff matrix for player i given i's action and j's action
-prisonersDilemmaMatrix :: Action -> Action -> Double
+prisonersDilemmaMatrix :: ActionPD -> ActionPD -> Double
 prisonersDilemmaMatrix Cooperate Cooperate   = 3
 prisonersDilemmaMatrix Cooperate Defect  = 0
 prisonersDilemmaMatrix Defect Cooperate  = 5
@@ -132,10 +132,10 @@ matchingPenniesReduced = [opengame|
 isEquilibriumPrisonersDilemma strat = generateIsEq $ evaluate prisonersDilemmaReduced strat void
 
 -- | Define pure single player strategies
-cooperateStrategy :: Kleisli Stochastic () Action
+cooperateStrategy :: Kleisli Stochastic () ActionPD
 cooperateStrategy = pureAction Cooperate
 -- ^ play _Cooperate_ with certainty
-defectStrategy :: Kleisli Stochastic () Action
+defectStrategy :: Kleisli Stochastic () ActionPD
 defectStrategy = pureAction Defect
 -- ^ play _Defect_ with certainty
 

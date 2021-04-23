@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8f246346c599ce8c7f11b5e5978bdfaf4877fa021eae0b44b15e295743faf259
+-- hash: d598e2044c84e3801b606d1b987f5f5030ff8459377d5cd7b06a568d68a98d30
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -47,6 +47,7 @@ library
       Examples.Decision
       Examples.Sequential
   other-modules:
+      Examples.SequentialMoves
       Paths_open_games_hs
   hs-source-dirs:
       src

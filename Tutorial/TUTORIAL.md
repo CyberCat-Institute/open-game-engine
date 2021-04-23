@@ -361,7 +361,7 @@ In the following, we consider a series of examples. We begin with decision probl
 [Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs)
 
 
-### Sequential move games 
+[Sequential move games](open-games-hs/src/Examples/) 
 ### Incomplete information and updating -> single player and auction
 ### Piping together different modules: Voting game 
 
