@@ -35,7 +35,7 @@ Progress on all of these fronts is happening. But we are not there yet.
 
 ### Basic structure of an _open game_
 
-The theory of open games is developed in a particular category theoretic structure which allows representations in terms of _string diagrams_. These are essentially two-dimensional diagrammatic representations. 
+The theory of open games is developed in a particular category theoretic structure which allows representations in terms of _string diagrams_. These are essentially two-dimensional diagrammatic representations of interactions. 
 
 ![Basic Game](GameSimple.png)
 
