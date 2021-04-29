@@ -59,6 +59,7 @@ deviationsInContext epsilon name x theta strategy u ys
                       payoff = strategicPayoff,
                       optimalMove = optimalPlay,
                       optimalPayoff = optimalPayoff,
+                      context = u ,
                       state = x,
                       unobservedState = show theta,
                       strategy = strategy}]

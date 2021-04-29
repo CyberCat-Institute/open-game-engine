@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d598e2044c84e3801b606d1b987f5f5030ff8459377d5cd7b06a568d68a98d30
+-- hash: 7d714fe8a78452e85b886390c4117e0211a03dcd7fde2b9acb2a4d0142fda4b6
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -45,17 +45,19 @@ library
       Examples.SimultaneousMoves
       Examples.Bayesian
       Examples.Decision
-      Examples.Sequential
-  other-modules:
       Examples.SequentialMoves
+      Examples.ExtractContextExample
+  other-modules:
       Paths_open_games_hs
   hs-source-dirs:
       src
   build-depends:
       QuickCheck
     , ad
+    , aeson
     , base >=4.7 && <5
     , comonad
+    , hvega
     , mtl
     , parsec
     , poly
@@ -75,8 +77,10 @@ executable open-games-exe
   build-depends:
       QuickCheck
     , ad
+    , aeson
     , base >=4.7 && <5
     , comonad
+    , hvega
     , mtl
     , open-games-hs
     , parsec

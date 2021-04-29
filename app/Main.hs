@@ -3,7 +3,9 @@ module Main where
 import Examples.Decision
 import Examples.SimultaneousMoves
 import Examples.SequentialMoves
+import Examples.ExtractContextExample
 
+import           Graphics.Vega.VegaLite
 
 main = do
   putStrLn "Single decision -->"
@@ -16,9 +18,6 @@ main = do
   isEquilibriumPrisonersDilemma strategTupleCooperate
   putStrLn "\n Prisoner's dilemma both defect -->"
   isEquilibriumPrisonersDilemma strategTupleDefect
-  putStrLn "\n Meeting in New York diff location -->"
-  isEquilibriumMeetingInNY strategyTupleGrandAndEmpire
-  putStrLn "\n Meeting in New York both ES -->"
-  isEquilibriumMeetingInNY strategyTupleEmpireState
   putStrLn "\n Matching Pennies - mixed with equal prob -->"
   isEquilibriumMatchingPennies strategyTupleMixed
+  toHtmlFile "contextPlayer1.html" meetingNYPlayer1

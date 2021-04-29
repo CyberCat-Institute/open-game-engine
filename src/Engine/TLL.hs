@@ -21,11 +21,14 @@ module Engine.TLL
   , FoldrL(..)
   , ConstMap(..)
   , SequenceList(..)
+  , Natural(..)
+  , IndexList(..)
   , type (+:+)
   , (+:+)
   ) where
 
 import Control.Applicative
+import Data.Kind
 
 infixr 6 ::-
 data List ts where
@@ -74,6 +77,7 @@ class MapL f xs ys where
 instance MapL f '[] '[] where
   mapL _ _ = Nil
 
+
 instance (Apply f x y, MapL f xs ys)
   => MapL f (x ': xs) (y ': ys) where
   mapL f (x ::- xs) = apply f x ::- mapL f xs
@@ -93,6 +97,7 @@ type family ConstMap (t :: *) (xs :: [*]) :: [*] where
   ConstMap _      '[]  = '[]
   ConstMap t (x ': xs) = t ': (ConstMap t xs)
 
+
 ----------------------------------------
 -- Features to ease feeding back outputs
 --
@@ -104,4 +109,24 @@ instance Applicative m => SequenceList m '[] '[] where
 
 instance (Applicative m, SequenceList m as bs) => SequenceList m (m a ': as) (a ': bs) where
     sequenceListA (a ::- b) = liftA2 (::-) a (sequenceListA b)
+
+
+-- Indexing on the list 
+
+data Nat = Z | S Nat
+
+data Natural a where
+  Zero :: Natural 'Z
+  Succ :: Natural a -> Natural ('S a)
+
+
+class IndexList (n :: Nat) (xs :: [Type]) (i :: Type) | n xs -> i where
+   fromIndex :: Natural n -> List xs -> i
+
+instance IndexList Z (x ': xs) x where
+   fromIndex Zero (x ::- _) = x
+
+instance IndexList n xs a => IndexList (S n) (x ': xs) a where
+   fromIndex (Succ n) (_ ::- xs) = fromIndex n xs
+
 
