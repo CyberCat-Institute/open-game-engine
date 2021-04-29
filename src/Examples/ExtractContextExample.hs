@@ -103,4 +103,7 @@ meetingNYPlayer1 =
          [ contextData
          , mark Bar []
          , enc []
+         , height 300
+         , width  200
+         , title "Unilateral Context for Player 1" []
          ]
