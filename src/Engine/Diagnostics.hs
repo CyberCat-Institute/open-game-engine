@@ -40,7 +40,7 @@ data DiagnosticInfoBayesian x y = DiagnosticInfoBayesian {
 showDiagnosticInfo :: (Show y, Ord y, Show x) => DiagnosticInfoBayesian x y -> String
 showDiagnosticInfo info =  
      "\n"    ++ "Player: " ++ player info
-     ++ "\n" ++ "Optimal move: " ++ (show $ optimalMove info)
+     ++ "\n" ++ "Optimal Move: " ++ (show $ optimalMove info)
      ++ "\n" ++ "Current Strategy: " ++ (show $ strategy info)
      ++ "\n" ++ "Optimal Payoff: " ++ (show $ optimalPayoff info)
      ++ "\n" ++ "Current Payoff: " ++ (show $ payoff info)

@@ -70,14 +70,14 @@ These tags are important as they also play a major role in programming games. In
 
 ### Programming syntax
 
-The graphical representation is useful as one gets a quick perspective on what the information actually is. Moreover, turning towards our actual goal, namely program these interactions, it is important to note one challenge that we face (and which will pervade throughout the programming): The graphical syntax is two-dimensional but like most programming languages, our code most be one-dimensional. 
+The graphical representation is useful as one gets a quick perspective on what the information actually is. Moreover, turning towards our actual goal, namely program these interactions, it is important to note one challenge that we face (and which will pervade throughout the programming): The graphical syntax is two-dimensional but like most programming languages, our code must be one-dimensional. 
 
 Hence, we need a way to flatten the two dimensions into one. We achieve this by cutting the two dimensions into parts, sequentialize these components, and connect them through variables. Bear this in mind; hopefully this makes it easier to grasp what is going on.
 
 
 The syntax for programming has two parts, an _outside perspective_ and an _inside perspective_. Let us begin with the outside perspective. 
 
-        _NameOfGame_ _var1_ _var2_ ... = [opengame|
+        _NameOfGame_ _var1_ _var2_ ... _varN_ = [opengame|
             
             inputs    : _InputGame_ ;                    -- This corresponds to X in the diagram
             feedback  : _FeedbackGame_ ;                 -- This corresponds to S in the diagram
@@ -91,11 +91,11 @@ The syntax for programming has two parts, an _outside perspective_ and an _insid
             
         |] 
 
-Think of the declaration of an open game as defining a (possibly constant) function. That is, on the left hand side of the equation you provide the name of the game `_NameOfGame_` as well as possible arguments that the game depends on `_var1_ ,...`. Think of the arguments as exogenous parameters on which the game depends such as utility functions, cost functions, discount factors etc. 
+The above expression is a declaration of an open game. You can think of it as a large (possibly constant) function. That is, on the left hand side of the equation you provide the name of the game `_NameOfGame_` as well as possible arguments that the game depends on `_var1_ ,...`. Think of the arguments as exogenous parameters on which the game depends such as utility functions, cost functions, discount factors, name of players etc. 
 
 Regarding the right hand side of the equation, the `[opengame| ... |]` is the syntax that contains the relevant information to define an open game. The internals are seperated from the externals through two separating lines `:---:`. 
 
-For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assign variable names to make clear on which information a game does depend on.
+For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
 
 Let us now turn to the internal structure. It has the following shape:
 
@@ -104,13 +104,13 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> Line 1 
+        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
         inputs    : a ;                                                  --\
         ...                                                                 \
-        ...                                                                  ==> Line 2
+        ...                                                                  ==> LineBlock 2
         ...                                                                 /
         ...                                                              --/
         
@@ -118,19 +118,19 @@ Let us now turn to the internal structure. It has the following shape:
        
         :-------------------------:
 
-The internals of an open game consists of one or more _Lines_. Each line consists of five fields. 
+The internals of an open game consists of one or more _LineBlocks_. Each LineBlock consists of five fields. 
 It is not accidental that the internal structure closely resembles the outer structure. There are also four input/output fields. 
 
 NOTE: For the compiler to work, the order of the fields must be kept intact. For instance, `operation` has to preceed `returns`. However, fields are optional. That is, if, for instance, there is no input, one ignore that field.
 
 Recall that our goal is to model each component as a possible standalone open game which can be connected.  
-The main difference between the outer and inner layer is that the each Line requires an operation field. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which -- given some possible prior observation, an action space (a list of possible actions to take), and information that is returned (his payoff) -- models a single agent who chooses an action. 
+The main difference between the outer and inner layer is that each LineBlock requires an _operation field_. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which -- given some possible prior observation, an action space (i.e. a list of possible actions to take), and information that is returned (his payoff) -- models a single agent who chooses an action. 
 
 What action? For now, you can think about the agent maximizing his expected payoffs. In principle, we can also consider other decision criteria. But for simplicity, we will stick to the maximization for now.     
 
 It is crucial to realize that there is a "gap" between the decision operation and the return field. When we speak of maximization of payoffs, the objective function is typically a payoff function. Yet, you may wonder: In a strategic situation the decisions of others matter. Otherwise, what is the whole point, right? 
 
-But as indicated above with `(...)` in the returns field, the payoff function can rely on other inputs from outside that single line, e.g. another player making a move.  
+But as indicated above with `(...)` in the returns field, the payoff function can rely on other inputs from outside that single LineBlock, e.g. another player making a move.  
 
 It is your task as a modeller to make this dependency explicit. The compiler in the back then takes care of threading the needed information together. This also gives you a first rule of thumb how to approach modelling in our language. Whenever there needs to be an explicit modelling of decisions, payoffs etc., you will typically model that parts in terms of the internals of a game. 
 
@@ -231,9 +231,9 @@ Recall, an open game in general has two inputs and two outputs on each side of t
 
 The exact voting rule can then be modelled as a `forwardFunction` game taking as inputs the votes and outputting a result. To foreshadow some "design patterns" of how you want to go about modelling in this framework, let us consider why you would want to lift the voting rule to an open game. 
 
-There are other ways of modelling the voting rule. We could add it as an additional line to the players (we will discuss an example and the different consequences below). However, it may makes sense to embed the voting rule in an open game as it then can also be switched out easily against a different component. Say, the voting rule entails a random draw in case of a tie. And now you want to consider a different voting rule in which a specific player is pivotal in the case of tie (similar to the US Vice-President in the Senate). 
+There are other ways of modelling the voting rule. We could add it as an additional LineBlock to the players (we will discuss an example and the different consequences below). However, it may makes sense to embed the voting rule in an open game as it then can also be switched out easily against a different component. Say, the voting rule entails a random draw in case of a tie. And now you want to consider a different voting rule in which a specific player is pivotal in the case of tie (similar to the US Vice-President in the Senate). 
 
-Thus you want to turn a previously non-strategic component into a strategic component. In that case you can just switch out that line in the representation -- and you are done. Thus as rule-of-thumb. If you model an interaction and you consider turning elements into more complicated, strategic components later but want to go for something simpler first, modelling these components as own open games eases modular substitution with other components down the road. We will see more of this kind of discussion below.
+Thus you want to turn a previously non-strategic component into a strategic component. In that case you can just switch out that LineBlock in the representation -- and you are done. Thus as rule-of-thumb. If you model an interaction and you consider turning elements into more complicated, strategic components later but want to go for something simpler first, modelling these components as own open games eases modular substitution with other components down the road. We will see more of this kind of discussion below.
 
 As promised there is a second function operation. 
 
