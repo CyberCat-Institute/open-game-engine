@@ -2,7 +2,14 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Engine.AtomicGames where
+module Engine.AtomicGames
+ ( decision
+ , decisionNoObs
+ , forwardFunction
+ , backwardFunction
+ , natureDraw
+ , liftStochasticForward
+ ) where
 
 import Language.Haskell.TH
 
@@ -44,7 +51,7 @@ decisionNoObs actionSpace payoffFunction playerName = [opengame|
     feedback  :   ;
     operation : dependentDecision playerName (\y -> actionSpace) ;
     outputs   : y ;
-    returns   : payoffFunction y ;
+    returns   : payoffFunction y r ;
     :-----:
 
     outputs  : y ;

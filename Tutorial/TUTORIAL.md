@@ -35,7 +35,7 @@ Progress on all of these fronts is happening. But we are not there yet.
 
 ### Basic structure of an _open game_
 
-The theory of open games is developed in a particular category theoretic structure which allows representations in terms of _string diagrams_. These are essentially two-dimensional diagrammatic representations. 
+The theory of open games is developed in a particular category theoretic structure which allows representations in terms of _string diagrams_. These are essentially two-dimensional diagrammatic representations of interactions. 
 
 ![Basic Game](GameSimple.png)
 
@@ -70,14 +70,14 @@ These tags are important as they also play a major role in programming games. In
 
 ### Programming syntax
 
-The graphical representation is useful as one gets a quick perspective on what the information actually is. Moreover, turning towards our actual goal, namely program these interactions, it is important to note one challenge that we face (and which will pervade throughout the programming): The graphical syntax is two-dimensional but like most programming languages, our code most be one-dimensional. 
+The graphical representation is useful as one gets a quick perspective on what the information actually is. Moreover, turning towards our actual goal, namely program these interactions, it is important to note one challenge that we face (and which will pervade throughout the programming): The graphical syntax is two-dimensional but like most programming languages, our code must be one-dimensional. 
 
 Hence, we need a way to flatten the two dimensions into one. We achieve this by cutting the two dimensions into parts, sequentialize these components, and connect them through variables. Bear this in mind; hopefully this makes it easier to grasp what is going on.
 
 
 The syntax for programming has two parts, an _outside perspective_ and an _inside perspective_. Let us begin with the outside perspective. 
 
-        _NameOfGame_ _var1_ _var2_ ... = [opengame|
+        _NameOfGame_ _var1_ _var2_ ... _varN_ = [opengame|
             
             inputs    : _InputGame_ ;                    -- This corresponds to X in the diagram
             feedback  : _FeedbackGame_ ;                 -- This corresponds to S in the diagram
@@ -91,11 +91,11 @@ The syntax for programming has two parts, an _outside perspective_ and an _insid
             
         |] 
 
-Think of the declaration of an open game as defining a (possibly constant) function. That is, on the left hand side of the equation you provide the name of the game `_NameOfGame_` as well as possible arguments that the game depends on `_var1_ ,...`. Think of the arguments as exogenous parameters on which the game depends such as utility functions, cost functions, discount factors etc. 
+The above expression is a declaration of an open game. You can think of it as a large (possibly constant) function. That is, on the left hand side of the equation you provide the name of the game `_NameOfGame_` as well as possible arguments that the game depends on `_var1_ ,...`. Think of the arguments as exogenous parameters on which the game depends such as utility functions, cost functions, discount factors, name of players etc. 
 
 Regarding the right hand side of the equation, the `[opengame| ... |]` is the syntax that contains the relevant information to define an open game. The internals are seperated from the externals through two separating lines `:---:`. 
 
-For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assign variable names to make clear on which information a game does depend on.
+For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
 
 Let us now turn to the internal structure. It has the following shape:
 
@@ -104,13 +104,13 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> Line 1 
+        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
         inputs    : a ;                                                  --\
         ...                                                                 \
-        ...                                                                  ==> Line 2
+        ...                                                                  ==> LineBlock 2
         ...                                                                 /
         ...                                                              --/
         
@@ -118,19 +118,19 @@ Let us now turn to the internal structure. It has the following shape:
        
         :-------------------------:
 
-The internals of an open game consists of one or more _Lines_. Each line consists of five fields. 
+The internals of an open game consists of one or more _LineBlocks_. Each LineBlock consists of five fields. 
 It is not accidental that the internal structure closely resembles the outer structure. There are also four input/output fields. 
 
 NOTE: For the compiler to work, the order of the fields must be kept intact. For instance, `operation` has to preceed `returns`. However, fields are optional. That is, if, for instance, there is no input, one ignore that field.
 
 Recall that our goal is to model each component as a possible standalone open game which can be connected.  
-The main difference between the outer and inner layer is that the each Line requires an operation field. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which -- given some possible prior observation, an action space (a list of possible actions to take), and information that is returned (his payoff) -- models a single agent who chooses an action. 
+The main difference between the outer and inner layer is that each LineBlock requires an _operation field_. This is where information is actually transformed or generated. We will see several canonical operations that one can use. This includes, as depicted in the box above, a decision operator which -- given some possible prior observation, an action space (i.e. a list of possible actions to take), and information that is returned (his payoff) -- models a single agent who chooses an action. 
 
 What action? For now, you can think about the agent maximizing his expected payoffs. In principle, we can also consider other decision criteria. But for simplicity, we will stick to the maximization for now.     
 
 It is crucial to realize that there is a "gap" between the decision operation and the return field. When we speak of maximization of payoffs, the objective function is typically a payoff function. Yet, you may wonder: In a strategic situation the decisions of others matter. Otherwise, what is the whole point, right? 
 
-But as indicated above with `(...)` in the returns field, the payoff function can rely on other inputs from outside that single line, e.g. another player making a move.  
+But as indicated above with `(...)` in the returns field, the payoff function can rely on other inputs from outside that single LineBlock, e.g. another player making a move.  
 
 It is your task as a modeller to make this dependency explicit. The compiler in the back then takes care of threading the needed information together. This also gives you a first rule of thumb how to approach modelling in our language. Whenever there needs to be an explicit modelling of decisions, payoffs etc., you will typically model that parts in terms of the internals of a game. 
 
@@ -193,7 +193,7 @@ Here is the second version:
             feedback  :   ;
             operation : dependentDecision playerName (\y -> actionSpace) ;
             outputs   : y ;
-            returns   : payoffFunction y ;
+            returns   : payoffFunction y r;
             :-----:
 
             outputs   : y ;
@@ -231,9 +231,9 @@ Recall, an open game in general has two inputs and two outputs on each side of t
 
 The exact voting rule can then be modelled as a `forwardFunction` game taking as inputs the votes and outputting a result. To foreshadow some "design patterns" of how you want to go about modelling in this framework, let us consider why you would want to lift the voting rule to an open game. 
 
-There are other ways of modelling the voting rule. We could add it as an additional line to the players (we will discuss an example and the different consequences below). However, it may makes sense to embed the voting rule in an open game as it then can also be switched out easily against a different component. Say, the voting rule entails a random draw in case of a tie. And now you want to consider a different voting rule in which a specific player is pivotal in the case of tie (similar to the US Vice-President in the Senate). 
+There are other ways of modelling the voting rule. We could add it as an additional LineBlock to the players (we will discuss an example and the different consequences below). However, it may makes sense to embed the voting rule in an open game as it then can also be switched out easily against a different component. Say, the voting rule entails a random draw in case of a tie. And now you want to consider a different voting rule in which a specific player is pivotal in the case of tie (similar to the US Vice-President in the Senate). 
 
-Thus you want to turn a previously non-strategic component into a strategic component. In that case you can just switch out that line in the representation -- and you are done. Thus as rule-of-thumb. If you model an interaction and you consider turning elements into more complicated, strategic components later but want to go for something simpler first, modelling these components as own open games eases modular substitution with other components down the road. We will see more of this kind of discussion below.
+Thus you want to turn a previously non-strategic component into a strategic component. In that case you can just switch out that LineBlock in the representation -- and you are done. Thus as rule-of-thumb. If you model an interaction and you consider turning elements into more complicated, strategic components later but want to go for something simpler first, modelling these components as own open games eases modular substitution with other components down the road. We will see more of this kind of discussion below.
 
 As promised there is a second function operation. 
 
@@ -345,34 +345,56 @@ The second element needed is the feeding of stochastic processes. We make our li
 
 To create a tailored, finite distribution you can use `distFromList` which expects a list of outcome, probability pairs. For example, a coin can be implemented as:
 
-    coin = distFromList [("Head", 0.5), ("Tail", 0.5)]
+    coin = distFromList [("Head", 1), ("Tail", 1)]
 
 TODO: Additional info probability -- maybe later if we change the underlying module
 TODO: How to implement stochastic processes?
 
 ## Examples
 
-### Single decision problem
-### Simultaneous moves
-### Sequential moves
-### Mixed strategies
+In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again.
+
+
+[Single Decision](open-games-hs/src/Examples/Decision.hs)
+
+
+[Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs)
+
+
+[Sequential move games](open-games-hs/src/Examples/) 
 ### Incomplete information and updating -> single player and auction
 ### Piping together different modules: Voting game 
 
 ## Analyzing Games
 
 ### Overview
+TODO: Say something about the construction of the strategies 
+
 
 After all that work, what can you actually do with a game that is represented You can analyze it in different ways. 
 
-0. You can check whether a given strategy tuple, that you need to come-up with!, is an equilibrium. You will receive a message like this, if it is:
+0. You can check whether a given strategy tuple (that you need to come-up with!) is an equilibrium. You will receive a message like this, if it is:
+        
+        ----Analytics begin----
+        Strategies are in equilibrium
+        NEWGAME: 
+        ----Analytics end----
 
-xxx
-
+ 
 and a message like this, if it is not:
 
-xxx
+        ----Analytics begin----
+        Strategies are NOT in equilibrium. Consider the following profitable deviations: 
 
+        Player: player1
+        Optimal move: 5.0
+        Current Strategy: fromFreqs [(4.0,1.0)]
+        Optimal Payoff: 0.0
+        Current Payoff: -1.0
+        Observable State: ()
+        Unobservable State: "((),())
+
+As you can see, the message contains information about the particular aspects of a specific strategy. It outputs such information for the whole strategy tuple. 
 If your game depends on outside parameters, you can check for a whole class of parameters
 
 xxx
@@ -390,14 +412,45 @@ Here is an example:
 
 
 ### Supplying strategies
+TODO Explain better Kleisli types used
 
-If you want to check for equilibria, you need to supply strategies. Which means that you need to supply a function for each move that can be made. Which means you need to know how to define functions in our system. 
+
+If you want to check for equilibria, you need to supply strategies. The strategies you need to supply are akin to behavioral strategies in classical game theory. Which means that you need to supply a function for each move that can be made. Which means you need to know how to define functions in our system. 
 
 Note, that even if there are no previous moves, no previous information to observe on which a strategy would be conditioned, you still supply a function -- just a constant function. This may look strange at the beginning but in essence it helps to make the system over all more uniform. And do not worry! You will not notice it much because we provide syntactic sugar which allow you to forget about this if you want to. 
 
 NOTE: If you are familiar with game theory, then most what we describe here probably makes sense to you. After all, if we take the Ultimatum Game, what you have to supply for the receiver is a function: given the offer by the sender, should the receiver accept or reject? Similarly, in a Bayesian Game like an auction, if one player observes her type, her strategy is function from her type space into the allowed bids. 
 
-As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy is really a function 
+As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy often really is a function.
+
+
+#### Construction of a single strategy
+
+The strategies you need to supply are expected to be of a certain "shape" or more precisely, type:
+
+     Kleisli Stochastic a b
+
+This type is from a relatively advanced part of Haskell. You do not need to worry about it to much. The reason for its use in our framework is that it makes several problems easier. 
+
+At the same time it is probably not easiest to grasp what is going on. 
+
+
+#### Construction of the complete strategy tuple
+
+In order to check an equilibrium, you need to supply a strategy for each player (and each occasion where a move can be made). So, once you have the construction for each single player working you still need to put them together into a "tuple".
+
+For the combined strategies, we are essentially constructing a list. The construction is as such:
+
+    stratTuple = strat1 ::- strat2 ::- ... ::- stratN ::- Nil
+
+The `::-` is a particular list constructor (in other contexts of referred to as `cons`). The constructor takes a single element and adds it to an existing list, i.e.:
+    
+    _element_ ::- _existingList_ 
+
+Note, each list has a `Nil` as a last element. 
+
+NOTE: In case you wonder, this is not the standard list implementation. In Haskell lists only allow elements of the same type. The list constructor above allows heterogenous types. The reason for this change is simple: The shape of strategies can differ starkly for different players. Some may be required to provide a single action, others a function which depends on several observations. 
+
 
 [^liftStoch]:
 Note that the `liftStochastic` could be used to implement the `natureDraw` function by consider a constant stochastic process. Still, we think models are more transparent and easier to read if we distinguish between these two operations.

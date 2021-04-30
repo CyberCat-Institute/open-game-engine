@@ -1,6 +1,14 @@
-{-# LANGUAGE TypeOperators, DataKinds, GADTs #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 
-module Engine.OpenGames where
+module Engine.OpenGames
+ ( OpenGame(..)
+ , lift
+ , reindex
+ , (>>>)
+ , (&&&)
+ ) where
 
 
 import Engine.OpticClass

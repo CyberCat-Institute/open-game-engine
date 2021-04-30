@@ -17,6 +17,7 @@ library:
     - Engine.AtomicGames
     - Engine.BayesianGames
     - Engine.Diagnostics
+    - Engine.Engine
     - Engine.OpenGames
     - Engine.OpticClass
     - Engine.TLL
@@ -27,9 +28,11 @@ library:
     - Preprocessor.THSyntax
     - Preprocessor.TH
     - Preprocessor.Types
-    - Examples.Bimatrix
+    - Preprocessor.Preprocessor
+    - Examples.SimultaneousMoves
     - Examples.Bayesian
-    - Examples.Sequential
+    - Examples.Decision
+    - Examples.SequentialMoves
 
 dependencies:
     - base >=4.7 && <5
@@ -57,15 +60,3 @@ executables:
     - open-games-hs
 
 
-
-tests:
-  test-open-games:
-    main: THTests
-    source-dirs: tests
-    dependencies:
-      - open-games-hs
-      - template-haskell
-      - base
-      - probability
-      - hspec
-      - QuickCheck

@@ -14,24 +14,15 @@ import Test.Hspec as Spec
 import Test.QuickCheck
 import Language.Haskell.TH.Syntax as TH
 
-import Preprocessor.THSyntax as THS
-import Preprocessor.Preprocessor as Pre
-import Preprocessor.TH
 import Preprocessor.Lambda
-import Preprocessor.Compile
 import Preprocessor.Parser
-import Preprocessor.AbstractSyntax as ABS
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
 
-import Examples.SimpleAuction
-import Examples.Bimatrix
 import Examples.Bayesian as B
-import Examples.LemonMarket
-import Examples.ResaleMarket
-import Examples.Sequential
-import Examples.Signalling
 
 import Numeric.Probability.Distribution
-import Engine.BayesianDiagnostics
+import Engine.Diagnostics
 
 btest = "t |                 <- nature (uniform [Rat, Omerta])                                -< | ;"
      ++ "x | pdMatrix1 x y   <- reindex const (decision \"prisoner1\" [Confess, DontConfess]) -< | ;"

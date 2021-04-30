@@ -1,12 +1,31 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators, DataKinds, GADTs, TypeFamilies, FlexibleInstances, FlexibleContexts, PolyKinds, ScopedTypeVariables, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                 #-}
 
 
 -- Parts of this file were written by Sjoerd Visscher 
 
-module Engine.TLL where
+module Engine.TLL
+  ( List(..)
+  , Apply(..)
+  , Unappend(..)
+  , MapL(..)
+  , FoldrL(..)
+  , ConstMap(..)
+  , SequenceList(..)
+  , type (+:+)
+  , (+:+)
+  ) where
 
-
+import Control.Applicative
 
 infixr 6 ::-
 data List ts where
@@ -48,7 +67,7 @@ class Apply f a b where
   apply :: f -> a -> b
 
 
--- Map 
+-- Map
 class MapL f xs ys where
   mapL :: f -> List xs -> List ys
 
@@ -73,4 +92,16 @@ instance (Apply f x (acc -> acc), FoldrL f acc xs)
 type family ConstMap (t :: *) (xs :: [*]) :: [*] where
   ConstMap _      '[]  = '[]
   ConstMap t (x ': xs) = t ': (ConstMap t xs)
+
+----------------------------------------
+-- Features to ease feeding back outputs
+--
+class Applicative m => SequenceList m a b | a -> b, m b -> a where
+    sequenceListA :: List a -> m (List b)
+
+instance Applicative m => SequenceList m '[] '[] where
+    sequenceListA _ = pure Nil
+
+instance (Applicative m, SequenceList m as bs) => SequenceList m (m a ': as) (a ': bs) where
+    sequenceListA (a ::- b) = liftA2 (::-) a (sequenceListA b)
 

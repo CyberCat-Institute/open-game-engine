@@ -1,9 +1,12 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE InstanceSigs #-}
 
-module Preprocessor.AbstractSyntax where
+module Preprocessor.AbstractSyntax
+  ( Line(..)
+  , pureLine
+  , Block(..)
+  ) where
 
 import Control.Comonad
 import Data.Bifunctor
