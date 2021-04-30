@@ -54,26 +54,26 @@ kMaxBid :: Int -> [(String, Values)] ->  Values
 kMaxBid k ls = snd $  orderAllocation ls !! (k-1)
 
 -- k- price auction rule, i.e. the sequence for winning bidders is ignored, winners always pay k-highest price
-setPaymentKMax :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
-setPaymentKMax _        _    _         _             _               []                     = []
-setPaymentKMax resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
+noLotteryPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
+noLotteryPayment _        _    _         _             _               []                     = []
+noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
    if winner
-      then (name,kmax) : setPaymentKMax resPrice kmax noLottery counterWinner lotteriesGiven ls
+      then (name,kmax) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
       else
-           if noLottery > lotteriesGiven then (name,resPrice) : setPaymentKMax resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : setPaymentKMax resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+           if noLottery > lotteriesGiven then (name,resPrice) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
+                                         else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
 
 -- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
-setPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
-setPayment _        _    _         _             _               []                     = []
-setPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
+lotteryPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
+lotteryPayment _        _    _         _             _               []                     = []
+lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
    if winner
       then
-           if counterWinner < noLottery then (name,resPrice) : setPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
-                                        else (name,kmax) : setPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+           if counterWinner < noLottery then (name,resPrice) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+                                        else (name,kmax) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
       else
-           if noLottery > lotteriesGiven then (name,resPrice) : setPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : setPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
+                                         else (name,0) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
 
 
 -- Mark the auctionWinners 
@@ -138,6 +138,24 @@ natureDrawsTypeStage name = [opengame|
     returns   :    ;
   |]
 
+-- Individual bidding stage
+biddingStage name = [opengame|
+
+    inputs    :  nameValuePair  ;
+    feedback  :   ;
+
+    :---------------------------:
+    inputs    :  nameValuePair  ;
+    feedback  :   ;
+    operation :  dependentDecision name (const [0,20..60]) ;
+    outputs   :  dec ;
+    returns   :  setPayoff nameValuePair payments  ;
+    :---------------------------:
+
+    outputs   :  dec ;
+    returns   :  payments  ;
+  |]
+
 -- Transforms the payments into a random reshuffling
 transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
@@ -191,21 +209,21 @@ bidding3 kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    :  aliceValue    ;
    feedback  :      ;
-   operation :  dependentDecision "Alice" (const [0,20..60]) ;
+   operation :  biddingStage "Alice" ;
    outputs   :  aliceDec ;
-   returns   :  setPayoff aliceValue payments  ;
+   returns   :  payments  ;
 
    inputs    :  bobValue    ;
    feedback  :      ;
-   operation :  dependentDecision "Bob" (const [0,20..60]) ;
+   operation :  biddingStage "Bob" ;
    outputs   :  bobDec ;
-   returns   :  setPayoff bobValue payments  ;
+   returns   :  payments  ;
 
    inputs    :  carolValue    ;
    feedback  :      ;
-   operation :  dependentDecision "Carol" (const [0,20..60]) ;
+   operation :  biddingStage "Carol" ;
    outputs   :  carolDec ;
-   returns   :  setPayoff carolValue payments  ;
+   returns   :  payments  ;
 
    inputs    :  [("Alice",aliceDec),("Bob",bobDec),("Carol",carolDec)]  ;
    feedback  :      ;
@@ -225,50 +243,53 @@ bidding3 kPrice kSlots noLotteries paymentFunction = [opengame|
 -- 0 Strategies
 
 -- Truthful bidding
-stratBidderTruth   = Kleisli $ (\(_,x) -> pureAction x)
+stratBidderTruth :: Kleisli Stochastic (String, Values) Values
+stratBidderTruth  = Kleisli (\(_,x) -> playDeterministically x)
 
 -- Bidding strategy with threshold 50 and value 10
-stratBidderThreshold = Kleisli $ (\(_,x) -> if x >= 50 then pureAction 20 else pureAction 10)
+stratBidderThreshold :: Kleisli Stochastic (String, Values) Values
+stratBidderThreshold = Kleisli (\(_,x) -> if x >= 50 then playDeterministically 20 else playDeterministically 10)
 
 -- Bidding with different threshold
-stratBidderThreshold' = Kleisli $ (\(_,x) -> case () of
-                                              _ | x < 30    -> pureAction 0
-                                                | x == 30   -> pureAction 10 
-                                                | otherwise ->  pureAction 20)
+stratBidderThreshold' :: Kleisli Stochastic (String, Values) Values
+stratBidderThreshold' = Kleisli (\(_,x) -> case () of
+                                              _ | x < 30    -> playDeterministically 0
+                                                | x == 30   -> playDeterministically 10
+                                                | otherwise -> playDeterministically 20)
 
 
 
 -- Complete strategy for truthful bidding for 3 players
-truthfulStrat3 ::
+truthfulStrat ::
   List
     '[Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values]
-truthfulStrat3 =
+truthfulStrat =
   stratBidderTruth
   ::- stratBidderTruth
   ::- stratBidderTruth
   ::- Nil
 
 -- Complete strategy for threshold bidding 3 players
-thresholdStrat3 ::
+thresholdStrat ::
   List
     '[Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values]
-thresholdStrat3 =
+thresholdStrat =
   stratBidderThreshold
   ::- stratBidderThreshold
   ::- stratBidderThreshold
   ::- Nil
 
 -- Complete strategy for threshold' bidding 3 players
-thresholdStrat3' ::
+thresholdStrat' ::
   List
     '[Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values,
       Kleisli Stochastic (String, Values) Values]
-thresholdStrat3' =
+thresholdStrat' =
   stratBidderThreshold'
   ::- stratBidderThreshold'
   ::- stratBidderThreshold'
@@ -277,15 +298,7 @@ thresholdStrat3' =
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
-equilibriumGame3 kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSlots noLotteries setPayment) strat void
-
-
----------------
--- 2 Equilibria
--- follows k-price auction
--- 2.0 Eq. game with 3 players
-equilibriumGame3KMax kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice kSlots noLotteries setPaymentKMax) strat void
-
+equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidding3 kPrice kSlots noLotteries paymentFunction) strat void
 
 
 ------------------------
@@ -293,19 +306,22 @@ equilibriumGame3KMax kPrice kSlots noLotteries strat = evaluate (bidding3 kPrice
 
 
 -- 3 players with 1 auction slot, 2nd highest price, and 1 lottery slot - truthful bidding - not an eq
--- generateIsEq $ equilibriumGame3 2 1 1 truthfulStrat3
+-- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment truthfulStrat
 
 -- 3 players with 1 auction slot, 2nd highest price is paid, and 1 lottery slot - threshold bidding - is an eq
--- generateIsEq $ equilibriumGame3 2 1 1 thresholdStrat3
+-- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment thresholdStrat
 
 -- 3 players with 1 auction slot and 1 lottery slot AND 2nd price rule - strategies before not an equilibrium
--- generateIsEq $ equilibriumGame3KMax 2 1 1 thresholdStrat3
+-- generateIsEq $ equilibriumGame 2 1 1 noLotteryPayment thresholdStrat
 
 -- Truthful bidding is also not an equilibrium
--- generateIsEq $ equilibriumGame3KMax 2 1 1 truthfulStrat3
+-- generateIsEq $ equilibriumGame 2 1 1 noLotteryPayment truthfulStrat
 
 -- But the alternative threshold strategy is an equilibrium
--- generateIsEq $ equilibriumGame3KMax 2 1 1 thresholdStrat3'
+-- generateIsEq $ equilibriumGame 2 1 1 noLotteryPayment thresholdStrat'
+
+-- Also note: Once we exclude slots via lottery, and just auction off one slot, truthful bidding becomes an equilibrium
+-- generateIsEq $ equilibriumGame 2 1 0 noLotteryPayment truthfulStrat
 
 
 
