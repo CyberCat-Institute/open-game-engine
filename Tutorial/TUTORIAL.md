@@ -53,7 +53,7 @@ And lastly, here is an example of an auction where the two bidders have private 
 
 ![Auction](Auction.png)
 
-We will not dwell much on the technical details behind these graphical representations. What is important though (and what you should take away from the pictures at this stage): The graphical language operates in two dimensions. In the bimatrix case players 1 and 2 are put side-by-side as they move simultaneously. They are still contacted though as their utility is affected not only by their own action but also by the action of the other player.
+We will not dwell much on the technical details behind these graphical representations. What is important though (and what you should take away from the pictures at this stage): The graphical language operates in two dimensions. In the bimatrix case players 1 and 2 are put side-by-side as they move simultaneously. They are still connected though as their utility is affected not only by their own action but also by the action of the other player.
 
 Obviously, there is still significant information missing such as what exactly are the strategies the players can choose? What are the payoffs etc? 
 
@@ -95,7 +95,7 @@ The above expression is a declaration of an open game. You can think of it as a 
 
 Regarding the right hand side of the equation, the `[opengame| ... |]` is the syntax that contains the relevant information to define an open game. The internals are seperated from the externals through two separating lines `:---:`. 
 
-For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
+For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
 
 Let us now turn to the internal structure. It has the following shape:
 
@@ -104,7 +104,7 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> LineBlock 1 
+        operation : dependentDecision _playerName_ _actionSpace_ ;     ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
