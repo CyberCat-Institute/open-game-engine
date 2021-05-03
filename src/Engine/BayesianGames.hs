@@ -11,6 +11,7 @@ module Engine.BayesianGames
   ( StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
   , dependentDecision
+  , dependentEpsilonDecision
   , fromLens
   , fromFunctions
   , nature
