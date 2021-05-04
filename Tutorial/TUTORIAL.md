@@ -354,15 +354,19 @@ TODO: How to implement stochastic processes?
 
 In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again.
 
+TODO Check paths
 
-[Single Decision](open-games-hs/src/Examples/Decision.hs)
+[Single Decision](open-games-hs/src/Examples/Decision.hs) illustrates the main elements of modelling a single player making decisions. It also introduces how to model in a modular fashion and how to define strategies.
+
+[Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs) illustrates how simultaneous decisions are modelled.
+
+[Sequential move games](open-games-hs/src/Examples/SequentialMoves.hs) illustrates how sequential decisions are modelled and how the sequence of moves is reflected in the definition of strategies.
+
+[Bayesian Updating](open-games-hs/src/Examples/Bayesian.hs) illustrates the Bayesian updating under the hood of the _dependentDecision_ operation. It also shows how to model stochastic processes. 
 
 
-[Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs)
+### Branching games operation
 
-
-[Sequential move games](open-games-hs/src/Examples/) 
-### Incomplete information and updating -> single player and auction
 ### Piping together different modules: Voting game 
 
 ## Analyzing Games

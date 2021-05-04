@@ -1,109 +1,180 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE LambdaCase #-}
+
 module Examples.Bayesian where
 
-import Numeric.Probability.Distribution
+import Engine.Engine
+import Preprocessor.Preprocessor
 
-import GHC.Generics
-import Engine.BayesianGames
-import Engine.OpenGames
-import Engine.OpticClass
 
-import Preprocessor.THSyntax
-import Preprocessor.AbstractSyntax
-import Preprocessor.Compile
-import Language.Haskell.TH.Syntax
-import GHC.Generics
+--------------
+-- 0. Overview
+-- This file contains two examples. First, a single player making a decision updating information given a signal structure. This games illustrates the Bayesian updating inherent in the players' optimization. Second, a Bayesian prisoner's dilemma, taken from Mas-Colell, Whinston & Green p.254, this is illustrates the interaction of a Bayesian player with private information and a player without private information in the setting of a prisoner's dilemma.
 
--- Bayesian prisoner's dilemma, from Mas-Colell, Whinston & Green p.254
+-----------------------
+-- 1. Types and payoffs
 
-data PDNature = Rat | Omerta deriving (Eq, Ord, Show)
+-- 1.0 Single player coordinating with nature
+
+data CoordinateMove = A | B deriving (Eq,Ord,Show)
+
+-- | payoff for player is matching the right state of the world
+coordinateWithNaturePayoff :: CoordinateMove -> CoordinateMove -> Double
+coordinateWithNaturePayoff x y = if x == y then 1 else 0
+
+-- 1.1 Prisoner's dilemma
+data PDNature = Rat | NoRat deriving (Eq, Ord, Show)
 data PDMove = Confess | DontConfess deriving (Eq, Ord, Show)
 
-pdMatrix1 :: PDMove -> PDMove -> Double
-pdMatrix1 Confess Confess = -5
-pdMatrix1 Confess DontConfess = -1
-pdMatrix1 DontConfess Confess = -10
-pdMatrix1 DontConfess DontConfess = 0
+-- | standard PD payoff
+pdPayoff1 :: PDMove -> PDMove -> Double
+pdPayoff1 Confess Confess = -5
+pdPayoff1 Confess DontConfess = -1
+pdPayoff1 DontConfess Confess = -10
+pdPayoff1 DontConfess DontConfess = 0
 
-pdMatrix2 :: PDNature -> PDMove -> PDMove -> Double
-pdMatrix2 Rat Confess Confess = -5
-pdMatrix2 Rat Confess DontConfess = -10
-pdMatrix2 Rat DontConfess Confess = -1
-pdMatrix2 Rat DontConfess DontConfess = -2
-pdMatrix2 Omerta Confess Confess = -11
-pdMatrix2 Omerta Confess DontConfess = -10
-pdMatrix2 Omerta DontConfess Confess = -7
-pdMatrix2 Omerta DontConfess DontConfess = -2
+-- | different payoffs depending on player type ("Rat" - "NoRat")
+pdPayoff2 :: PDNature -> PDMove -> PDMove -> Double
+pdPayoff2 Rat Confess Confess = -5
+pdPayoff2 Rat Confess DontConfess = -10
+pdPayoff2 Rat DontConfess Confess = -1
+pdPayoff2 Rat DontConfess DontConfess = -2
+pdPayoff2 NoRat Confess Confess = -11
+pdPayoff2 NoRat Confess DontConfess = -10
+pdPayoff2 NoRat DontConfess Confess = -7
+pdPayoff2 NoRat DontConfess DontConfess = -2
 
--- using TH
-generateGame "bayesianPDTH" []
-                   [Line [] [] [|nature (uniform [Rat, Omerta])|] ["t"] []
-                   ,Line [] [] [|dependentDecision "prisoner1" (const [Confess, DontConfess])|] ["x"] [[|pdMatrix1 x y|]]
-                   ,Line [[|t|]] [] [|dependentDecision "prisoner2" (\o -> [Confess, DontConfess])|] ["y"] [[|pdMatrix2 t x y|]]
-                   ]
 
--- Using Quasiquotes
-bayseianInline = [game|
-  || =>>
-    t | <- nature (uniform [Rat, Omerta])
-        -< | ;
-    x | pdMatrix1 x y
-        <- dependentDecision "prisoner1" (const [Confess, DontConfess])
-        -< |;
-    y | pdMatrix2 t x y
-        <- dependentDecision "prisoner2" (\o -> [Confess, DontConfess])
-        -< | t ;
-        <<= ||
+--------------------------
+-- 2. Game representations
+-- 2.0. coordination with nature
+
+-- | Distribution of states of the world
+distributionNature probA = distFromList [(A,probA),(B, 1- probA)]
+
+-- | signal structure, given precision probability that the correct state of nature is sent
+signal signalPrecision A = distFromList [(A,signalPrecision),(B, 1- signalPrecision)]
+signal signalPrecision B = distFromList [(B,signalPrecision),(A, 1- signalPrecision)]
+
+-- | This game represents a stochastic process: Nature draws from a distribution given _probA_ of A, then a signal is sent with a given probability _signalPrecision_
+stochasticEnv probA signalPrecision = [opengame|
+   inputs    :      ;
+   feedback  :      ;
+
+   :----------------------------:
+   inputs    :      ;
+   feedback  :      ;
+   operation : nature (distributionNature probA);
+   outputs   : draw ;
+   returns   :      ;
+
+   inputs    : draw     ;
+   feedback  :      ;
+   operation : liftStochasticForward (signal signalPrecision);
+   outputs   : signal ;
+   returns   :      ;
+   :----------------------------:
+
+   outputs   :  (signal,draw) ;
+   returns   :      ;
   |]
 
-bayesianPDEquilibrium strat  = evaluate bayesianPDTH strat void
 
------------------
--- Eq. strategies
+-- | The complete game 
+coordinateWithNature probA signalPrecision = [opengame|
+   inputs    :      ;
+   feedback  :      ;
 
-{--
-bayesianPDEquilibrium ((), certainly Confess, strategyPD2)
+   :----------------------------:
+   inputs    :      ;
+   feedback  :      ;
+   operation : stochasticEnv probA signalPrecision ;
+   outputs   : (signal,draw) ;
+   returns   : ;
 
-strategyPD2 :: PDNature -> Engine.BayesianOpenGames.D PDMove
-strategyPD2 Rat =  certainly Confess
-strategyPD2 Omerta = certainly DontConfess
---}
+   inputs    : signal ;
+   feedback  :      ;
+   operation : dependentDecision "player" (const [A,B]);
+   outputs   : decision ;
+   returns   : coordinateWithNaturePayoff decision draw;
+
+   :----------------------------:
+
+   outputs   :      ;
+   returns   :      ;
+   |]
+
+-- 2.1. Prisoner's dilemma
+bayesianPD  = [opengame| 
+
+   inputs    :      ;
+   feedback  :      ;
+
+   :----------------------------:
+   inputs    :      ;
+   feedback  :      ;
+   operation : nature (uniformDist [Rat, NoRat]) ;
+   outputs   : prisoner2Type ;
+   returns   : ;
+
+   inputs    :  ;
+   feedback  :      ;
+   operation : dependentDecision "prisoner1" (const [Confess, DontConfess]);
+   outputs   : decision1 ;
+   returns   : pdPayoff1 decision1 decision2;
+
+   inputs    : prisoner2Type ;
+   feedback  :      ;
+   operation : dependentDecision "prisoner2" (const [Confess, DontConfess]);
+   outputs   : decision2 ;
+   returns   : pdPayoff2 prisoner2Type decision1 decision2 ;
+
+   :----------------------------:
+
+   outputs   :      ;
+   returns   :      ;
+   |]
+
+--------------------------
+-- 3. Equilibrium analysis
+
+-- 3.0. Coordinate with nature
+
+-- | Equilibrium function
+isEquilibriumCoordinationNature probA signalPrecision strat = generateIsEq $ evaluate (coordinateWithNature probA signalPrecision) strat void
+
+-- | We define two strategies _followSignal_ and _doOpposite_
+followSignal,doOpposite :: Kleisli Stochastic CoordinateMove CoordinateMove
+followSignal = Kleisli (\x -> playDeterministically x)
+doOpposite   = Kleisli (\case {A -> playDeterministically B; B -> playDeterministically A})
+
+-- | Putting strategies into the list
+followSignalStrategy = followSignal ::- Nil
+doOppositeStrategy   = doOpposite ::- Nil
+
+-- Example usage
+-- isEquilibriumCoordinationNature 0.6 0.7 followSignalStrategy
+
+-- 3.1. Bayesian Prisoner's Dilemma
+
+-- | Equilibrium function
+isEquilibriumBayesianPDE strat  = generateIsEq $  evaluate bayesianPD strat void
 
 
--- Battle of sexes with asymmetric uncertainty, from https://sites.duke.edu/niou/files/2011/05/Lecture-7-Bayesian-Games1.pdf
+-- | Strategy player 1
+player1Strategy :: Kleisli Stochastic () PDMove
+player1Strategy = pureAction Confess
 
-data BOSType = BOSType1 | BOSType2 deriving (Eq, Ord, Show, Generic)
-data BOSMove = BayesianB | BayesianS deriving (Eq, Ord, Show, Generic)
+-- | Strategy player 2
+player2Strategy :: Kleisli Stochastic PDNature PDMove
+player2Strategy  = Kleisli (\case { Rat   -> playDeterministically Confess
+                                  ; NoRat -> playDeterministically DontConfess})
 
-bos_bayesian_matrix1, bos_bayesian_matrix2 :: BOSType -> BOSMove -> BOSMove -> Double
-bos_bayesian_matrix1 BOSType1 BayesianB BayesianB = 2
-bos_bayesian_matrix1 BOSType1 BayesianS BayesianS = 1
-bos_bayesian_matrix1 BOSType1 _ _ = 0
-bos_bayesian_matrix1 BOSType2 BayesianB BayesianS = 2
-bos_bayesian_matrix1 BOSType2 BayesianS BayesianB = 1
-bos_bayesian_matrix1 BOSType2 _ _ = 0
-bos_bayesian_matrix2 BOSType1 BayesianB BayesianB = 1
-bos_bayesian_matrix2 BOSType1 BayesianS BayesianS = 2
-bos_bayesian_matrix2 BOSType1 _ _ = 0
-bos_bayesian_matrix2 BOSType2 BayesianS BayesianB = 1
-bos_bayesian_matrix2 BOSType2 BayesianB BayesianS = 2
-bos_bayesian_matrix2 BOSType2 _ _ = 0
+-- | Complete strategy tuple
+strategyTuplePD = player1Strategy ::- player2Strategy ::- Nil
 
-bayesianBOS = [game|
-  || =>>
-    t1, t2 | <- nature (do {t1 <- uniform [BOSType1, BOSType2];
-                            t2 <- uniform [BOSType1, BOSType2];
-                            return (t1, t2)}) -< | ;
-         x | bos_bayesian_matrix1 t1 x y <- dependentDecision "man" (\t -> [BayesianB, BayesianS]) -< | t1;
-         y | bos_bayesian_matrix2 t2 x y <- dependentDecision "woman"(\t -> [BayesianB, BayesianS]) -< | t2;
-    <<= ||
-    |]
--- Using TH
-generateGame "bayesianBOSTH" []
-                    [Line []       [] [|nature (do {t1 <- uniform [BOSType1, BOSType2]; t2 <- uniform [BOSType1, BOSType2]; return (t1, t2)})|] ["t1", "t2"] []
-                    ,Line [[|t1|]] [] [|dependentDecision "man" (\t -> [BayesianB, BayesianS])|] ["x"] [[|bos_bayesian_matrix1 t1 x y|]]
-                    ,Line [[|t2|]] [] [|dependentDecision "woman"(\t -> [BayesianB, BayesianS])|] ["y"] [[|bos_bayesian_matrix2 t2 x y|]]
-                    ]
-bayesianBOSEquilibrium strat = evaluate bayesianBOS strat void
+-- Example usage
+-- isEquilibriumBayesianPDE strategyTuplePD
+
