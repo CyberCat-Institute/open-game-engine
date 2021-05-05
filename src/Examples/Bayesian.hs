@@ -73,11 +73,11 @@ stochasticEnv probA signalPrecision = [opengame|
    inputs    : draw     ;
    feedback  :      ;
    operation : liftStochasticForward (signal signalPrecision);
-   outputs   : signal ;
+   outputs   : signalDraw ;
    returns   :      ;
    :----------------------------:
 
-   outputs   :  (signal,draw) ;
+   outputs   :  (signalDraw,draw) ;
    returns   :      ;
   |]
 
