@@ -104,7 +104,7 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ _actionSpace_ ;     ==> LineBlock 1 
+        operation : dependentDecision _playerName_ _actionSpace_ ;           ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
