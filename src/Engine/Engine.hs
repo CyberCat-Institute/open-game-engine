@@ -11,6 +11,7 @@ module Engine.Engine
   , StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
   , dependentDecision
+  , dependentEpsilonDecision
   , fromFunctions
   , fromLens
   , uniformDist

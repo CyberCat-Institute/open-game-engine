@@ -53,7 +53,7 @@ And lastly, here is an example of an auction where the two bidders have private 
 
 ![Auction](Auction.png)
 
-We will not dwell much on the technical details behind these graphical representations. What is important though (and what you should take away from the pictures at this stage): The graphical language operates in two dimensions. In the bimatrix case players 1 and 2 are put side-by-side as they move simultaneously. They are still contacted though as their utility is affected not only by their own action but also by the action of the other player.
+We will not dwell much on the technical details behind these graphical representations. What is important though (and what you should take away from the pictures at this stage): The graphical language operates in two dimensions. In the bimatrix case players 1 and 2 are put side-by-side as they move simultaneously. They are still connected though as their utility is affected not only by their own action but also by the action of the other player.
 
 Obviously, there is still significant information missing such as what exactly are the strategies the players can choose? What are the payoffs etc? 
 
@@ -95,7 +95,7 @@ The above expression is a declaration of an open game. You can think of it as a 
 
 Regarding the right hand side of the equation, the `[opengame| ... |]` is the syntax that contains the relevant information to define an open game. The internals are seperated from the externals through two separating lines `:---:`. 
 
-For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. (Information to be inputted is depicted in _..._). In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
+For now, we focus on the external parts. Recall the diagram above. The outside perspective corresponds to having the box with 4 wires. Hence, we need to provide inputs/outputs. In many cases this will boil down to assigning variable names to make clear on which information a game does depend on.
 
 Let us now turn to the internal structure. It has the following shape:
 
@@ -104,7 +104,7 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ (\y -> actionSpace) ;     ==> LineBlock 1 
+        operation : dependentDecision _playerName_ _actionSpace_ ;     ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
@@ -335,7 +335,7 @@ Or, closer to home, a utility function for one player of the Prisoner's Dilemma:
                   | x == Defect    && y == Cooperate = 4
                   | x == Defect    && y == Defect    = 1
 
-(Not necessarily the most simplest way of defining such a function but hopefully easy to understand for people with no background in Haskell so far)
+(Not necessarily the most elegant way of defining such a function but hopefully easy to understand for people with no background in Haskell so far)
 
 The second element needed is the feeding of stochastic processes. We make our lives very simple here: There are two convenience functions `uniformDist` as well as `distFromList` which help to build distributions. 
 
@@ -345,24 +345,42 @@ The second element needed is the feeding of stochastic processes. We make our li
 
 To create a tailored, finite distribution you can use `distFromList` which expects a list of outcome, probability pairs. For example, a coin can be implemented as:
 
-    coin = distFromList [("Head", 1), ("Tail", 1)]
+    coin = distFromList [("Heads", 1), ("Tails", 1)]
 
-TODO: Additional info probability -- maybe later if we change the underlying module
-TODO: How to implement stochastic processes?
+Here is another simple example of a distribution. We will use a version of it later in the Bayesian Updating Example (see next section).
+
+    signal signalPrecision Heads = distFromList [(Heads,signalPrecision),(Tails, 1- signalPrecision)]
+    signal signalPrecision Tails = distFromList [(Tails,signalPrecision),(Heads, 1- signalPrecision)]
+
+This distribution expects two inputs: a parameter `signalPrecision` and the outcome of a coin throw. Given `Heads` (`Tails`), the `signal` then sends the correct input with probability `signalPrecision`. As the name suggests we can think about this distribution as a stochastic signal of some underlying state of the world. 
+
+Such functions can be integrated into games as an input to the operation field using the `liftStochasticForward` function: 
+
+    inputs    : draw     ;
+    feedback  :      ;
+    operation : liftStochasticForward (signal signalPrecision);
+    outputs   : signalDraw ;
+    returns   :      ;
+
+This represents a LineBlock where given some initial `draw` from a distribution, a signal is sent forward. Note, the state input variable for `signal`, which above was either `Heads` or `Tails`, is not defined here. The `liftStochasticForward` function takes care of that and automatically takes the variables in the `inputs` field as the input to the function `signal` attached to `liftStochasticForward`.  
 
 ## Examples
 
-In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again.
+In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again. It is best, if you go through the examples in the order as they are listed here.
+
+TODO Check paths
+
+[Single Decision](/src/Examples/Decision.hs) illustrates the main elements of modelling a single player making decisions. It also introduces how to model in a modular fashion and how to define strategies.
+
+[Simultaneous move games](/src/Examples/SimultaneousMove.hs) illustrates how simultaneous decisions are modelled.
+
+[Sequential move games](src/Examples/SequentialMoves.hs) illustrates how sequential decisions are modelled and how the sequence of moves is reflected in the definition of strategies.
+
+[Bayesian Updating](/open-games-hs/src/Examples/Bayesian.hs) illustrates the Bayesian updating under the hood of the _dependentDecision_ operation. It also shows how to model stochastic processes. 
 
 
-[Single Decision](open-games-hs/src/Examples/Decision.hs)
+### Branching games operation
 
-
-[Simultaneous move games](open-games-hs/src/Examples/SimultaneousMove.hs)
-
-
-[Sequential move games](open-games-hs/src/Examples/) 
-### Incomplete information and updating -> single player and auction
 ### Piping together different modules: Voting game 
 
 ## Analyzing Games

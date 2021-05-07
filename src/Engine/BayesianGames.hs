@@ -11,6 +11,7 @@ module Engine.BayesianGames
   ( StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
   , dependentDecision
+  , dependentEpsilonDecision
   , fromLens
   , fromFunctions
   , nature
@@ -76,6 +77,19 @@ dependentDecision name ys = OpenGame {
                    strategy = runKleisli a x
                   in deviationsInContext 0 name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
+
+dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentEpsilonDecision epsilon name ys = OpenGame {
+  play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
+                             u () r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                            in StochasticStatefulOptic v u,
+  evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
+     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x); r <- k t y; v <- get; return (r + v name)}) (const 0))
+                   strategy = runKleisli a x
+                  in deviationsInContext epsilon name x theta strategy u (ys x)
+              | (theta, x) <- support h]) ::- Nil }
+
+
 
 -- Support functionality for constructing open games
 fromLens :: (x -> y) -> (x -> r -> s) -> StochasticStatefulBayesianOpenGame '[] '[] x s y r
