@@ -15,6 +15,7 @@ module Engine.Diagnostics
   , generateOutput
   , generateIsEq
   , generateContext
+  , generateContextWType
   ) where
 
 import Engine.OpticClass
@@ -57,6 +58,15 @@ extractContext  info =  (player info, context info)
 extractContextL :: [DiagnosticInfoBayesian x y] -> [(String,(y -> Double))]
 extractContextL  []  = []
 extractContextL  xs  = fmap extractContext xs
+
+-- extract context for a player with _name_ and _type_
+extractContextWType ::Show x => DiagnosticInfoBayesian x y -> ((String, String), (y -> Double))
+extractContextWType  info =  ((player info, show $ state info), context info)
+
+-- extract context for a player with _name_ for the whole output
+extractContextWTypeL :: Show x => [DiagnosticInfoBayesian x y] -> [((String, String), (y -> Double))]
+extractContextWTypeL  []  = []
+extractContextWTypeL  xs  = fmap extractContextWType xs
 
 
 
@@ -102,10 +112,17 @@ instance Apply Concat String (String -> String) where
 
 -- for extracting Context
 
-data ExtractContext = ExtractContext 
+data ExtractContext = ExtractContext
 
 instance Apply ExtractContext [DiagnosticInfoBayesian x y] [(String,(y -> Double))] where
   apply _ x = extractContextL  x
+
+data ExtractContextWType = ExtractContextWType
+
+instance Show x => Apply ExtractContextWType [DiagnosticInfoBayesian x y] [((String, String), (y -> Double))] where
+  apply _ x = extractContextWTypeL  x
+
+
 
 ---------------------
 -- main functionality
@@ -128,8 +145,14 @@ generateIsEq hlist = putStrLn $
 
 -- generate context for a given player
 generateContext :: forall xs y.
-               ( MapL  ExtractContext xs (ConstMap [(String,(y -> Double))] xs)
-               ) => List xs -> List (ConstMap [(String,(y -> Double))] xs)
-generateContext hlist = mapL @_ @_ @(ConstMap [(String,(y -> Double))] xs) ExtractContext hlist 
+               ( MapL  ExtractContext xs (ConstMap [(String, (y -> Double))] xs)
+               ) => List xs -> List (ConstMap [(String, (y -> Double))] xs)
+generateContext hlist = mapL @_ @_ @(ConstMap [(String, (y -> Double))] xs) ExtractContext hlist 
 
+
+-- generate context with type for a given player
+generateContextWType :: forall xs y x.
+               ( MapL  ExtractContextWType xs (ConstMap [((String, String), (y -> Double))] xs)
+               ) => List xs -> List (ConstMap [((String, String), (y -> Double))] xs)
+generateContextWType hlist = mapL @_ @_ @(ConstMap [((String, String), (y -> Double))] xs) ExtractContextWType hlist 
 

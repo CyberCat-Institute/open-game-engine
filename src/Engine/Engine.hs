@@ -22,6 +22,7 @@ module Engine.Engine
   , generateOutput
   , generateIsEq
   , generateContext
+  , generateContextWType
   , OpenGame(..)
   , lift
   , reindex
