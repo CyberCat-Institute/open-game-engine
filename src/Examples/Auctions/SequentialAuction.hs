@@ -141,11 +141,11 @@ biddingStage name = [opengame|
     inputs    :  nameValuePair  ;
     feedback  :   ;
     operation :  dependentDecision name (const [0,20..60]) ;
-    outputs   :  dec ;
+    outputs   :  bid ;
     returns   :  setPayoff nameValuePair payments  ;
     :---------------------------:
 
-    outputs   :  dec ;
+    outputs   :  bid ;
     returns   :  payments  ;
   |]
 
@@ -176,7 +176,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding3 kPrice kSlots noLotteries paymentFunction = [opengame| 
+bidding3 kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    :      ;
    feedback  :      ;
