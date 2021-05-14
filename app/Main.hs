@@ -3,9 +3,7 @@ module Main where
 import Examples.Decision
 import Examples.SimultaneousMoves
 import Examples.SequentialMoves
-import Examples.ExtractContextExample
 
-import           Graphics.Vega.VegaLite
 
 main = do
   putStrLn "Single decision -->"
@@ -20,4 +18,3 @@ main = do
   isEquilibriumPrisonersDilemma strategTupleDefect
   putStrLn "\n Matching Pennies - mixed with equal prob -->"
   isEquilibriumMatchingPennies strategyTupleMixed
-  toHtmlFile "contextPlayer1.html" meetingNYPlayer1

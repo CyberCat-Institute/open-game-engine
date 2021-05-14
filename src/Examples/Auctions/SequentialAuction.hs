@@ -29,7 +29,7 @@ import Preprocessor.Preprocessor
 ---------------
 -- 0 Parameters
 
-type Values = Double 
+type Values = Double
 
 values = [20,30,60]
 
@@ -317,20 +317,3 @@ equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidd
 -- generateIsEq $ equilibriumGame 2 1 0 noLotteryPayment truthfulStrat
 
 
---- 3. Exporting context
-
--- Evaluate game at truthful bidding strategy by everyone
-eqTest1 = generateContextWType $ equilibriumGame 2 1 1 lotteryPayment truthfulStrat
-
--- Extract context
-testContext1 :: [((String, String),  Values -> Double)]
-testContext1 = fromIndex Zero eqTest1
-
--- Exemplary deviation context by Alice
-deviationsPlayer1 = head  [((s,t),f) | ((s,t),f) <- testContext1, s == "Alice"]
-
--- show state
-showState = fst deviationsPlayer1
-
--- extract deviation function
-context = snd deviationsPlayer1

@@ -14,8 +14,6 @@ module Engine.Diagnostics
   ( DiagnosticInfoBayesian(..)
   , generateOutput
   , generateIsEq
-  , generateContext
-  , generateContextWType
   ) where
 
 import Engine.OpticClass
@@ -49,24 +47,6 @@ showDiagnosticInfo info =
      ++ "\n" ++ "Current Payoff: " ++ (show $ payoff info)
      ++ "\n" ++ "Observable State: " ++ (show $ state info)
      ++ "\n" ++ "Unobservable State: " ++ (show $ unobservedState info)
-
--- extract context for a player with _name_
-extractContext :: DiagnosticInfoBayesian x y -> (String, (y -> Double))
-extractContext  info =  (player info, context info)
-
--- extract context for a player with _name_ for the whole output
-extractContextL :: [DiagnosticInfoBayesian x y] -> [(String,(y -> Double))]
-extractContextL  []  = []
-extractContextL  xs  = fmap extractContext xs
-
--- extract context for a player with _name_ and _type_
-extractContextWType ::Show x => DiagnosticInfoBayesian x y -> ((String, String), (y -> Double))
-extractContextWType  info =  ((player info, show $ state info), context info)
-
--- extract context for a player with _name_ for the whole output
-extractContextWTypeL :: Show x => [DiagnosticInfoBayesian x y] -> [((String, String), (y -> Double))]
-extractContextWTypeL  []  = []
-extractContextWTypeL  xs  = fmap extractContextWType xs
 
 
 
@@ -110,19 +90,6 @@ data Concat = Concat
 instance Apply Concat String (String -> String) where
   apply _ x = \y -> x ++ "\n NEWGAME: \n" ++ y
 
--- for extracting Context
-
-data ExtractContext = ExtractContext
-
-instance Apply ExtractContext [DiagnosticInfoBayesian x y] [(String,(y -> Double))] where
-  apply _ x = extractContextL  x
-
-data ExtractContextWType = ExtractContextWType
-
-instance Show x => Apply ExtractContextWType [DiagnosticInfoBayesian x y] [((String, String), (y -> Double))] where
-  apply _ x = extractContextWTypeL  x
-
-
 
 ---------------------
 -- main functionality
@@ -142,17 +109,4 @@ generateIsEq :: forall xs.
                ) => List xs -> IO ()
 generateIsEq hlist = putStrLn $
   "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
-
--- generate context for a given player
-generateContext :: forall xs y.
-               ( MapL  ExtractContext xs (ConstMap [(String, (y -> Double))] xs)
-               ) => List xs -> List (ConstMap [(String, (y -> Double))] xs)
-generateContext hlist = mapL @_ @_ @(ConstMap [(String, (y -> Double))] xs) ExtractContext hlist 
-
-
--- generate context with type for a given player
-generateContextWType :: forall xs y x.
-               ( MapL  ExtractContextWType xs (ConstMap [((String, String), (y -> Double))] xs)
-               ) => List xs -> List (ConstMap [((String, String), (y -> Double))] xs)
-generateContextWType hlist = mapL @_ @_ @(ConstMap [((String, String), (y -> Double))] xs) ExtractContextWType hlist 
 

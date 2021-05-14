@@ -21,8 +21,6 @@ module Engine.Engine
   , DiagnosticInfoBayesian(..)
   , generateOutput
   , generateIsEq
-  , generateContext
-  , generateContextWType
   , OpenGame(..)
   , lift
   , reindex

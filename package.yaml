@@ -33,7 +33,6 @@ library:
     - Examples.Bayesian
     - Examples.Decision
     - Examples.SequentialMoves
-    - Examples.ExtractContextExample
 
 dependencies:
     - base >=4.7 && <5
@@ -48,8 +47,6 @@ dependencies:
     - QuickCheck
     - comonad
     - haskeline
-    - hvega
-    - aeson
 
 executables:
   open-games-exe:
