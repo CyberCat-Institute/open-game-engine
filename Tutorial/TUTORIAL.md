@@ -104,7 +104,7 @@ Let us now turn to the internal structure. It has the following shape:
 
         inputs    : x ;                                                  --\
         feedback  : f ;                                                     \
-        operation : dependentDecision _playerName_ _actionSpace_ ;     ==> LineBlock 1 
+        operation : dependentDecision _playerName_ _actionSpace_ ;           ==> LineBlock 1 
         outputs   : y ;                                                     / 
         returns   : payoffFunction x y (...) ;                           --/
 
@@ -374,9 +374,9 @@ TODO Check paths
 
 [Simultaneous move games](/src/Examples/SimultaneousMove.hs) illustrates how simultaneous decisions are modelled.
 
-[Sequential move games](src/Examples/SequentialMoves.hs) illustrates how sequential decisions are modelled and how the sequence of moves is reflected in the definition of strategies.
+[Sequential move games](/src/Examples/SequentialMoves.hs) illustrates how sequential decisions are modelled and how the sequence of moves is reflected in the definition of strategies.
 
-[Bayesian Updating](/open-games-hs/src/Examples/Bayesian.hs) illustrates the Bayesian updating under the hood of the _dependentDecision_ operation. It also shows how to model stochastic processes. 
+[Bayesian Updating](/src/Examples/Bayesian.hs) illustrates the Bayesian updating under the hood of the _dependentDecision_ operation. It also shows how to model stochastic processes. 
 
 
 ### Branching games operation
