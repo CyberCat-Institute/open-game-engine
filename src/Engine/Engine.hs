@@ -21,6 +21,8 @@ module Engine.Engine
   , DiagnosticInfoBayesian(..)
   , generateOutput
   , generateIsEq
+  , generateContext
+  , generateContextWType
   , OpenGame(..)
   , lift
   , reindex
@@ -42,6 +44,8 @@ module Engine.Engine
   , FoldrL(..)
   , ConstMap(..)
   , SequenceList(..)
+  , Natural(..)
+  , IndexList(..)
   , type (+:+)
   , (+:+)
   , Kleisli(..)
