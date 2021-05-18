@@ -14,8 +14,15 @@ import Language.Haskell.TH
 import System.Console.Haskeline
 import Text.Read
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import Engine.AtomicGames
+import Engine.BayesianGames
+import Engine.Diagnostics
+import Engine.OpenGames
+import Engine.OpticClass
+import Engine.TLL
+import Preprocessor.THSyntax
+import Preprocessor.AbstractSyntax
+import Preprocessor.Compile
 
 
 
@@ -33,6 +40,7 @@ type Values = Double
 
 values = [20,30,60]
 
+reservePrice :: Double
 reservePrice = 1
 
 ----------------------
@@ -68,6 +76,20 @@ lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,w
            if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
                                          else (name,0) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
 
+
+-- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
+-- Use a different payment rule; kmax is reduced by factor depending on number of lottery slots, pricing rule, and reserve price
+lotteryPayment2 :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
+lotteryPayment2 _        _    _         _             _               []                     = []
+lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
+   if winner
+      then
+           if counterWinner < noLottery then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
+                                        else (name,pay) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
+      else
+           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
+                                         else (name,0) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+   where pay = kmax  - (fromIntegral noLottery) / 2 * (kmax - reservePrice)
 
 -- Mark the auctionWinners 
 auctionWinner :: Values -> [(String, Values)] -> [(String, Values,Bool)]
@@ -141,11 +163,11 @@ biddingStage name = [opengame|
     inputs    :  nameValuePair  ;
     feedback  :   ;
     operation :  dependentDecision name (const [0,20..60]) ;
-    outputs   :  bid ;
+    outputs   :  dec ;
     returns   :  setPayoff nameValuePair payments  ;
     :---------------------------:
 
-    outputs   :  bid ;
+    outputs   :  dec ;
     returns   :  payments  ;
   |]
 
@@ -176,7 +198,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding3 kPrice kSlots noLotteries paymentFunction = [opengame|
+bidding3 kPrice kSlots noLotteries paymentFunction = [opengame| 
 
    inputs    :      ;
    feedback  :      ;
@@ -301,6 +323,9 @@ equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidd
 -- 3 players with 1 auction slot, 2nd highest price, and 1 lottery slot - truthful bidding - not an eq
 -- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment truthfulStrat
 
+-- 3 players with 1 auction slot, 2nd highest price, and 1 lottery slot with modified payment - truthful bidding - eq
+-- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment2 truthfulStrat
+
 -- 3 players with 1 auction slot, 2nd highest price is paid, and 1 lottery slot - threshold bidding - is an eq
 -- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment thresholdStrat
 
@@ -317,20 +342,4 @@ equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidd
 -- generateIsEq $ equilibriumGame 2 1 0 noLotteryPayment truthfulStrat
 
 
---- 3. Exporting context
 
--- Evaluate game at truthful bidding strategy by everyone
-eqTest1 = generateContextWType $ equilibriumGame 2 1 1 lotteryPayment truthfulStrat
-
--- Extract context
-testContext1 :: [((String, String),  Values -> Double)]
-testContext1 = fromIndex Zero eqTest1
-
--- Exemplary deviation context by Alice
-deviationsPlayer1 = head  [((s,t),f) | ((s,t),f) <- testContext1, s == "Alice"]
-
--- show state
-showState = fst deviationsPlayer1
-
--- extract deviation function
-context = snd deviationsPlayer1
