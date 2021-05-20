@@ -8,22 +8,10 @@
 
 module Examples.Auctions.SequentialAuction where
 
-import Control.Arrow (Kleisli(..))
-import Data.List
-import Language.Haskell.TH
-import System.Console.Haskeline
-import Text.Read
 
-import Engine.AtomicGames
-import Engine.BayesianGames
-import Engine.Diagnostics
-import Engine.OpenGames
-import Engine.OpticClass
-import Engine.TLL
-import Preprocessor.THSyntax
-import Preprocessor.AbstractSyntax
-import Preprocessor.Compile
-
+import Engine.Engine
+import Preprocessor.Preprocessor
+import Examples.Auctions.AuctionSupportFunctions
 
 
 
@@ -42,95 +30,6 @@ values = [20,30,60]
 
 reservePrice :: Double
 reservePrice = 1
-
-----------------------
--- 1 Preliminary stuff
-
--- Order bids from large to small
-orderAllocation :: [(String, Values)] -> [(String, Values)]
-orderAllocation  = sortBy (flip (\(_,v1) (_,v2) -> compare v1 v2 ))
-
--- Determine k-max bid
-kMaxBid :: Int -> [(String, Values)] ->  Values
-kMaxBid k ls = snd $  orderAllocation ls !! (k-1)
-
--- k- price auction rule, i.e. the sequence for winning bidders is ignored, winners always pay k-highest price
-noLotteryPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
-noLotteryPayment _        _    _         _             _               []                     = []
-noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
-   if winner
-      then (name,kmax) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
-      else
-           if noLottery > lotteriesGiven then (name,resPrice) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
-
--- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
-lotteryPayment :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
-lotteryPayment _        _    _         _             _               []                     = []
-lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
-   if winner
-      then
-           if counterWinner < noLottery then (name,resPrice) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
-                                        else (name,kmax) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
-      else
-           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
-
-
--- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
--- Use a different payment rule; kmax is reduced by factor depending on number of lottery slots, pricing rule, and reserve price
-lotteryPayment2 :: Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)]
-lotteryPayment2 _        _    _         _             _               []                     = []
-lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
-   if winner
-      then
-           if counterWinner < noLottery then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
-                                        else (name,pay) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
-      else
-           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
-   where pay = kmax  - (fromIntegral noLottery) / 2 * (kmax - reservePrice)
-
--- Mark the auctionWinners 
-auctionWinner :: Values -> [(String, Values)] -> [(String, Values,Bool)]
-auctionWinner kmax []= []
-auctionWinner kmax ls@((name,b):bs)=
-  if b < kmax then (name,b,False) : auctionWinner kmax bs
-              else (name,b,True)  : auctionWinner kmax bs
-
--- Select the payment for a player given the list of payments
-selectPayoffs :: String -> [(String,Values)] -> Values
-selectPayoffs name [] = 0
-selectPayoffs name ((n,p):ls) = if name == n then p else selectPayoffs name ls
-
--- Determines the payoff for each player
-setPayoff :: (String,Values) -> [(String, Values)] -> Values
-setPayoff (name,value) payments =
-  if pay == 0 then 0 else value - pay
-  where
-    pay =  selectPayoffs name payments
-
-
-
--- Determine the payments given k-highest price (1,2..) and no of winnerSlots being allocated through auction; and _noLotteries_ slots through lottery
--- NOTE the restriction of k-highest price and number of slots
-auctionPayment :: (Values -> Values -> Int -> Int -> Int -> [(String,Values,Bool)] -> [(String, Values)])
-                 -- ^ Payment function
-                 -> Int -> Int -> Int -> [(String, Values)]
-                 -- ^ Parameters
-                 -> [(String, Values)]
-auctionPayment paymentFunction kPrice winnerSlots noLotteries ls =
-  if kMax > kThreshold
-     then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinner kThreshold ls)
-     else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinner kThreshold ls)
-  where kMax = kMaxBid kPrice ls
-        kThreshold = kMaxBid winnerSlots ls
-
-
-
--- Random shuffle of bids
-shuffleBids :: [(String, Values)] -> Stochastic [(String, Values)]
-shuffleBids ls = uniformDist $ permutations ls
 
 ---------------------
 -- 1 The actual games
@@ -186,7 +85,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    : shuffledBids ;
    feedback  :      ;
-   operation : forwardFunction (auctionPayment paymentFunction kPrice kSlots noLotteries) ;
+   operation : forwardFunction (auctionPayment paymentFunction reservePrice kPrice kSlots noLotteries) ;
    outputs   : payments ;
    returns   :      ;
    :-----------------:
