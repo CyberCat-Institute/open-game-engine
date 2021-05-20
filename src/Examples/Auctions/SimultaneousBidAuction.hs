@@ -67,7 +67,7 @@ biddingStage name = [opengame|
   |]
 
 -- Transforms the payments into a random reshuffling
-transformPayments kPrice kSlots paymentFunction = [opengame|
+transformPayments kPrice kSlots = [opengame|
 
    inputs    : bids ;
    feedback  :      ;
@@ -81,7 +81,7 @@ transformPayments kPrice kSlots paymentFunction = [opengame|
 
    inputs    : shuffledBids ;
    feedback  :      ;
-   operation : forwardFunction (auctionPayment paymentFunction reservePrice kPrice kSlots 0) ;
+   operation : forwardFunction (auctionPayment noLotteryPayment reservePrice kPrice kSlots 0) ;
    outputs   : payments ;
    returns   :      ;
    :-----------------:
@@ -93,7 +93,7 @@ transformPayments kPrice kSlots paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding2 kPrice kSlots paymentFunction = [opengame| 
+bidding2 kPrice kSlots = [opengame| 
 
    inputs    :      ;
    feedback  :      ;
@@ -125,7 +125,7 @@ bidding2 kPrice kSlots paymentFunction = [opengame|
 
    inputs    :  [("Alice",aliceDec),("Bob",bobDec)]  ;
    feedback  :      ;
-   operation :   transformPayments kPrice kSlots paymentFunction ;
+   operation :   transformPayments kPrice kSlots ;
    outputs   :  payments ;
    returns   :      ;
    :-----------------:
@@ -170,14 +170,14 @@ truthfulStrat =
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
-equilibriumGame kPrice kSlots paymentFunction strat = evaluate (bidding2 kPrice kSlots paymentFunction) strat void
+equilibriumGame kPrice kSlots strat = evaluate (bidding2 kPrice kSlots) strat void
 
 
 ------------------------
 -- 2 Interactive session
 
 -- One object being auctioned off Once we exclude slots via lottery, and just auction off one slot, truthful bidding becomes an equilibrium
--- generateIsEq $ equilibriumGame 2 1 0 noLotteryPayment truthfulStrat
+-- generateIsEq $ equilibriumGame 2 1 truthfulStrat
 
 
 
