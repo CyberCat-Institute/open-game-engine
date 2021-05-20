@@ -50,7 +50,6 @@ library
   other-modules:
       Examples.Auctions.AuctionSupportFunctions
       Examples.Auctions.SequentialAuction
-      Examples.Auctions.SimultaneousBidAuction
       Paths_open_games_hs
   hs-source-dirs:
       src
