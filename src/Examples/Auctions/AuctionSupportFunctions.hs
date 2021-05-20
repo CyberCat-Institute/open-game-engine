@@ -25,6 +25,35 @@ noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid
       else
            if noLottery > lotteriesGiven then (name,resPrice) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
                                          else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+
+-- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
+lotteryPayment :: Num v => v -> v -> Int -> Int -> Int -> [(String,v,Bool)] -> [(String, v)]
+lotteryPayment _        _    _         _             _               []                     = []
+lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
+   if winner
+      then
+           if counterWinner < noLottery then (name,resPrice) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+                                        else (name,kmax) : lotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+      else
+           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
+                                         else (name,0) : lotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+
+
+-- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
+-- Use a different payment rule; kmax is reduced by factor depending on number of lottery slots, pricing rule, and reserve price
+lotteryPayment2 :: Fractional v => v -> v -> Int -> Int -> Int -> [(String,v,Bool)] -> [(String, v)]
+lotteryPayment2 _        _    _         _             _               []                     = []
+lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
+   if winner
+      then
+           if counterWinner < noLottery then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
+                                        else (name,pay) : lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ls
+      else
+           if noLottery > lotteriesGiven then (name,resPrice) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
+                                         else (name,0) : lotteryPayment2 resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+   where pay = kmax  - (fromIntegral noLottery) / 2 * (kmax - resPrice)
+
+
 -- Mark the auctionWinners 
 auctionWinner :: Ord v => v -> [(n, v)] -> [(n, v,Bool)]
 auctionWinner kmax []= []
