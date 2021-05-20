@@ -22,9 +22,7 @@ noLotteryPayment _        _    _         _             _               []       
 noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)  =
    if winner
       then (name,kmax) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
-      else
-           if noLottery > lotteriesGiven then (name,resPrice) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) (lotteriesGiven + 1) ls
-                                         else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+      else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
 
 -- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
 lotteryPayment :: Num v => v -> v -> Int -> Int -> Int -> [(String,v,Bool)] -> [(String, v)]
@@ -85,6 +83,18 @@ auctionPayment :: Ord v => (v -> v -> Int -> Int -> Int -> [(n,v,Bool)] -> [(n, 
                  -- ^ Parameters
                  -> [(n, v)]
 auctionPayment paymentFunction reservePrice kPrice winnerSlots noLotteries ls =
+  if kMax > kThreshold
+     then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinner kThreshold ls)
+     else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinner kThreshold ls)
+  where kMax = kMaxBid kPrice ls
+        kThreshold = kMaxBid winnerSlots ls
+
+auctionPaymentResPrice :: Ord v => (v -> v -> Int -> Int -> Int -> [(n,v,Bool)] -> [(n, v)])
+                 -- ^ Payment function
+                 -> Int -> Int -> Int -> ([(n, v)],v)
+                 -- ^ Parameters
+                 -> [(n, v)]
+auctionPaymentResPrice paymentFunction kPrice winnerSlots noLotteries (ls,reservePrice) =
   if kMax > kThreshold
      then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinner kThreshold ls)
      else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinner kThreshold ls)
