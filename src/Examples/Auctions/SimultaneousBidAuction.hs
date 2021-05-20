@@ -67,7 +67,7 @@ biddingStage name = [opengame|
   |]
 
 -- Transforms the payments into a random reshuffling
-transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
+transformPayments kPrice kSlots paymentFunction = [opengame|
 
    inputs    : bids ;
    feedback  :      ;
@@ -81,7 +81,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    : shuffledBids ;
    feedback  :      ;
-   operation : forwardFunction (auctionPayment paymentFunction reservePrice kPrice kSlots noLotteries) ;
+   operation : forwardFunction (auctionPayment paymentFunction reservePrice kPrice kSlots 0) ;
    outputs   : payments ;
    returns   :      ;
    :-----------------:
@@ -93,7 +93,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding2 kPrice kSlots noLotteries paymentFunction = [opengame| 
+bidding2 kPrice kSlots paymentFunction = [opengame| 
 
    inputs    :      ;
    feedback  :      ;
@@ -125,7 +125,7 @@ bidding2 kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    :  [("Alice",aliceDec),("Bob",bobDec)]  ;
    feedback  :      ;
-   operation :   transformPayments kPrice kSlots noLotteries paymentFunction ;
+   operation :   transformPayments kPrice kSlots paymentFunction ;
    outputs   :  payments ;
    returns   :      ;
    :-----------------:
@@ -170,7 +170,7 @@ truthfulStrat =
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
-equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidding2 kPrice kSlots noLotteries paymentFunction) strat void
+equilibriumGame kPrice kSlots paymentFunction strat = evaluate (bidding2 kPrice kSlots paymentFunction) strat void
 
 
 ------------------------
