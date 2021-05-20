@@ -16,6 +16,14 @@ orderAllocation  = sortBy (flip (\(_,v1) (_,v2) -> compare v1 v2 ))
 kMaxBid :: Ord v => Int -> [(n, v)] ->  v
 kMaxBid k ls = snd $  orderAllocation ls !! (k-1)
 
+-- Determine k-max bid
+kMaxBidReservePrice :: Ord v => v -> Int -> [(n, v)] ->  v
+kMaxBidReservePrice resPrice k ls = snd $  orderAllocation (resPriceLs ls) !! (k-1)
+   where   resPriceLs  []    = []
+           resPriceLs ((n,v):xs) = if v > resPrice then (n,v)  : resPriceLs xs
+                                             else (n,resPrice) : resPriceLs xs
+
+
 -- k- price auction rule, i.e. the sequence for winning bidders is ignored, winners always pay k-highest price
 noLotteryPayment :: Num v => v -> v -> Int -> Int -> Int -> [(n,v,Bool)] -> [(n, v)]
 noLotteryPayment _        _    _         _             _               []                     = []
@@ -23,6 +31,16 @@ noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid
    if winner
       then (name,kmax) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
       else (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+
+-- k- price auction rule, i.e. the sequence for winning bidders is ignored, winners always pay k-highest price
+noLotteryPaymentReservePrice ::(Num v, Ord v) => v -> v -> Int -> Int -> Int -> [(n,v,Bool)] -> [(n, v)]
+noLotteryPaymentReservePrice _        _    _         _             _               []                     = []
+noLotteryPaymentReservePrice resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,winner):ls)
+  | winner && bid >= resPrice = (name,bid) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+  | winner && bid <  resPrice = (name,resPrice) : noLotteryPayment resPrice kmax noLottery counterWinner lotteriesGiven ls
+  | otherwise                 =  (name,0) : noLotteryPayment resPrice kmax noLottery (counterWinner + 1) lotteriesGiven ls
+
+
 
 -- Determine payments for winners; for lottery winners, and for those who do not get a good set it to 0
 lotteryPayment :: Num v => v -> v -> Int -> Int -> Int -> [(String,v,Bool)] -> [(String, v)]
@@ -52,12 +70,22 @@ lotteryPayment2 resPrice kmax noLottery counterWinner lotteriesGiven ((name,bid,
    where pay = kmax  - (fromIntegral noLottery) / 2 * (kmax - resPrice)
 
 
--- Mark the auctionWinners 
+-- Mark the auctionWinners
 auctionWinner :: Ord v => v -> [(n, v)] -> [(n, v,Bool)]
-auctionWinner kmax []= []
-auctionWinner kmax ls@((name,b):bs)=
+auctionWinner _    []            = []
+auctionWinner kmax ((name,b):bs) =
   if b < kmax then (name,b,False) : auctionWinner kmax bs
               else (name,b,True)  : auctionWinner kmax bs
+
+-- Mark the auctionWinners
+auctionWinnerReservePrice :: Ord v => v -> v -> [(n, v)] -> [(n, v,Bool)]
+auctionWinnerReservePrice _            _    []            = []
+auctionWinnerReservePrice reservePrice kmax ((name,b):bs) =
+  if b < kmax || b < reservePrice
+     then (name,b,False) : auctionWinner kmax bs
+     else (name,b,True)  : auctionWinner kmax bs
+
+
 
 -- Select the payment for a player given the list of payments
 selectPayoffs :: (Eq n, Num v) => n -> [(n,v)] -> v
@@ -96,10 +124,10 @@ auctionPaymentResPrice :: Ord v => (v -> v -> Int -> Int -> Int -> [(n,v,Bool)] 
                  -> [(n, v)]
 auctionPaymentResPrice paymentFunction kPrice winnerSlots noLotteries (ls,reservePrice) =
   if kMax > kThreshold
-     then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinner kThreshold ls)
-     else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinner kThreshold ls)
-  where kMax = kMaxBid kPrice ls
-        kThreshold = kMaxBid winnerSlots ls
+     then paymentFunction reservePrice kThreshold noLotteries 0 0 (auctionWinnerReservePrice reservePrice kThreshold ls)
+     else paymentFunction reservePrice kMax noLotteries 0 0 (auctionWinnerReservePrice reservePrice kThreshold ls)
+  where kMax = kMaxBidReservePrice reservePrice kPrice ls
+        kThreshold = kMaxBidReservePrice reservePrice winnerSlots ls
 
 
 
