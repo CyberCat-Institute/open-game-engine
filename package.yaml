@@ -6,7 +6,6 @@ author: Jules Hedges, André Videla, Philipp Zahn & other contributors
 maintainer: philipp.zahn@protonmail
 copyright: Jules Hedges, André Videla, Philipp Zahn & other contributors
 license: AGPL
-github: https://github.com/philipp-zahn/open-games-hs
 extra-source-files:
 - README.md
 
