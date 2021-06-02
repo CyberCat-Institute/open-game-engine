@@ -97,7 +97,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding3 kPrice kSlots noLotteries paymentFunction = [opengame| 
+bidding kPrice kSlots noLotteries paymentFunction = [opengame| 
 
    inputs    :      ;
    feedback  :      ;
@@ -212,7 +212,7 @@ thresholdStrat' =
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
-equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidding3 kPrice kSlots noLotteries paymentFunction) strat void
+equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidding kPrice kSlots noLotteries paymentFunction) strat void
 
 
 ------------------------
