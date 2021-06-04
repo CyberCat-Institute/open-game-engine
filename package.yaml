@@ -86,3 +86,12 @@ tests:
       - probability
       - hspec
       - QuickCheck
+executables:
+  opengame:
+    main: app/Main.hs
+    dependencies: 
+          - base
+          - probability
+          - open-games-hs
+          - template-haskell
+
