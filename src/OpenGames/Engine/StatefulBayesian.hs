@@ -157,3 +157,11 @@ liftStochastic f = OpticOpenGame {
                     u () _ = return ()
                  in StochasticStatefulOptic v u,
   equilibrium = \_ () -> []}
+
+discount :: String -> (Double -> Double) -> StochasticStatefulOpenGame () () () () ()
+discount name f = OpticOpenGame {
+  play = \() -> let v () = return ((), ())
+                    u () () = do v <- get
+                                 put (\name' -> if name == name' then f (v name) else v name)
+                 in StochasticStatefulOptic v u,
+  equilibrium = \_ () -> []}

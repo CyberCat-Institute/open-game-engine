@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 41c6bdd1c8721a1ef397eab4242eb1d521be4a841692f0f2bcbaf79e4a412ea7
+-- hash: aeda5ac6e19348ac34f58d78fb24e3fc6989bc93b824ec31f2303d5b3fdaa1b5
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -99,6 +99,17 @@ library
     , profunctors
     , template-haskell
     , transformers
+  default-language: Haskell2010
+
+executable opengame
+  main-is: app/Main.hs
+  other-modules:
+      Paths_open_games_hs
+  build-depends:
+      base
+    , open-games-hs
+    , probability
+    , template-haskell
   default-language: Haskell2010
 
 test-suite test-open-games
