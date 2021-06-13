@@ -19,19 +19,43 @@ import OpenGames.Engine.DependentDecision
 
 
 generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
- (Block ["costOfCapital"] []
-  [Line [[|costOfCapital|]] [] [|epsilonDecision epsilon name [minDeposit, minDeposit + incrementDeposit .. maxDeposit]|] ["deposit"] [[|(-deposit) * costOfCapital|]]]
-  [[|deposit|]] [] :: Block String (Q Exp))
+ (Block ["costOfCapital"]
+        []
+
+  [Line [[|costOfCapital|]]
+        []
+        [|epsilonDecision epsilon name [minDeposit, minDeposit + incrementDeposit .. maxDeposit]|]
+        ["deposit"]
+        [[|(-deposit) * costOfCapital|]]]
+
+  [[|deposit|]]
+  []
+    :: Block String (Q Exp))
 {-}
-depositStagePlayerSrc = Block ["costOfCapital"] []
-  [Line ["costOfCapital"] [] "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])" ["deposit"] ["-deposit * costOfCapital"]]
-  ["deposit"] []
+depositStagePlayerSrc =
+Block ["costOfCapital"]
+      []
+---------------
+  [Line ["costOfCapital"]
+  []
+  "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])"
+  ["deposit"]
+  ["-deposit * costOfCapital"]]
+---------------
+  ["deposit"]
+  []
 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(costOfCapital, deposit) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\costOfCapital -> (costOfCapital, costOfCapital)) (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit]))))))) >>> (fromFunctions (\(costOfCapital, deposit) -> (costOfCapital, deposit)) (\(costOfCapital, deposit) -> ((costOfCapital, deposit), -deposit * costOfCapital)))))))) >>> (fromLens (\(costOfCapital, deposit) -> deposit) (curry (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit)))))
 -}
 generateGame "playingStagePlayer" ["name", "moves"] $ (Block ["observation", "bribe"] []
-  [Line [[|observation|], [|bribe|]] [] [|dependentDecision name (const moves)|] ["move"] [[|payoff + if bribePaid then bribe else 0|]]]
-  [[|move|]] ["payoff", "bribePaid"] :: Block String (Q Exp))
+  [Line [[|observation|], [|bribe|]]
+  []
+  [|dependentDecision name (const moves)|]
+  ["move"]
+  [[|payoff + if bribePaid then bribe else 0|]]]
+
+  [[|move|]]
+  ["payoff", "bribePaid"] :: Block String (Q Exp))
 
 class Obfuscatable x y where
   obfuscate :: [x] -> y
