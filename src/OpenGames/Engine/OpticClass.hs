@@ -17,12 +17,8 @@ class Optic o where
 identity :: (Optic o) => o s t s t
 identity = lens id (flip const)
 
-class Precontext c where
+class (Optic o) => Context c o | c -> o where
   void :: c () () () ()
-
--- Precontext is a separate class to Context because otherwise the typechecker throws a wobbly
-
-class (Optic o, Precontext c) => Context c o | c -> o where
   cmap :: o s1 t1 s2 t2 -> o a1 b1 a2 b2 -> c s1 t1 a2 b2 -> c s2 t2 a1 b1
   (//) :: (Show s1) => o s1 t1 a1 b1 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s2 t2 a2 b2
   (\\) :: (Show s2) => o s2 t2 a2 b2 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s1 t1 a1 b1
@@ -43,7 +39,7 @@ data OpticOpenGame o c m a x s y r = OpticOpenGame {
   play        :: a -> o x s y r,
   equilibrium :: c x s y r -> a -> m}
 
-instance (Optic o, Precontext c, Context c o, ContextAdd c, Monoid m) => OG (OpticOpenGame o c m) where
+instance (Optic o, Context c o, ContextAdd c, Monoid m) => OG (OpticOpenGame o c m) where
   fromLens v u = OpticOpenGame {
     play = \() -> lens v u,
     equilibrium = \_ () -> mempty}

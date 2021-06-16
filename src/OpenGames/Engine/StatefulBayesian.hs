@@ -47,10 +47,8 @@ instance Optic StochasticStatefulOptic where
 data StochasticStatefulContext s t a b where
   StochasticStatefulContext :: (Show z) => Stochastic (z, s) -> (z -> a -> StateT Vector Stochastic b) -> StochasticStatefulContext s t a b
 
-instance Precontext StochasticStatefulContext where
-  void = StochasticStatefulContext (return ((), ())) (\() () -> return ())
-
 instance Context StochasticStatefulContext StochasticStatefulOptic where
+  void = StochasticStatefulContext (return ((), ())) (\() () -> return ())
   cmap (StochasticStatefulOptic v1 u1) (StochasticStatefulOptic v2 u2) (StochasticStatefulContext h k)
             = let h' = do {(z, s) <- h; (_, s') <- v1 s; return (z, s')}
                   k' z a = do {(z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'}
