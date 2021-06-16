@@ -59,10 +59,6 @@ instance Context StochasticStatefulContext StochasticStatefulOptic where
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
                   k' (z, s1) a2 = do {(_, a1) <- lift (v s1); (_, b2) <- k z (a1, a2); return b2}
                in StochasticStatefulContext h' k'
-  (\\) (StochasticStatefulOptic v u) (StochasticStatefulContext h k)
-            = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
-                  k' (z, s2) a1 = do {(_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1}
-               in StochasticStatefulContext h' k'
 
 instance ContextAdd StochasticStatefulContext where
   prl (StochasticStatefulContext h k)
