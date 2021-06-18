@@ -289,6 +289,7 @@ appl = do
 expr :: Parser Lambda
 expr =  infixParser appl
 
+
 parseLine :: Parser p -> Parser e -> Parser (Line p e)
 parseLine parseP parseE = do
     covo <- (commaSep parseP <* reservedOp "|")
@@ -301,10 +302,10 @@ parseLine parseP parseE = do
 parseBlock :: Parser p -> Parser e -> Parser (Block p e)
 parseBlock parseP parseE = do
     covi <- (commaSep parseP <* reservedOp "||")
-    covo <- (commaSep parseE <* reservedOp "=>>")
+    cono <- (commaSep parseE <* reservedOp "=>>")
     lines <- (many (parseLine parseP parseE) <* reservedOp "<<=")
     coni <- (commaSep parseP <* reservedOp "||")
-    cono <- (commaSep parseE)
+    covo <- (commaSep parseE)
     pure (Block covi cono lines covo coni)
 
 parseTwoLines :: String -> String -> Parser p -> Parser e -> Parser ([p], [e])
@@ -331,4 +332,5 @@ parseVerboseSyntax parseP parseE =
   do (input, feedback) <- try (parseInput parseP parseE <* parseDelimiter) <|> pure ([], [])
      lines <- many (parseVerboseLine parseP parseE)
      (outputs,returns) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
+     eof
      return $ Block input feedback lines outputs returns

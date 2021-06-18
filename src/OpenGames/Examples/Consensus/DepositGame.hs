@@ -14,11 +14,10 @@ import OpenGames.Preprocessor.THSyntax
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.DecisionClass
-import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
+import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 
-
-generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
+generateGame "depositStagePlayerTH" ["name", "minDeposit", "maxDeposit", "incrementDeposit", "epsilon"] $
  (Block ["costOfCapital"]
         []
 
@@ -31,22 +30,22 @@ generateGame "depositStagePlayer" ["name", "minDeposit", "maxDeposit", "incremen
   [[|deposit|]]
   []
     :: Block String (Q Exp))
-{-}
+
 depositStagePlayerSrc =
-Block ["costOfCapital"]
-      []
----------------
-  [Line ["costOfCapital"]
-  []
-  "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])"
-  ["deposit"]
-  ["-deposit * costOfCapital"]]
----------------
-  ["deposit"]
-  []
+  Block ["costOfCapital"]
+        []
+  ---------------
+    [Line ["costOfCapital"]
+    []
+    "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])"
+    ["deposit"]
+    ["-deposit * costOfCapital"]]
+  ---------------
+    ["deposit"]
+    []
 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(costOfCapital, deposit) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\costOfCapital -> (costOfCapital, costOfCapital)) (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit]))))))) >>> (fromFunctions (\(costOfCapital, deposit) -> (costOfCapital, deposit)) (\(costOfCapital, deposit) -> ((costOfCapital, deposit), -deposit * costOfCapital)))))))) >>> (fromLens (\(costOfCapital, deposit) -> deposit) (curry (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit)))))
--}
+
 generateGame "playingStagePlayer" ["name", "moves"] $ (Block ["observation", "bribe"] []
   [Line [[|observation|], [|bribe|]]
   []

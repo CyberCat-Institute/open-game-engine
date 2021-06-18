@@ -24,7 +24,6 @@ import Data.Bifunctor
 -- covOut/S ─┤      ├─ R/conOut
 --           └──────┘
 --
-
 -- There is an important duality that the types can't express: half of these are lists of Haskell variables
 -- (they could probably be patterns) that create new bindings, and half of them are lists of Haskell expressions
 -- Line outputs and block inputs are variables/patterns, line inputs and block outputs are expressions
@@ -40,7 +39,8 @@ data Line p e = Line {
   contravariantOutputs :: [p],
   matrix :: e,
   covariantOutputs :: [p],
-  contravariantInputs :: [e]} deriving (Eq, Show, Functor)
+  contravariantInputs :: [e]}
+  deriving (Eq, Show, Functor)
 
 instance Comonad (Line p) where
   extract (Line _ _ e _ _) = e

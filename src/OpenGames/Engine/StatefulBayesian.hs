@@ -47,6 +47,8 @@ instance Optic StochasticStatefulOptic where
 data StochasticStatefulContext s t a b where
   StochasticStatefulContext :: (Show z) => Stochastic (z, s) -> (z -> a -> StateT Vector Stochastic b) -> StochasticStatefulContext s t a b
 
+instance Show (StochasticStatefulContext s t a b) where
+
 instance Precontext StochasticStatefulContext where
   void = StochasticStatefulContext (return ((), ())) (\() () -> return ())
 
@@ -75,6 +77,9 @@ instance ContextAdd StochasticStatefulContext where
                      else Just (StochasticStatefulContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
 
 type StochasticStatefulOpenGame = OpticOpenGame StochasticStatefulOptic StochasticStatefulContext [DiagnosticInfo]
+
+instance Show (Kleisli Stochastic a b) where
+  show _ = "kleisli stochastic"
 
 instance Decision (Kleisli Stochastic) StochasticStatefulOpenGame where
   decision name ys = OpticOpenGame {
