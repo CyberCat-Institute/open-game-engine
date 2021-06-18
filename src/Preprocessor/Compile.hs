@@ -40,7 +40,7 @@ compileRange :: LRange -> TH.Range
 compileRange (LFromR from) = FromR (compileLambda from)
 compileRange (LFromThenR from step) = FromThenR (compileLambda from) (compileLambda step)
 compileRange (LFromToR from to) = FromToR (compileLambda from) (compileLambda to)
-compileRange (LFromThenToR from step to) = FromThenToR (compileLambda from) (compileLambda step) (compileLambda step)
+compileRange (LFromThenToR from step to) = FromThenToR (compileLambda from) (compileLambda step) (compileLambda to)
 
 compileLambda :: Lambda -> Exp
 compileLambda (Lit l) = compileLiteral l
