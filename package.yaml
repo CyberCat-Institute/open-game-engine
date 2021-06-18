@@ -63,6 +63,7 @@ library:
     - OpenGames.Examples.Consensus.Censor
     - OpenGames.Examples.Consensus.CensorStrategicAttacker
     - OpenGames.Examples.Consensus.AndGate
+    - OpenGames.Examples.Consensus.AndGateMarkov
   dependencies:
     - base >=4.7 && <5
     - mtl
@@ -89,9 +90,8 @@ tests:
 executables:
   opengame:
     main: app/Main.hs
-    dependencies: 
+    dependencies:
           - base
           - probability
           - open-games-hs
           - template-haskell
-

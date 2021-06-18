@@ -9,6 +9,7 @@ import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
 import OpenGames.Preprocessor.THSyntax
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.Compile
+import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
@@ -17,8 +18,6 @@ import OpenGames.Engine.DependentDecision
 import OpenGames.Examples.Consensus.DepositGame (attackerPayoff)
 import OpenGames.Examples.Consensus.AndGate
 import Control.Arrow (Kleisli(..))
-
--- TODO: work out the summary statistics
 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit epsilon = [opengame|
   inputs : summaryStatistic, costOfCapital ;
@@ -97,3 +96,38 @@ iteratedAndGateMarkovGame numIterations numPlayers reward costOfCapital minBribe
   | (numIterations == 1) = andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor
   | (numIterations > 1)  = reindex (\x -> (x, x)) ((andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor)
                         >>> (iteratedAndGateMarkovGame (numIterations - 1) numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor))
+
+foo =
+  let numPlayers = 2
+      reward = 1.0
+      costOfCapital = 0.05
+      minBribe = 0.0
+      maxBribe = 0.0
+      incrementBribe = 0.0
+      maxSuccessfulAttackPayoff = 0.0
+      attackerProbability = 0.0
+      penalty = 0.5
+      minDeposit = 0.0
+      maxDeposit = 10.0
+      incrementDeposit = 0.1
+      epsilon = 0.0
+      discountFactor = 0.1
+      g = andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor
+          :: OpticOpenGame
+                          StochasticStatefulOptic
+                          StochasticStatefulContext
+                          [OpenGames.Engine.Diagnostics.DiagnosticInfo]
+                          ([Kleisli Stochastic (([Double], Bool), Double) Double], (),
+                           Kleisli Stochastic ([Double], Double) Double,
+                           [Kleisli Stochastic (([Double], Bool), [Double], Double) Bool], (), [()], ())
+                          ([Double], Bool)
+                          ()
+                          ([Double], Bool)
+                          ()
+      prior = undefined
+      depositStrategies = undefined
+      attackerStrategy = Kleisli (const (return 0.0))
+      stakingStrategies = undefined
+   in equilibrium g
+        (StochasticStatefulContext (do {p <- prior; return ((), p)}) (\_ _ -> return ()))
+        (depositStrategies, (), attackerStrategy, stakingStrategies, (), [(),()], ())
