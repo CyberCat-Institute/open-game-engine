@@ -119,7 +119,7 @@ bayesianDecision ys = BayesianOpenGame {
                                           in expected (fmap u (a x)) >= maximum [u y | y <- ys])
                                   (map snd (support h))}
 
-bayesianDecision1 :: [y] -> BayesianOpenGame Bool (D y) () () y Rational
+bayesianDecision1 :: Eq y => [y] -> BayesianOpenGame Bool (D y) () () y Rational
 bayesianDecision1 = reindex const . bayesianDecision
 
 bayesianDecisionDiagnostic :: (Eq x, Show x, Ord y, Show y) => String -> [y] -> BayesianOpenGame [DiagnosticInfo] (x -> D y) x () y Rational

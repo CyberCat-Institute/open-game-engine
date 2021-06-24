@@ -7,12 +7,12 @@ module OpenGames.Engine.OpticClass where
 import           OpenGames.Engine.OpenGamesClass
 
 class Optic o where
-  lens :: (s -> a) -> (s -> b -> t) -> o s t a b
+  lens :: Eq s => (s -> a) -> (s -> b -> t) -> o s t a b
   (>>>>) :: o s t a b -> o a b p q -> o s t p q
   (&&&&) :: o s1 t1 a1 b1 -> o s2 t2 a2 b2 -> o (s1, s2) (t1, t2) (a1, a2) (b1, b2)
   (++++) :: o s1 t a1 b -> o s2 t a2 b -> o (Either s1 s2) t (Either a1 a2) b
 
-identity :: (Optic o) => o s t s t
+identity :: (Eq s, Optic o) => o s t s t
 identity = lens id (flip const)
 
 class Precontext c where
@@ -36,7 +36,7 @@ class ContextAdd c where
   prl :: c (Either s1 s2) t (Either a1 a2) b -> Maybe (c s1 t a1 b)
   prr :: c (Either s1 s2) t (Either a1 a2) b -> Maybe (c s2 t a2 b)
 
-data OpticOpenGame o c m a x s y r = OpticOpenGame {
+data Eq x => OpticOpenGame o c m a x s y r = OpticOpenGame {
   play        :: a -> o x s y r,
   equilibrium :: c x s y r -> a -> m}
 

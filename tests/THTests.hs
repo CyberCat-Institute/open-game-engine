@@ -84,7 +84,6 @@ instance Arbitrary t => Arbitrary (T Rational t) where
   arbitrary = certainly <$> arbitrary
   shrink (Cons v) = Cons <$> (subsequences v)
 
-
 main :: IO ()
 main = do
   testCensor

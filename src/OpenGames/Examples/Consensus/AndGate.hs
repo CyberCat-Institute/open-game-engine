@@ -13,7 +13,7 @@ import OpenGames.Engine.OpticClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
 import OpenGames.Engine.DependentDecision
 
-import OpenGames.Examples.Consensus.DepositGame (depositStagePlayer, playingStagePlayer, attackerPayoff)
+import OpenGames.Examples.Consensus.DepositGame (depositStagePlayerTH, playingStagePlayer, attackerPayoff)
 import Control.Arrow (Kleisli(..))
 
 obfuscateAndGate :: [Bool] -> Bool
@@ -38,7 +38,7 @@ successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff
 andGateGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon = [opengame|
   inputs : replicate numPlayers costOfCapital ;
   feedback : discard1 ;
-  operation : population [ depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon | n <- [1 .. numPlayers]] ;
+  operation : population [ depositStagePlayerTH ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon | n <- [1 .. numPlayers]] ;
   outputs : deposits ;
   returns : replicate numPlayers unit ;
 

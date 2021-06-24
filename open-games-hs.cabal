@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33387bdbfa3de0c4dd6b4af90e0f14e8cf17b20e79e24dad0d20dfcaa346daf8
+-- hash: 06aeaf21090d9f02319554f7d1c39f3a2234c143e63abfa0f5c50e45c7712388
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -79,9 +79,9 @@ library
       OpenGames.Examples.Consensus.CensorStrategicAttacker
       OpenGames.Examples.Consensus.AndGate
       OpenGames.Examples.Consensus.AndGateMarkov
+      OpenGames.Examples.Consensus.DepositGame
   other-modules:
       OpenGames.Engine.Costrategies
-      OpenGames.Examples.Consensus.DepositGame
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
       Paths_open_games_hs
@@ -116,7 +116,6 @@ test-suite test-open-games
   type: exitcode-stdio-1.0
   main-is: THTests.hs
   other-modules:
-      ArrowTest
       CensorTests
       VerboseTests
       Paths_open_games_hs
