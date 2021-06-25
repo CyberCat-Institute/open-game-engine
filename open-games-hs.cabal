@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 06aeaf21090d9f02319554f7d1c39f3a2234c143e63abfa0f5c50e45c7712388
+-- hash: 1247e21c979dc78e405074be267e2c6babfaa48e0e2b4ada081ffabf60cb49be
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -122,6 +122,25 @@ test-suite test-open-games
   hs-source-dirs:
       tests
   ghc-options: -main-is THTests
+  build-depends:
+      QuickCheck
+    , base
+    , hspec
+    , open-games-hs
+    , probability
+    , template-haskell
+  default-language: Haskell2010
+
+test-suite test-verbose-syntax
+  type: exitcode-stdio-1.0
+  main-is: VerboseTests.hs
+  other-modules:
+      CensorTests
+      THTests
+      Paths_open_games_hs
+  hs-source-dirs:
+      tests
+  ghc-options: -main-is VerboseTests
   build-depends:
       QuickCheck
     , base

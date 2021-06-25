@@ -88,6 +88,17 @@ tests:
       - probability
       - hspec
       - QuickCheck
+  test-verbose-syntax:
+    main: VerboseTests
+    source-dirs: tests
+    dependencies:
+      - open-games-hs
+      - template-haskell
+      - base
+      - probability
+      - hspec
+      - QuickCheck
+
 executables:
   opengame:
     main: app/Main.hs
