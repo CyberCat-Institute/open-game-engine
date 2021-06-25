@@ -26,9 +26,13 @@ type Stochastic = T Double
 type Vector = String -> Double
 
 data StochasticStatefulOptic s t a b where
-  StochasticStatefulOptic :: (s -> Stochastic (z, a))
+  StochasticStatefulOptic :: Eq z => (s -> Stochastic (z, a))
                           -> (z -> b -> StateT Vector Stochastic t)
                           -> StochasticStatefulOptic s t a b
+
+instance (Eq s, Eq t, Eq a, Eq b) => Eq (StochasticStatefulOptic s t a b) where
+  (==) (StochasticStatefulOptic f1 f2)
+       (StochasticStatefulOptic g1 g2) = undefined
 
 instance Optic StochasticStatefulOptic where
   lens v u = StochasticStatefulOptic (\s -> return (s, v s)) (\s b -> return (u s b))
@@ -46,6 +50,9 @@ instance Optic StochasticStatefulOptic where
 
 data StochasticStatefulContext s t a b where
   StochasticStatefulContext :: (Show z) => Stochastic (z, s) -> (z -> a -> StateT Vector Stochastic b) -> StochasticStatefulContext s t a b
+
+--instance Show (StochasticStatefulContext s t a b) where
+
 
 instance Precontext StochasticStatefulContext where
   void = StochasticStatefulContext (return ((), ())) (\() () -> return ())
@@ -75,6 +82,9 @@ instance ContextAdd StochasticStatefulContext where
                      else Just (StochasticStatefulContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
 
 type StochasticStatefulOpenGame = OpticOpenGame StochasticStatefulOptic StochasticStatefulContext [DiagnosticInfo]
+
+instance Show (Kleisli Stochastic a b) where
+  show _ = "kleisli stochastic"
 
 instance Decision (Kleisli Stochastic) StochasticStatefulOpenGame where
   decision name ys = OpticOpenGame {
@@ -146,12 +156,12 @@ dependentDecision = OpticOpenGame {
                                          optimalPayoff = show optimalPayoff}]
            | (theta, (name, ys, x)) <- support h]}
 
-nature :: Stochastic x -> StochasticStatefulOpenGame () () () x ()
+nature :: Eq x => Stochastic x -> StochasticStatefulOpenGame () () () x ()
 nature a = OpticOpenGame {
   play = \() -> StochasticStatefulOptic (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),
  equilibrium = \_ () -> []}
 
-liftStochastic :: (x -> Stochastic y) -> StochasticStatefulOpenGame () x () y ()
+liftStochastic :: (Eq x, Eq y) => (x -> Stochastic y) -> StochasticStatefulOpenGame () x () y ()
 liftStochastic f = OpticOpenGame {
   play = \() -> let v x = do {y <- f x; return ((), y)}
                     u () _ = return ()

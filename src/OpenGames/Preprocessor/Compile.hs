@@ -6,6 +6,7 @@ module OpenGames.Preprocessor.Compile where
 
 import Prelude hiding (lines)
 import Data.Char
+import Data.Bifunctor
 import OpenGames.Preprocessor.Parser
 import OpenGames.Preprocessor.Lambda
 import OpenGames.Preprocessor.THSyntax
@@ -53,6 +54,12 @@ compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
                                                (NormalB (compileLambda val))
                                                []]
                                          (compileLambda body)
+compileLambda (LComp stmts) = CompE (map compileStmt stmts)
+
+compileStmt :: LStmt -> Stmt
+compileStmt (LBindS pat exp) = BindS (compilePattern pat) (compileLambda exp)
+compileStmt (LNoBindS exp) = NoBindS (compileLambda exp)
+compileStmt (LLetS pat exp) = LetS [ValD (compilePattern pat) (NormalB $ compileLambda exp) []]
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i
@@ -63,44 +70,23 @@ compilePattern (PList ls) = ListP $ fmap compilePattern ls
 compilePattern (PTuple ts) = TupP $ fmap compilePattern ts
 compilePattern (PVar i) = VarP (mkName i)
 
-compLine :: ParsedLine Pattern Lambda -> ParsedLine Pat Exp
-compLine (MkParsedLine covOut conIn op conOut covIn) =
-  MkParsedLine  (compilePattern <$> covOut)
-                (compileLambda <$> conIn)
-                (compileLambda op)
-                (compilePattern <$> conOut)
-                (compileLambda <$> covIn)
+compLine :: Line Pattern Lambda -> Line Pat Exp
+compLine = bimap compilePattern compileLambda
 
 
-convertGame :: GameAST Pattern Lambda -> GameAST Pat Exp
-convertGame (MkParsedBlock covIn conOut lns covOut conIn) =
-  MkParsedBlock (fmap compilePattern covIn)
-                (fmap compileLambda conOut)
-                (fmap compLine lns)
-                (fmap compilePattern covOut)
-                (fmap compileLambda conIn)
-
-compileGameLine :: ParsedLine Pat Exp -> Line Pat Exp
-compileGameLine (MkParsedLine { covOut
-                          , conIn
-                          , op
-                          , conOut
-                          , covIn }) = Line covIn conOut op covOut conIn
-
-compileAST :: GameAST Pat Exp -> Block Pat Exp
-compileAST (MkParsedBlock a b c d e) =
-  Block a b (fmap compileGameLine c) e d
+convertGame :: Block Pattern Lambda -> Block Pat Exp
+convertGame = bimap compilePattern compileLambda
 
 parseLambdaAsOpenGame :: String -> Maybe (FreeOpenGame Pat Exp)
 parseLambdaAsOpenGame input =
   case parseLambda input of
     Left _ -> Nothing
-    Right v -> Just $ compileBlock $ compileAST $ convertGame v
+    Right v -> Just $ compileBlock $ convertGame v
 
 parseLambdaAsExp :: String -> Q Exp
 parseLambdaAsExp input = case parseLambda input of
                            Left err -> error (show err)
-                           Right v ->  (interpretOpenGame $ compileBlock $ compileAST $ convertGame v)
+                           Right v ->  (interpretOpenGame $ compileBlock $ convertGame v)
 
 game :: QuasiQuoter
 game = QuasiQuoter
@@ -110,11 +96,15 @@ game = QuasiQuoter
      , quoteDec  = error "expected expr"
      }
 
-parseVerboseGame :: String -> Q Exp
-parseVerboseGame input = case parseVerbose input of
-                           Left err ->  error (show err)
-                           Right v ->  (interpretOpenGame $ compileBlock $ compileAST $ convertGame v)
+parseOrFail :: String -> Block Pattern Lambda
+parseOrFail input = case parseVerbose input of
+                          Left err -> error (show err)
+                          Right parsed -> parsed
 
+getParseTree = convertGame . parseOrFail
+
+parseVerboseGame :: String -> Q Exp
+parseVerboseGame = interpretOpenGame . compileBlock . getParseTree
 opengame :: QuasiQuoter
 opengame = QuasiQuoter
      { quoteExp  = parseVerboseGame . dropWhile isSpace
@@ -123,3 +113,10 @@ opengame = QuasiQuoter
      , quoteDec  = error "expected expr"
      }
 
+parseTree :: QuasiQuoter
+parseTree = QuasiQuoter
+     { quoteExp  = \str -> [|getParseTree . dropWhile isSpace $ str|]
+     , quotePat  = error "expected expr"
+     , quoteType = error "expected expr"
+     , quoteDec  = error "expected expr"
+     }

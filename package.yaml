@@ -64,6 +64,7 @@ library:
     - OpenGames.Examples.Consensus.CensorStrategicAttacker
     - OpenGames.Examples.Consensus.AndGate
     - OpenGames.Examples.Consensus.AndGateMarkov
+    - OpenGames.Examples.Consensus.DepositGame
   dependencies:
     - base >=4.7 && <5
     - mtl
@@ -87,6 +88,17 @@ tests:
       - probability
       - hspec
       - QuickCheck
+  test-verbose-syntax:
+    main: VerboseTests
+    source-dirs: tests
+    dependencies:
+      - open-games-hs
+      - template-haskell
+      - base
+      - probability
+      - hspec
+      - QuickCheck
+
 executables:
   opengame:
     main: app/Main.hs
