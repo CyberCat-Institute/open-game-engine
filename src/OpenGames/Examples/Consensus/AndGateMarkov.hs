@@ -103,14 +103,14 @@ foo =
       costOfCapital = 0.05
       minBribe = 0.0
       maxBribe = 0.0
-      incrementBribe = 0.0
+      incrementBribe = 0.1
       maxSuccessfulAttackPayoff = 0.0
       attackerProbability = 0.0
       penalty = 0.5
       minDeposit = 0.0
       maxDeposit = 10.0
       incrementDeposit = 0.1
-      epsilon = 0.0
+      epsilon = 0.001
       discountFactor = 0.1
       g = andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor
           :: OpticOpenGame
@@ -124,10 +124,12 @@ foo =
                           ()
                           ([Double], Bool)
                           ()
-      prior = undefined
-      depositStrategies = undefined
+      prior = do deposits <- uniform [[x, x] | x <- [0.0, 0.1 .. 10.0]]
+                 andResults <- uniform [True, False]
+                 return (deposits, andResults)
+      depositStrategies = replicate 2 $ Kleisli $ \((_, previousRoundTrue), _) -> certainly $ if previousRoundTrue then 5.0 else 0.0
       attackerStrategy = Kleisli (const (return 0.0))
-      stakingStrategies = undefined
+      stakingStrategies = replicate 2 $ Kleisli $ \((_, previousRoundTrue), _, _) -> certainly previousRoundTrue
    in equilibrium g
         (StochasticStatefulContext (do {p <- prior; return ((), p)}) (\_ _ -> return ()))
         (depositStrategies, (), attackerStrategy, stakingStrategies, (), [(),()], ())

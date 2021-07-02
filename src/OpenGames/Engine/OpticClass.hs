@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DatatypeContexts #-}
 
 module OpenGames.Engine.OpticClass where
 
