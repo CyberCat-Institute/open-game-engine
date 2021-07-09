@@ -115,16 +115,16 @@ andGateMarkovTestParams = AndGateMarkovParams {
     reward = 1.0,
     costOfCapital = 0.05,
     minBribe = 0.0,
-    maxBribe = 0.0,
-    incrementBribe = 0.1,
-    maxSuccessfulAttackPayoff = 0.0,
-    attackerProbability = 0.0,
+    maxBribe = 5.0,
+    incrementBribe = 1.0,
+    maxSuccessfulAttackPayoff = 1000.0,
+    attackerProbability = 0.001,
     penalty = 0.5,
     minDeposit = 0.0,
     maxDeposit = 10.0,
     incrementDeposit = 0.1,
     epsilon = 0.001,
-    discountFactor = 0.1
+    discountFactor = 0.9
 }
 
 andGateMarkovTestStrategies ::([Kleisli Stochastic (([Double], Bool), Double) Double], (),
@@ -132,8 +132,8 @@ andGateMarkovTestStrategies ::([Kleisli Stochastic (([Double], Bool), Double) Do
  [Kleisli Stochastic (([Double], Bool), [Double], Double) Bool], (), [()], ())
 andGateMarkovTestStrategies =
   let depositStrategies = replicate (numPlayers andGateMarkovTestParams) $ Kleisli $ \((_, previousRoundTrue), _) -> certainly $ if previousRoundTrue then 4.6 else 0.0
-      attackerStrategy = Kleisli (const (return 0.0))
-      stakingStrategies = replicate (numPlayers andGateMarkovTestParams) $ Kleisli $ \((_, previousRoundTrue), _, _) -> certainly previousRoundTrue
+      attackerStrategy = Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then certainly 5.0 else certainly 0.0)
+      stakingStrategies = replicate (numPlayers andGateMarkovTestParams) $ Kleisli $ \((_, previousRoundTrue), _, bribe) -> certainly $ previousRoundTrue && bribe < 5.0
    in (depositStrategies, (), attackerStrategy, stakingStrategies, (), replicate (numPlayers andGateMarkovTestParams) (), ())
 
 andGateMarkovTestPrior = do deposits <- uniform [replicate (numPlayers andGateMarkovTestParams) x | x <- [0.0, 1.0 .. 10.0]]
@@ -156,3 +156,11 @@ andGateMarkovEq numIterations =
         (StochasticStatefulContext (do {p <- andGateMarkovTestPrior; return ((), p)})
                                    (\() -> continuation))
         andGateMarkovTestStrategies
+
+{-
+Known equilibrium: every deposits 0, plays False, attacker plays 0 in every state
+-}
+
+{-
+TODO: Extreme values of discount factor aren't making sense
+-}
