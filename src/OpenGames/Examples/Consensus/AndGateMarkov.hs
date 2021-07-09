@@ -4,6 +4,8 @@
 
 module OpenGames.Examples.Consensus.AndGateMarkov where
 
+import Data.HashMap (Map)
+
 import Control.Monad.State
 import Numeric.Probability.Distribution (T(..), certainly, uniform, fromFreqs)
 
@@ -145,10 +147,11 @@ andGateMarkovStageEq
         (StochasticStatefulContext (do {p <- andGateMarkovTestPrior; return ((), p)}) (\_ _ -> return ()))
         andGateMarkovTestStrategies
 
-extractContinuation :: StochasticStatefulOptic x () y () -> x -> StateT (String -> Double) (T Double) ()
+extractContinuation :: StochasticStatefulOptic x () y () -> x -> StateT (Map String Double) (T Double) ()
 extractContinuation (StochasticStatefulOptic v u) x
   = do (z, _) <- lift (v x)
        u z ()
+
 
 andGateMarkovEq numIterations =
   let continuation = extractContinuation (play (iteratedAndGateMarkovGame numIterations andGateMarkovTestParams) andGateMarkovTestStrategies)

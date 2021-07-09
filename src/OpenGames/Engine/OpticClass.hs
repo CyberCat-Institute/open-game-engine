@@ -1,5 +1,4 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DatatypeContexts #-}
 
 module OpenGames.Engine.OpticClass where
 
@@ -37,7 +36,7 @@ class ContextAdd c where
   prl :: c (Either s1 s2) t (Either a1 a2) b -> Maybe (c s1 t a1 b)
   prr :: c (Either s1 s2) t (Either a1 a2) b -> Maybe (c s2 t a2 b)
 
-data Eq x => OpticOpenGame o c m a x s y r = OpticOpenGame {
+data OpticOpenGame o c m a x s y r = OpticOpenGame {
   play        :: a -> o x s y r,
   equilibrium :: c x s y r -> a -> m}
 
