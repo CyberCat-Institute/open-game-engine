@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1247e21c979dc78e405074be267e2c6babfaa48e0e2b4ada081ffabf60cb49be
+-- hash: d1e9f94ef4c9273aed97e2d8216abc66cfd6e21fccacf0569d75f857161c4b98
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -92,6 +92,7 @@ library
     , ad
     , base >=4.7 && <5
     , comonad
+    , hashmap
     , mtl
     , parsec
     , poly
