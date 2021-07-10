@@ -7,6 +7,7 @@ module OpenGames.Preprocessor.THSyntax ( LineWithContext(..)
                                        , QLine
                                        , compileBlock
                                        , param
+                                       , asPat
                                        , compileLine
                                        , generateGame
                                        )
@@ -95,6 +96,9 @@ linesWithContext block = zipWith3 LineWithContext (blockLines block) (covariantC
 param :: String -> Q Exp
 param = pure . VarE . mkName
 
+asPat :: String -> Q Pat
+asPat = pure . VarP . mkName
+
 compileQLine :: QLine -> Q SLine
 compileQLine qline = do covIn <- traverse id $ covariantInputs qline
                         conIn <- traverse id $ contravariantInputs qline
@@ -112,6 +116,29 @@ instance GameCompiler (Block Pat Exp) where
     do
        game <- interpretOpenGame (compileBlock block)
        pure $ [FunD (mkName name) [Clause (fmap (VarP . mkName) args) (NormalB game) []]]
+
+extract :: Block (Q p) (Q e) -> Q (Block p e)
+extract (Block covIn conOut lines covOut conIn) =
+  do covIn' <- sequence covIn
+     conOut' <- sequence conOut
+     lines' <- traverse extractLines lines
+     covOut' <- sequence covOut
+     conIn' <- sequence conIn
+     pure (Block covIn' conOut' lines' covOut' conIn')
+  where
+    extractLines :: Line (Q p) (Q e) -> Q (Line p e)
+    extractLines (Line covIn conOut m covOut conIn) = do
+      covIn' <- sequence covIn
+      conOut' <- sequence conOut
+      body <- m
+      covOut' <- sequence covOut
+      conIn' <- sequence conIn
+      pure (Line covIn' conOut' body covOut' conIn')
+
+instance GameCompiler (Block (Q Pat) (Q Exp)) where
+  generateGame name args block =
+    extract block >>=
+    generateGame name args
 
 instance GameCompiler (Block String (Q Exp)) where
   generateGame name args block = do

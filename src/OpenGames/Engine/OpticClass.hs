@@ -9,12 +9,12 @@ import           OpenGames.Engine.OpenGamesClass hiding (fromFunctions)
 import           Data.Tuple                             (swap)
 
 class Optic o where
-  lens :: (s -> a) -> (s -> b -> t) -> o s t a b
+  lens :: Eq s => (s -> a) -> (s -> b -> t) -> o s t a b
   (>>>>) :: o s t a b -> o a b p q -> o s t p q
   (&&&&) :: o s1 t1 a1 b1 -> o s2 t2 a2 b2 -> o (s1, s2) (t1, t2) (a1, a2) (b1, b2)
   (++++) :: o s1 t a1 b -> o s2 t a2 b -> o (Either s1 s2) t (Either a1 a2) b
 
-identity :: (Optic o) => o s t s t
+identity :: (Eq s, Optic o) => o s t s t
 identity = lens id (flip const)
 
 class (Optic o) => Context c o | c -> o where

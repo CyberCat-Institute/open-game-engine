@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: aeda5ac6e19348ac34f58d78fb24e3fc6989bc93b824ec31f2303d5b3fdaa1b5
+-- hash: d1e9f94ef4c9273aed97e2d8216abc66cfd6e21fccacf0569d75f857161c4b98
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -78,10 +78,10 @@ library
       OpenGames.Examples.Consensus.Censor
       OpenGames.Examples.Consensus.CensorStrategicAttacker
       OpenGames.Examples.Consensus.AndGate
-  other-modules:
-      OpenGames.Engine.Costrategies
       OpenGames.Examples.Consensus.AndGateMarkov
       OpenGames.Examples.Consensus.DepositGame
+  other-modules:
+      OpenGames.Engine.Costrategies
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
       Paths_open_games_hs
@@ -92,6 +92,7 @@ library
     , ad
     , base >=4.7 && <5
     , comonad
+    , hashmap
     , mtl
     , parsec
     , poly
@@ -116,12 +117,31 @@ test-suite test-open-games
   type: exitcode-stdio-1.0
   main-is: THTests.hs
   other-modules:
-      ArrowTest
       CensorTests
+      VerboseTests
       Paths_open_games_hs
   hs-source-dirs:
       tests
   ghc-options: -main-is THTests
+  build-depends:
+      QuickCheck
+    , base
+    , hspec
+    , open-games-hs
+    , probability
+    , template-haskell
+  default-language: Haskell2010
+
+test-suite test-verbose-syntax
+  type: exitcode-stdio-1.0
+  main-is: VerboseTests.hs
+  other-modules:
+      CensorTests
+      THTests
+      Paths_open_games_hs
+  hs-source-dirs:
+      tests
+  ghc-options: -main-is VerboseTests
   build-depends:
       QuickCheck
     , base

@@ -11,6 +11,7 @@ import           Control.Arrow
 import           Control.Monad.State                hiding (state)
 import           Control.Monad.Trans.Class
 import           Data.Profunctor
+import           Data.HashMap                       as HM hiding (null)
 import           Numeric.Probability.Distribution   hiding (lift)
 
 import           Data.List                          (maximumBy)
@@ -23,12 +24,16 @@ import           OpenGames.Engine.SubgamePerfect    (KleisliContext (..),
                                                      KleisliOptic (..))
 
 type Stochastic = T Double
-type Vector = String -> Double
+type Vector = HM.Map String Double
 
 data StochasticStatefulOptic s t a b where
-  StochasticStatefulOptic :: (s -> Stochastic (z, a))
+  StochasticStatefulOptic :: Eq z => (s -> Stochastic (z, a))
                           -> (z -> b -> StateT Vector Stochastic t)
                           -> StochasticStatefulOptic s t a b
+
+instance (Eq s, Eq t, Eq a, Eq b) => Eq (StochasticStatefulOptic s t a b) where
+  (==) (StochasticStatefulOptic f1 f2)
+       (StochasticStatefulOptic g1 g2) = undefined
 
 instance Optic StochasticStatefulOptic where
   lens v u = StochasticStatefulOptic (\s -> return (s, v s)) (\s b -> return (u s b))
@@ -70,13 +75,20 @@ instance ContextAdd StochasticStatefulContext where
 
 type StochasticStatefulOpenGame = OpticOpenGame StochasticStatefulOptic StochasticStatefulContext [DiagnosticInfo]
 
+instance Show (Kleisli Stochastic a b) where
+  show _ = "kleisli stochastic"
+
 instance Decision (Kleisli Stochastic) StochasticStatefulOpenGame where
   decision name ys = OpticOpenGame {
     play = \a -> let v x = do {y <- runKleisli a x; return ((), y)}
-                     u () r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                     u () r = modify (HM.adjust (+ r) name)
                   in StochasticStatefulOptic v u,
     equilibrium = \(StochasticStatefulContext h k) a ->
-      concat [let u y = expected (evalStateT (do {t <- lift (bayes h x); r <- k t y; v <- get; return (r + v name)}) (const 0))
+      concat [let u y = expected (evalStateT (do {t <- lift (bayes h x);
+                                                  r <- k t y;
+                                                  gets ((+ r) . HM.findWithDefault 0.0 name)
+                                                 })
+                                             HM.empty)
                   strategy = runKleisli a x
                   strategicPayoff = expected (fmap u strategy)
                   (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
@@ -98,13 +110,18 @@ import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision
 import OpenGames.Engine.DependentDecision
 -}
 
-roleDecision :: (Eq x, Show x, Ord y, Show y) => [y] -> StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, x) () y Double
+roleDecision :: (Eq x, Show x, Ord y, Show y)
+             => [y] -> StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, x) () y Double
 roleDecision ys = OpticOpenGame {
   play = \a -> let v (name, x) = do {y <- runKleisli a x; return (name, y)}
-                   u name r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                   u name r = modify (HM.adjust (+ r) name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
-    concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, x)); r <- k t y; v <- get; return (r + v name)}) (const 0))
+    concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, x));
+                                                r <- k t y;
+                                                gets ((+ r) . HM.findWithDefault 0.0 name)
+                                               })
+                                           HM.empty)
                 strategy = runKleisli a x
                 strategicPayoff = expected (fmap u strategy)
                 (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
@@ -119,13 +136,18 @@ roleDecision ys = OpticOpenGame {
                                          optimalPayoff = show optimalPayoff}]
            | (theta, (name, x)) <- support h]}
 
-dependentDecision :: (Eq x, Show x, Ord y, Show y) => StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, [y], x) () y Double
+dependentDecision :: (Eq x, Show x, Ord y, Show y)
+                  => StochasticStatefulOpenGame (Kleisli Stochastic x y) (String, [y], x) () y Double
 dependentDecision = OpticOpenGame {
   play = \a -> let v (name, _, x) = do {y <- runKleisli a x; return (name, y)}
-                   u name r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                   u name r = modify (HM.adjust (+ r) name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
-    concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, ys, x)); r <- k t y; v <- get; return (r + v name)}) (const 0))
+    concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, ys, x));
+                                                r <- k t y;
+                                                gets ((+ r) . HM.findWithDefault 0.0 name)
+                                               })
+                                           HM.empty)
                 strategy = runKleisli a x
                 strategicPayoff = expected (fmap u strategy)
                 (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
@@ -140,12 +162,12 @@ dependentDecision = OpticOpenGame {
                                          optimalPayoff = show optimalPayoff}]
            | (theta, (name, ys, x)) <- support h]}
 
-nature :: Stochastic x -> StochasticStatefulOpenGame () () () x ()
+nature :: Eq x => Stochastic x -> StochasticStatefulOpenGame () () () x ()
 nature a = OpticOpenGame {
   play = \() -> StochasticStatefulOptic (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),
  equilibrium = \_ () -> []}
 
-liftStochastic :: (x -> Stochastic y) -> StochasticStatefulOpenGame () x () y ()
+liftStochastic :: (Eq x, Eq y) => (x -> Stochastic y) -> StochasticStatefulOpenGame () x () y ()
 liftStochastic f = OpticOpenGame {
   play = \() -> let v x = do {y <- f x; return ((), y)}
                     u () _ = return ()
@@ -155,7 +177,6 @@ liftStochastic f = OpticOpenGame {
 discount :: String -> (Double -> Double) -> StochasticStatefulOpenGame () () () () ()
 discount name f = OpticOpenGame {
   play = \() -> let v () = return ((), ())
-                    u () () = do v <- get
-                                 put (\name' -> if name == name' then f (v name) else v name)
+                    u () () = modify (HM.adjust f name)
                  in StochasticStatefulOptic v u,
   equilibrium = \_ () -> []}

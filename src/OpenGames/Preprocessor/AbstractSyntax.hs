@@ -17,7 +17,13 @@ import Data.Bifunctor
 -- cvo, ..., cvo' | cno, ..., cno' <- matrix -< cvi, ..., cvi' | cni, ..., cvi'
 
 -- covariant input = X, covariant output = Y, contravariant input = R, contravariant output = S
-
+--
+--           ┌──────┐
+--  covIn/X ─┤      ├─ Y/conIn
+--           │      │
+-- covOut/S ─┤      ├─ R/conOut
+--           └──────┘
+--
 -- There is an important duality that the types can't express: half of these are lists of Haskell variables
 -- (they could probably be patterns) that create new bindings, and half of them are lists of Haskell expressions
 -- Line outputs and block inputs are variables/patterns, line inputs and block outputs are expressions
@@ -29,9 +35,12 @@ import Data.Bifunctor
 -- rather than record syntax
 
 data Line p e = Line {
-  covariantInputs :: [e], contravariantOutputs :: [p],
-  matrix :: e, --
-  covariantOutputs :: [p], contravariantInputs :: [e]} deriving (Eq, Show, Functor)
+  covariantInputs :: [e],
+  contravariantOutputs :: [p],
+  matrix :: e,
+  covariantOutputs :: [p],
+  contravariantInputs :: [e]}
+  deriving (Eq, Show, Functor)
 
 instance Comonad (Line p) where
   extract (Line _ _ e _ _) = e
@@ -61,11 +70,14 @@ instance Traversable (Line p) where
               <*> pure covOut
               <*> traverse f conIn
 
+-- `p` stands for "pattern", `e` for "expression"
 data Block p e = Block {
-  blockCovariantInputs :: [p], blockContravariantOutputs :: [e],
+  blockCovariantInputs :: [p],
+  blockContravariantOutputs :: [e],
   blockLines :: [Line p e],
-  blockCovariantOutputs :: [e], blockContravariantInputs :: [p]} deriving (Eq, Show, Functor)
-
+  blockCovariantOutputs :: [e],
+  blockContravariantInputs :: [p]}
+  deriving (Eq, Show, Functor)
 
 instance Applicative (Block p) where
   pure v = Block [] [] (pure (pure v)) [] []
@@ -80,7 +92,6 @@ instance Applicative (Block p) where
       where
         mapLines :: [Line p (a -> b)] -> [a] -> [b]
         mapLines f as = fmap extract f <*> as
-
 
 instance Foldable (Block p) where
   foldr f init (Block _ _ arg _ _)  =

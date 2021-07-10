@@ -4,11 +4,15 @@
 
 module OpenGames.Examples.Consensus.AndGateMarkov where
 
-import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
+import Data.HashMap (Map)
+
+import Control.Monad.State
+import Numeric.Probability.Distribution (T(..), certainly, uniform, fromFreqs)
 
 import OpenGames.Preprocessor.THSyntax
 import OpenGames.Preprocessor.AbstractSyntax
 import OpenGames.Preprocessor.Compile
+import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.OpenGamesClass
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.StatefulBayesian hiding (decision, roleDecision, dependentDecision)
@@ -17,8 +21,6 @@ import OpenGames.Engine.DependentDecision
 import OpenGames.Examples.Consensus.DepositGame (attackerPayoff)
 import OpenGames.Examples.Consensus.AndGate
 import Control.Arrow (Kleisli(..))
-
--- TODO: work out the summary statistics
 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit epsilon = [opengame|
   inputs : summaryStatistic, costOfCapital ;
@@ -51,7 +53,19 @@ playingStagePlayer name moves = [opengame|
   returns : payoff, bribePaid ;
 |]
 
-andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor = [opengame|
+data AndGateMarkovParams = AndGateMarkovParams {
+  numPlayers :: Int,
+  reward :: Double,
+  costOfCapital :: Double,
+  minBribe :: Double, maxBribe :: Double, incrementBribe :: Double,
+  maxSuccessfulAttackPayoff :: Double, attackerProbability :: Double,
+  penalty :: Double,
+  minDeposit :: Double, maxDeposit :: Double, incrementDeposit :: Double,
+  epsilon :: Double,
+  discountFactor :: Double
+}
+
+andGateMarkovGame (AndGateMarkovParams numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor) = [opengame|
   inputs : summaryStatistic ;
 
   :---:
@@ -93,7 +107,63 @@ andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBri
   outputs : (deposits, obfuscateAndGate moves) ;
 |]
 
-iteratedAndGateMarkovGame numIterations numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor
-  | (numIterations == 1) = andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor
-  | (numIterations > 1)  = reindex (\x -> (x, x)) ((andGateMarkovGame numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor)
-                        >>> (iteratedAndGateMarkovGame (numIterations - 1) numPlayers reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor))
+iteratedAndGateMarkovGame numIterations params
+  | (numIterations == 1) = andGateMarkovGame params
+  | (numIterations > 1)  = reindex (\x -> (x, x)) ((andGateMarkovGame params)
+                        >>> (iteratedAndGateMarkovGame (numIterations - 1) params))
+
+andGateMarkovTestParams = AndGateMarkovParams {
+    numPlayers = 3,
+    reward = 1.0,
+    costOfCapital = 0.05,
+    minBribe = 0.0,
+    maxBribe = 5.0,
+    incrementBribe = 1.0,
+    maxSuccessfulAttackPayoff = 1000.0,
+    attackerProbability = 0.001,
+    penalty = 0.5,
+    minDeposit = 0.0,
+    maxDeposit = 10.0,
+    incrementDeposit = 0.1,
+    epsilon = 0.001,
+    discountFactor = 0.9
+}
+
+andGateMarkovTestStrategies ::([Kleisli Stochastic (([Double], Bool), Double) Double], (),
+ Kleisli Stochastic ([Double], Double) Double,
+ [Kleisli Stochastic (([Double], Bool), [Double], Double) Bool], (), [()], ())
+andGateMarkovTestStrategies =
+  let depositStrategies = replicate (numPlayers andGateMarkovTestParams) $ Kleisli $ \((_, previousRoundTrue), _) -> certainly $ if previousRoundTrue then 4.6 else 0.0
+      attackerStrategy = Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then certainly 5.0 else certainly 0.0)
+      stakingStrategies = replicate (numPlayers andGateMarkovTestParams) $ Kleisli $ \((_, previousRoundTrue), _, bribe) -> certainly $ previousRoundTrue && bribe < 5.0
+   in (depositStrategies, (), attackerStrategy, stakingStrategies, (), replicate (numPlayers andGateMarkovTestParams) (), ())
+
+andGateMarkovTestPrior = do deposits <- uniform [replicate (numPlayers andGateMarkovTestParams) x | x <- [0.0, 1.0 .. 10.0]]
+                            andResults <- uniform [True, False]
+                            return (deposits, andResults)
+
+andGateMarkovStageEq
+   = equilibrium (andGateMarkovGame andGateMarkovTestParams)
+        (StochasticStatefulContext (do {p <- andGateMarkovTestPrior; return ((), p)}) (\_ _ -> return ()))
+        andGateMarkovTestStrategies
+
+extractContinuation :: StochasticStatefulOptic x () y () -> x -> StateT (Map String Double) (T Double) ()
+extractContinuation (StochasticStatefulOptic v u) x
+  = do (z, _) <- lift (v x)
+       u z ()
+
+
+andGateMarkovEq numIterations =
+  let continuation = extractContinuation (play (iteratedAndGateMarkovGame numIterations andGateMarkovTestParams) andGateMarkovTestStrategies)
+   in equilibrium (andGateMarkovGame andGateMarkovTestParams)
+        (StochasticStatefulContext (do {p <- andGateMarkovTestPrior; return ((), p)})
+                                   (\() -> continuation))
+        andGateMarkovTestStrategies
+
+{-
+Known equilibrium: every deposits 0, plays False, attacker plays 0 in every state
+-}
+
+{-
+TODO: Extreme values of discount factor aren't making sense
+-}

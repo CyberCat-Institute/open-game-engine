@@ -9,9 +9,9 @@ import OpenGames.Preprocessor.Types
 import OpenGames.Preprocessor.Compile
 import OpenGames.Preprocessor.AbstractSyntax
 
-data StagePDTitForTatState = TitForTatState1 | TitForTatState2 deriving (Show)
-data StagePDGrimTriggerState = GrimTriggerState1 | GrimTriggerState2 deriving (Show)
-data StagePDMove = Cooperate | Defect deriving (Show)
+data StagePDTitForTatState = TitForTatState1 | TitForTatState2 deriving (Show, Eq)
+data StagePDGrimTriggerState = GrimTriggerState1 | GrimTriggerState2 deriving (Show, Eq)
+data StagePDMove = Cooperate | Defect deriving (Show, Eq)
 
 stagePDTitForTatTransition :: StagePDTitForTatState -> StagePDMove -> StagePDTitForTatState
 stagePDTitForTatTransition _ Cooperate = TitForTatState1
