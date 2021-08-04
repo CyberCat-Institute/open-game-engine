@@ -46,6 +46,7 @@ dependencies:
     - QuickCheck
     - comonad
     - haskeline
+    - hashmap
 
 executables:
   open-games-exe:

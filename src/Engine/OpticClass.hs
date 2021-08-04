@@ -18,6 +18,7 @@ module Engine.OpticClass
 
 
 import           Control.Monad.State                hiding (state)
+import           Data.HashMap                       as HM hiding (null,map,mapMaybe)
 import           Numeric.Probability.Distribution   hiding (lift)
 
 class Optic o where
@@ -53,7 +54,7 @@ class ContextAdd c where
 -------------------------------------------------------------
 --- replicate the old implementation of a stochastic context 
 type Stochastic = T Double
-type Vector = String -> Double
+type Vector = HM.Map String Double
 
 
 data StochasticStatefulOptic s t a b where

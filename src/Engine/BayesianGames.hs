@@ -29,6 +29,9 @@ import           Control.Monad.Trans.Class
 import GHC.TypeLits
 
 import Data.Foldable
+import           Data.HashMap                       as HM hiding (null,map,mapMaybe)
+
+
 import Data.List (maximumBy)
 import Data.Ord (comparing)
 import Numeric.Probability.Distribution hiding (map, lift, filter)
@@ -71,10 +74,13 @@ deviationsInContext epsilon name x theta strategy u ys
 dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
 dependentDecision name ys = OpenGame {
   play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                             u () r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                             u () r = modify (HM.adjust (+ r) name)
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
-     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x); r <- k t y; v <- get; return (r + v name)}) (const 0))
+     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
+                                                   r <- k t y; v <- get;
+                                                   gets ((+ r) . HM.findWithDefault 0.0 name)})
+                                    HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext 0 name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
@@ -82,10 +88,13 @@ dependentDecision name ys = OpenGame {
 dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
 dependentEpsilonDecision epsilon name ys = OpenGame {
   play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                             u () r = do {v <- get; put (\name' -> if name == name' then v name' + r else v name')}
+                             u () r = modify (HM.adjust (+ r) name)
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
-     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x); r <- k t y; v <- get; return (r + v name)}) (const 0))
+     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
+                                                   r <- k t y; v <- get;
+                                                   gets ((+ r) . HM.findWithDefault 0.0 name)})
+                                    HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext epsilon name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
@@ -125,3 +134,12 @@ pureAction x = Kleisli $ const $ certainly x
 
 playDeterministically :: a -> Stochastic a
 playDeterministically = certainly
+
+
+-- discount Operation for repeated structures
+discount :: String -> (Double -> Double) -> StochasticStatefulBayesianOpenGame '[] '[] () () () ()
+discount name f = OpenGame {
+  play = \_ -> let v () = return ((), ())
+                   u () () = modify (HM.adjust f name)
+                 in StochasticStatefulOptic v u,
+  evaluate = \_ _ -> Nil}
