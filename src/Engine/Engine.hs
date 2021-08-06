@@ -18,6 +18,7 @@ module Engine.Engine
   , distFromList
   , pureAction
   , playDeterministically
+  , discount
   , DiagnosticInfoBayesian(..)
   , generateOutput
   , generateIsEq

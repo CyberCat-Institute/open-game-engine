@@ -20,6 +20,7 @@ module Engine.BayesianGames
   , distFromList
   , pureAction
   , playDeterministically
+  , discount
   ) where
 
 
@@ -78,7 +79,7 @@ dependentDecision name ys = OpenGame {
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
-                                                   r <- k t y; v <- get;
+                                                   r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
@@ -92,7 +93,7 @@ dependentEpsilonDecision epsilon name ys = OpenGame {
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
-                                                   r <- k t y; v <- get;
+                                                   r <- k t y; 
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
