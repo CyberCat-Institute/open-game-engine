@@ -124,7 +124,7 @@ andGateMarkovTestParams = AndGateMarkovParams {
     maxDeposit = 10.0,
     incrementDeposit = 0.1,
     epsilon = 0.001,
-    discountFactor = 0.9
+    discountFactor = 0.5
 }
 
 andGateMarkovTestStrategies ::([Kleisli Stochastic (([Double], Bool), Double) Double], (),
