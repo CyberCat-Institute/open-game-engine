@@ -4,8 +4,6 @@
 
 module OpenGames.Examples.Consensus.TestPayoffs where
 
-import Data.HashMap (Map)
-
 import Control.Monad.State
 import Numeric.Probability.Distribution (T(..), certainly, uniform, fromFreqs)
 

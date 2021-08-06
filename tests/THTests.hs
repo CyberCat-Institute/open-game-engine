@@ -6,6 +6,7 @@
 
 module THTests where
 
+import EqTests
 import CensorTests
 import GHC.Real
 import Data.Bool
@@ -86,6 +87,7 @@ instance Arbitrary t => Arbitrary (T Rational t) where
 
 main :: IO ()
 main = do
+  tests
   testCensor
   hspec $ parallel $ do
     describe "testing regressions with old syntax" $ parallel $ do

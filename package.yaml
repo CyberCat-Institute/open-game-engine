@@ -65,6 +65,7 @@ library:
     - OpenGames.Examples.Consensus.AndGate
     - OpenGames.Examples.Consensus.AndGateMarkov
     - OpenGames.Examples.Consensus.DepositGame
+    - OpenGames.Examples.Consensus.TestPayoffs
   dependencies:
     - base >=4.7 && <5
     - mtl
@@ -78,6 +79,7 @@ library:
     - QuickCheck
     - comonad
     - hashmap
+    - hashable
 tests:
   test-open-games:
     main: THTests

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d1e9f94ef4c9273aed97e2d8216abc66cfd6e21fccacf0569d75f857161c4b98
+-- hash: 4820c50bac4d9617c8ad0f417ec912641044a72287c39cc86f28ad27f8aed5c7
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -80,7 +80,9 @@ library
       OpenGames.Examples.Consensus.AndGate
       OpenGames.Examples.Consensus.AndGateMarkov
       OpenGames.Examples.Consensus.DepositGame
+      OpenGames.Examples.Consensus.TestPayoffs
   other-modules:
+      Data.Utils
       OpenGames.Engine.Costrategies
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
@@ -92,6 +94,7 @@ library
     , ad
     , base >=4.7 && <5
     , comonad
+    , hashable
     , hashmap
     , mtl
     , parsec
@@ -118,6 +121,7 @@ test-suite test-open-games
   main-is: THTests.hs
   other-modules:
       CensorTests
+      EqTests
       VerboseTests
       Paths_open_games_hs
   hs-source-dirs:
@@ -137,6 +141,7 @@ test-suite test-verbose-syntax
   main-is: VerboseTests.hs
   other-modules:
       CensorTests
+      EqTests
       THTests
       Paths_open_games_hs
   hs-source-dirs:
