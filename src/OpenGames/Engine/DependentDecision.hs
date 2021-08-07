@@ -16,7 +16,8 @@ import           Control.Monad.State                hiding (state)
 import           Control.Monad.Trans.Class
 import           Data.List                          (maximumBy)
 import           Data.Ord                           (comparing)
-import           Data.HashMap                       (findWithDefault, empty, adjust)
+import           Data.HashMap
+import           Data.Utils
 import           OpenGames.Engine.BayesianOpenGames (bayes, support)
 import           Numeric.Probability.Distribution   hiding (lift)
 import OpenGames.Engine.StatefulBayesian hiding (roleDecision, dependentDecision)
@@ -41,12 +42,12 @@ deviationsInContext epsilon name x theta strategy u ys
 roleDecision :: (Eq x, Show x, Ord y, Show y) => [y] -> StochasticStatefulOpenGame (Kleisli Stochastic (Agent, x) y) (Agent, x) () y Double
 roleDecision ys = OpticOpenGame {
   play = \a -> let v (name, x) = do {y <- runKleisli a (name, x); return (name, y)}
-                   u name r = modify (adjust (+ r) name)
+                   u name r = modify (adjustOrAdd (+ r) r name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
     concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, x));
                                                 r <- k t y;
-                                                gets ((+ r) . findWithDefault 0.0 name)
+                                                gets ((+ r) . findWithDefault r name)
                                                })
                                            empty)
                 strategy = runKleisli a (name, x)
@@ -56,7 +57,7 @@ roleDecision ys = OpticOpenGame {
 dependentDecision :: (Eq x, Show x, Ord y, Show y) => Agent -> (x -> [y]) -> StochasticStatefulOpenGame (Kleisli Stochastic x y) x () y Double
 dependentDecision name ys = OpticOpenGame {
   play = \a -> let v x = do {y <- runKleisli a x; return ((), y)}
-                   u () r = modify (adjust (+ r) name)
+                   u () r = modify (adjustOrAdd (+ r) r name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
     concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
@@ -71,7 +72,7 @@ dependentDecision name ys = OpticOpenGame {
 dependentRoleDecision :: (Eq x, Show x, Ord y, Show y) => (x -> [y]) -> StochasticStatefulOpenGame (Kleisli Stochastic (Agent, x) y) (Agent, x) () y Double
 dependentRoleDecision ys = OpticOpenGame {
   play = \a -> let v (name, x) = do {y <- runKleisli a (name, x); return (name, y)}
-                   u name r = modify (adjust (+ r) name)
+                   u name r = modify (adjustOrAdd (+ r) r name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
     concat [let u y = expected (evalStateT (do {t <- lift (bayes h (name, x));
@@ -86,7 +87,7 @@ dependentRoleDecision ys = OpticOpenGame {
 epsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> Agent -> [y] -> StochasticStatefulOpenGame (Kleisli Stochastic x y) x () y Double
 epsilonDecision epsilon name ys = OpticOpenGame {
   play = \a -> let v x = do {y <- runKleisli a x; return ((), y)}
-                   u () r = modify (adjust (+ r) name)
+                   u () r = modify (adjustOrAdd (+ r) r name)
                 in StochasticStatefulOptic v u,
   equilibrium = \(StochasticStatefulContext h k) a ->
     concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
