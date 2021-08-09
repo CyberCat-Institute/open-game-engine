@@ -47,6 +47,7 @@ dependencies:
     - comonad
     - haskeline
     - hashmap
+    - hashable
 
 executables:
   open-games-exe:
