@@ -59,4 +59,16 @@ executables:
     dependencies:
     - open-games-hs
 
+benchmarks:
+  learning-bench:
+    main:                Main.hs
+    source-dirs:         bench
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -eventlog
+    dependencies:
+      - open-games-hs
+      - criterion
 
