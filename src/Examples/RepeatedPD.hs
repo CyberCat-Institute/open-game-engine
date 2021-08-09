@@ -57,10 +57,6 @@ prisonersDilemma = [opengame|
 
 
 
-
-
-  
-
 -- Add strategy for stage game 
 stageStrategy1,stageStrategy2 :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
 stageStrategy1 = Kleisli $
@@ -90,7 +86,12 @@ extractContinuation :: StochasticStatefulOptic s () a () -> s -> StateT Vector S
 extractContinuation (StochasticStatefulOptic v u) x = do
   (z,a) <- ST.lift (v x)
   u z ()
-  
+
+extractNextState :: StochasticStatefulOptic s () a () -> s -> Stochastic a
+extractNextState (StochasticStatefulOptic v _) x = do
+  (z,a) <- v x
+  pure a
+
 
 -- TODO Iterator on the type level needs to be added
 
@@ -116,110 +117,18 @@ eqOutput = generateIsEq $ repeatedPDEq
 test = extractContinuation (play iteratedPD strategyTuple2) (Cooperate, Cooperate)
 
 
--- testing the state payoffs are correct
-prisonersDilemma2 = [opengame|
+-- determine continuation for iterator, with the same repeated strategy
 
-   inputs    : (dec1Old,dec2Old) ;
-   feedback  :      ;
-
-   :----------------------------:
-   inputs    :  (dec1Old,dec2Old)    ;
-   feedback  :      ;
-   operation : dependentDecision "player1" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer1 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
-
-   inputs    :   (dec1Old,dec2Old)   ;
-   feedback  :      ;
-   operation : dependentDecision "player2" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer2 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
-
-   inputs    :  (dec1Old,dec2Old)    ;
-   feedback  :      ;
-   operation : dependentDecision "player1" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer1' ;
-   returns   : prisonersDilemmaMatrix decisionPlayer1' decisionPlayer2' ;
-
-   inputs    :   (dec1Old,dec2Old)   ;
-   feedback  :      ;
-   operation : dependentDecision "player2" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer2' ;
-   returns   : prisonersDilemmaMatrix decisionPlayer2' decisionPlayer1' ;
+determineContinuationPayoffs input 1        = extractContinuation (play prisonersDilemma strategyTuple) input
+determineContinuationPayoffs input iterator = do
+   extractContinuation executeStrat input
+   nextInput <- ST.lift $ extractNextState executeStrat input
+   determineContinuationPayoffs nextInput (pred iterator)
+ where executeStrat =  play prisonersDilemma strategyTuple
 
 
-   operation : discount "player1" (\x -> x * discountFactor) ;
+repeatedPDEq' iterator = evaluate prisonersDilemma strategyTuple context
+  where context      = StochasticStatefulContext (pure ((),(Cooperate,Cooperate))) (\_ _ -> determineContinuationPayoffs (Cooperate,Cooperate) iterator)
+        
 
-   operation : discount "player2" (\x -> x * discountFactor) ;
-
-   :----------------------------:
-
-   outputs   : (decisionPlayer1,decisionPlayer2)     ;
-   returns   :      ;
-  |]
-
-
-stageGameEq2 = generateIsEq $ evaluate prisonersDilemma2 strategyTuple2 initialContext
-
-
-
-
-prisonersDilemmaBasic = [opengame|
-
-   inputs    :  ;
-   feedback  :  ;
-
-   :----------------------------:
-   inputs    :   ;
-   feedback  :   ;
-   operation : dependentDecision "player1" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer1 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
-
-   inputs    :    ;
-   feedback  :    ;
-   operation : dependentDecision "player2" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer2 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
-
-   :----------------------------:
-
-   outputs   :  ;
-   returns   :  ;
-  |]
-
-
-prisonersDilemmaComposed = [opengame|
-
-   inputs    :  ;
-   feedback  :  ;
-
-   :----------------------------:
-   inputs    :   ;
-   feedback  :   ;
-   operation : prisonersDilemmaBasic ;
-   outputs   : ;
-   returns   : ;
-
-   inputs    :    ;
-   feedback  :    ;
-   operation : prisonersDilemmaBasic ;
-   outputs   : ;
-   returns   : ;
-
-
-   :----------------------------:
-
-   outputs   :  ;
-   returns   :  ;
-
-   |]
-
-
-prisonersDilemmaComposed2 = prisonersDilemmaBasic >>> prisonersDilemmaBasic
-
-composedEq strat =generateIsEq $  evaluate prisonersDilemmaComposed2 strat void
-
-stratSimple =  Kleisli $ const $ playDeterministically Cooperate
-
-stratTupleSimple = stratSimple ::- stratSimple ::- stratSimple ::- stratSimple ::- Nil
+eqOutput' iterator = generateIsEq $ repeatedPDEq' iterator 
