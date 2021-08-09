@@ -142,6 +142,6 @@ playDeterministically = certainly
 discount :: String -> (Double -> Double) -> StochasticStatefulBayesianOpenGame '[] '[] () () () ()
 discount name f = OpenGame {
   play = \_ -> let v () = return ((), ())
-                   u () () = modify (HM.adjust f name)
+                   u () () = modify (adjustOrAdd f (f 0) name)
                  in StochasticStatefulOptic v u,
   evaluate = \_ _ -> Nil}
