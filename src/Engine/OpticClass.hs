@@ -9,6 +9,8 @@ module Engine.OpticClass
   , Vector(..)
   , StochasticStatefulOptic(..)
   , StochasticStatefulContext(..)
+  , StochasticOptic(..)
+  , StochasticContext(..)
   , Optic(..)
   , Precontext(..)
   , Context(..)
@@ -105,4 +107,55 @@ instance ContextAdd StochasticStatefulContext where
     = let fs = [((z, s2), p) | ((z, Right s2), p) <- decons h]
        in if null fs then Nothing
                      else Just (StochasticStatefulContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
+
+
+-- Experimental non state
+data StochasticOptic s t a b where
+  StochasticOptic :: (s -> Stochastic (z, a))
+                          -> (z -> b -> Stochastic t)
+                          -> StochasticOptic s t a b
+
+instance Optic StochasticOptic where
+  lens v u = StochasticOptic (\s -> return (s, v s)) (\s b -> return (u s b))
+  (>>>>) (StochasticOptic v1 u1) (StochasticOptic v2 u2) = StochasticOptic v u
+    where v s = do {(z1, a) <- v1 s; (z2, p) <- v2 a; return ((z1, z2), p)}
+          u (z1, z2) q = do {b <- u2 z2 q; u1 z1 b}
+  (&&&&) (StochasticOptic v1 u1) (StochasticOptic v2 u2) = StochasticOptic v u
+    where v (s1, s2) = do {(z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))}
+          u (z1, z2) (b1, b2) = do {t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)}
+  (++++) (StochasticOptic v1 u1) (StochasticOptic v2 u2) = StochasticOptic v u
+    where v (Left s1)  = do {(z1, a1) <- v1 s1; return (Left z1, Left a1)}
+          v (Right s2) = do {(z2, a2) <- v2 s2; return (Right z2, Right a2)}
+          u (Left z1) b  = u1 z1 b
+          u (Right z2) b = u2 z2 b
+
+data StochasticContext s t a b where
+  StochasticContext :: (Show z) => Stochastic (z, s) -> (z -> a -> Stochastic b) -> StochasticContext s t a b
+
+instance Precontext StochasticContext where
+  void = StochasticContext (return ((), ())) (\() () -> return ())
+
+instance Context StochasticContext StochasticOptic where
+  cmap (StochasticOptic v1 u1) (StochasticOptic v2 u2) (StochasticContext h k)
+            = let h' = do {(z, s) <- h; (_, s') <- v1 s; return (z, s')}
+                  k' z a = do {(z', a') <-  (v2 a); b' <- k z a'; u2 z' b'}
+               in StochasticContext h' k'
+  (//) (StochasticOptic v u) (StochasticContext h k)
+            = let h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
+                  k' (z, s1) a2 = do {(_, a1) <-  (v s1); (_, b2) <- k z (a1, a2); return b2}
+               in StochasticContext h' k'
+  (\\) (StochasticOptic v u) (StochasticContext h k)
+            = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
+                  k' (z, s2) a1 = do {(_, a2) <-  (v s2); (b1, _) <- k z (a1, a2); return b1}
+               in StochasticContext h' k'
+
+instance ContextAdd StochasticContext where
+  prl (StochasticContext h k)
+    = let fs = [((z, s1), p) | ((z, Left s1), p) <- decons h]
+       in if null fs then Nothing
+                     else Just (StochasticContext (fromFreqs fs) (\z a1 -> k z (Left a1)))
+  prr (StochasticContext h k)
+    = let fs = [((z, s2), p) | ((z, Right s2), p) <- decons h]
+       in if null fs then Nothing
+                     else Just (StochasticContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
 
