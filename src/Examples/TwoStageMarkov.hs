@@ -16,6 +16,10 @@ import qualified Control.Monad.State  as ST
 
 import Numeric.Probability.Distribution hiding (map, lift, filter)
 
+
+-- TODO: Add stage game with proper backtransitioning 
+
+
 --------
 -- Types
 
