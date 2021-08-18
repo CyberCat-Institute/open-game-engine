@@ -4,7 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.TwoStageMarkov where 
+module Examples.Markov.TwoStageMarkov where 
 
 import           Data.Tuple.Extra (uncurry3)
 import           Engine.Engine

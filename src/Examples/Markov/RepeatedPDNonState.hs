@@ -4,7 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.RepeatedPDNonState where 
+module Examples.Markov.RepeatedPDNonState where 
 
 
 import           Engine.Engine hiding (StochasticStatefulOptic

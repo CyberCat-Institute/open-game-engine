@@ -4,7 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.RepeatedPD where 
+module Examples.Markov.RepeatedPD where 
 
 
 import           Engine.Engine
