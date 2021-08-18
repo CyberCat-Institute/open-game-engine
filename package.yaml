@@ -32,6 +32,14 @@ library:
     - Examples.Bayesian
     - Examples.Decision
     - Examples.SequentialMoves
+    - Examples.Auctions.AuctionSupportFunctions
+    - Examples.Auctions.ChooseReservePrice
+    - Examples.Auctions.DutchAuction
+    - Examples.Auctions.SequentialAuction
+    - Examples.Auctions.SimultaneousBidAuction
+    - Examples.Markov.RepeatedPD
+    - Examples.Markov.RepeatedPDNonState
+    - Examples.Markov.TwoStageMarkov
 
 dependencies:
     - base >=4.7 && <5
