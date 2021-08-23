@@ -60,8 +60,8 @@ randomAll2 noP = do
 -------------------------------
 -- 2. Nature determining types
 natureStageSrc = Block [] []
-            [Line [] [] "nature prior" ["v1"] [],
-             Line [] [] "nature prior" ["v2"] []]
+            [Line Nothing [] [] "nature prior" ["v1"] [],
+             Line Nothing [] [] "nature prior" ["v2"] []]
             ["v1","v2"] []
 
 natureStage = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2), ()) -> (v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\((), v1) -> v1) (\(v1, v2) -> ((v1, v2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\v1 -> (v1, ())) (\((v1, v2), ()) -> (v1, v2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature prior)))))) >>> (fromFunctions (\(v1, v2) -> (v1, v2)) (\(v1, v2) -> ((v1, v2), ()))))))))) >>> (fromLens (\(v1, v2) -> (v1, v2)) (curry (\((v1, v2), ()) -> (v1, v2)))))
@@ -70,7 +70,7 @@ natureStage = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions 
 -- 3. Initial allocation phase
 -- 3.0 random allocation of permits
 randomAllocationSrc = Block [] []
-             [Line [] [] "nature randomAll" ["p1", "p2"] []]
+             [Line Nothing [] [] "nature randomAll" ["p1", "p2"] []]
              ["p1","p2"] []
 
 randomAllocation = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((p1, p2), ()) -> (p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature randomAll)))))) >>> (fromFunctions (\((), (p1, p2)) -> (p1, p2)) (\(p1, p2) -> ((p1, p2), ())))))))) >>> (fromLens (\(p1, p2) -> (p1, p2)) (curry (\((p1, p2), ()) -> (p1, p2)))))
@@ -79,9 +79,9 @@ randomAllocation = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunct
 
 -- 3.1 allocation of permits through fixed price
 exogenousPriceSrc  = Block ["v1 :: Value","v2 :: Value"] []
-             [Line ["\"player1\"", "[0..availablePermits]", "v1"] [] "dependentDecision" ["ask1"] ["- cost* p1"],
-              Line ["\"player2\"", "[0..availablePermits]", "v2"] [] "dependentDecision" ["ask2"] ["- cost* p2"],
-              Line ["(ask1,ask2)"] []    "fromFunctions allocatePermits id"  ["(p1,p2)"] []]
+             [Line Nothing ["\"player1\"", "[0..availablePermits]", "v1"] [] "dependentDecision" ["ask1"] ["- cost* p1"],
+              Line Nothing ["\"player2\"", "[0..availablePermits]", "v2"] [] "dependentDecision" ["ask2"] ["- cost* p2"],
+              Line Nothing ["(ask1,ask2)"] []    "fromFunctions allocatePermits id"  ["(p1,p2)"] []]
              ["p1","p2"] []
 
 
@@ -99,9 +99,9 @@ allocatePermits  (ask1,ask2)   | ask1 + ask2 <= 2       = (ask1,ask2)
 -- 3.2 VCG auction of permits
 -- NOTE Simplification of bidding function due to constant MV; needs to be adapted in case of decreasing demand
 vcgSrc =  Block ["v1 :: Value","v2 :: Value"] []
-          [Line ["\"player1\"", "[0..(2*maximalValue)]", "v1"] [] "dependentDecision" ["bid1"] ["- b1"],
-           Line ["\"player2\"", "[0..(2*maximalValue)]", "v2"] [] "dependentDecision" ["bid2"] ["- b2"],
-           Line ["(bid1,bid2)"] []    "fromFunctions vcgAllocation id"  ["((p1,b1),(p2,b2))"] []]
+          [Line Nothing ["\"player1\"", "[0..(2*maximalValue)]", "v1"] [] "dependentDecision" ["bid1"] ["- b1"],
+           Line Nothing ["\"player2\"", "[0..(2*maximalValue)]", "v2"] [] "dependentDecision" ["bid2"] ["- b2"],
+           Line Nothing ["(bid1,bid2)"] []    "fromFunctions vcgAllocation id"  ["((p1,b1),(p2,b2))"] []]
           ["p1","p2"] []
 
 vcg = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1 :: Value, v2 :: Value) -> ((v1 :: Value, v2 :: Value), ("player1", [0..(2*maximalValue)], v1))) (\((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), ()) -> (v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((v1 :: Value, v2 :: Value), bid1) -> (v1 :: Value, v2 :: Value, bid1)) (\(v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))) -> ((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), - b1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1 :: Value, v2 :: Value, bid1) -> ((v1 :: Value, v2 :: Value, bid1), ("player2", [0..(2*maximalValue)], v2))) (\((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), ()) -> (v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((v1 :: Value, v2 :: Value, bid1), bid2) -> (v1 :: Value, v2 :: Value, bid1, bid2)) (\(v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))) -> ((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), - b2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1 :: Value, v2 :: Value, bid1, bid2) -> ((v1 :: Value, v2 :: Value, bid1, bid2), (bid1,bid2))) (\((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), ()) -> (v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions vcgAllocation id)))))) >>> (fromFunctions (\((v1 :: Value, v2 :: Value, bid1, bid2), ((p1,b1),(p2,b2))) -> (v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2)))) (\(v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))) -> ((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), ()))))))))) >>> (fromLens (\(v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))) -> (p1, p2)) (curry (\((v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2))), ()) -> (v1 :: Value, v2 :: Value, bid1, bid2, ((p1,b1),(p2,b2)))))))
@@ -118,8 +118,8 @@ vcgAllocation (b1,b2) | b1 == b2 = ((1,b2/2),(1,b1/2))
 
 -- TODO fix the dependent decision - delivers wrong result
 productionDecSrc = Block ["p1", "p2", "v1", "v2"] []
-  [Line ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
-   Line ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
+  [Line Nothing ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
+   Line Nothing ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
   [] []
 
 productionDec = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, v1, v2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ("player1", [0 .. p1], (p1, v1)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2), dec1) -> (p1, p2, v1, v2, dec1)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v1 0 dec1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2, dec1) -> ((p1, p2, v1, v2, dec1), ("player2", [0 .. p2], (p2, v2)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2, dec1), dec2) -> (p1, p2, v1, v2, dec1, dec2)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v2 0 dec2))))))))) >>> (fromLens (\(p1, p2, v1, v2, dec1, dec2) -> ()) (curry (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2)))))
@@ -127,8 +127,8 @@ productionDec = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunction
 -- 4.1 With feeding information forward
 -- TODO fix the dependent decision - delivers wrong result
 productionDecContSrc = Block ["p1", "p2", "v1", "v2"] []
-  [Line ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
-   Line ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
+  [Line Nothing ["\"player1\"", "[0 .. p1]", "(p1, v1)"] [] "dependentDecision" ["dec1"] ["profit v1 0 dec1"],
+   Line Nothing ["\"player2\"", "[0 .. p2]", "(p2, v2)"] [] "dependentDecision" ["dec2"] ["profit v2 0 dec2"]]
   ["p1-dec1","p2 - dec2"] []
 
 productionDecCont = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(p1, p2, v1, v2, dec1, dec2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2) -> ((p1, p2, v1, v2), ("player1", [0 .. p1], (p1, v1)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2), dec1) -> (p1, p2, v1, v2, dec1)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v1 0 dec1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(p1, p2, v1, v2, dec1) -> ((p1, p2, v1, v2, dec1), ("player2", [0 .. p2], (p2, v2)))) (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision)))))) >>> (fromFunctions (\((p1, p2, v1, v2, dec1), dec2) -> (p1, p2, v1, v2, dec1, dec2)) (\(p1, p2, v1, v2, dec1, dec2) -> ((p1, p2, v1, v2, dec1, dec2), profit v2 0 dec2))))))))) >>> (fromLens (\(p1, p2, v1, v2, dec1, dec2) -> (p1-dec1, p2 - dec2)) (curry (\((p1, p2, v1, v2, dec1, dec2), ()) -> (p1, p2, v1, v2, dec1, dec2)))))
@@ -136,14 +136,14 @@ productionDecCont = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunc
 -------------------------------
 -- 5. Resale market
 
---[Line ["whichSeller (ContResale player1Type player2Type signalPlayer1 signalPlayer2 dec1 dec2)"] ["price1","price2"] "resaleSeller1 +++ resaleSeller2"   ["discard"] []]
+--[Line Nothing ["whichSeller (ContResale player1Type player2Type signalPlayer1 signalPlayer2 dec1 dec2)"] ["price1","price2"] "resaleSeller1 +++ resaleSeller2"   ["discard"] []]
 
 
 
 resaleStageSrc = Block ["r1","r2","v1 :: Value","v2 :: Value"] []
-                     [Line ["\"player1\"", "[0..maximalValue]", "(fst (whoIsSeller r1 r2 v1 v2))"] [] "dependentDecision" ["price1"] ["t1"],
-                      Line ["\"player2\"", "[0..maximalValue]", "(snd (whoIsSeller r1 r2 v1 v2))"] [] "dependentDecision" ["price2"] ["t2"],
-                      Line ["(price1,price2,r1,r2)"] []    "fromFunctions resaleMarketClearing id"  ["((p1,t1),(p2,t2))"] []]
+                     [Line Nothing ["\"player1\"", "[0..maximalValue]", "(fst (whoIsSeller r1 r2 v1 v2))"] [] "dependentDecision" ["price1"] ["t1"],
+                      Line Nothing ["\"player2\"", "[0..maximalValue]", "(snd (whoIsSeller r1 r2 v1 v2))"] [] "dependentDecision" ["price2"] ["t2"],
+                      Line Nothing ["(price1,price2,r1,r2)"] []    "fromFunctions resaleMarketClearing id"  ["((p1,t1),(p2,t2))"] []]
                       ["p1","p2"] []
 
 
@@ -167,9 +167,9 @@ resaleMarketClearing (p1,p2,prmt1,prmt2) | prmt1 > prmt2 && p2 > p1 =  ((prmt1-1
 
 -- 6.0 With initial random allocation
 completeGameSrc = Block [] []
-  [Line [] [] "natureStage"      ["v1","v2"] [],
-   Line [] [] "randomAllocation" ["p1","p2"] [],
-   Line ["p1","p2","v1","v2"] [] "productionDec" [] []]
+  [Line Nothing [] [] "natureStage"      ["v1","v2"] [],
+   Line Nothing [] [] "randomAllocation" ["p1","p2"] [],
+   Line Nothing ["p1","p2","v1","v2"] [] "productionDec" [] []]
   [] []
 
 completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((natureStage)))))) >>> (fromFunctions (\((), (v1, v2)) -> (v1, v2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), (p1, p2, v1, v2))) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2) -> ()) (curry (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)))))
@@ -177,18 +177,18 @@ completeGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions
 
 -- 6.1 With fixed price allocation
 completeGameEPSrc = Block [] []
-  [Line [] [] "natureStage"             ["v1","v2"] [],
-   Line ["v1","v2"] [] "exogenousPrice" ["p1","p2"] [],
-   Line ["p1","p2","v1","v2"] [] "productionDec" [] []]
+  [Line Nothing [] [] "natureStage"             ["v1","v2"] [],
+   Line Nothing ["v1","v2"] [] "exogenousPrice" ["p1","p2"] [],
+   Line Nothing ["p1","p2","v1","v2"] [] "productionDec" [] []]
   [] []
 
 completeGameEP = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((natureStage)))))) >>> (fromFunctions (\((), (v1, v2)) -> (v1, v2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), (v1, v2))) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((exogenousPrice)))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), (p1, p2, v1, v2))) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2) -> ()) (curry (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)))))
 
 -- 6.2 With initial auction stage
 completeGameVCGSrc = Block [] []
-  [Line [] [] "natureStage"             ["v1","v2"] [],
-   Line ["v1","v2"] [] "vcg" ["p1","p2"] [],
-   Line ["p1","p2","v1","v2"] [] "productionDec" [] []]
+  [Line Nothing [] [] "natureStage"             ["v1","v2"] [],
+   Line Nothing ["v1","v2"] [] "vcg" ["p1","p2"] [],
+   Line Nothing ["p1","p2","v1","v2"] [] "productionDec" [] []]
   [] []
 
 completeGameVCG = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((natureStage)))))) >>> (fromFunctions (\((), (v1, v2)) -> (v1, v2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), (v1, v2))) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((vcg)))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), (p1, p2, v1, v2))) (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2) -> ()) (curry (\((v1, v2, p1, p2), ()) -> (v1, v2, p1, p2)))))
@@ -197,21 +197,21 @@ completeGameVCG = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFuncti
 
 -- 6.3 Random allocation with resale and one production stage
 completeGameResaleSrc = Block [] []
-  [Line [] [] "natureStage"             ["v1","v2"] [],
-   Line [] [] "randomAllocation" ["p1","p2"] [],
-   Line ["p1","p2","v1","v2"] [] "resaleStage"   ["r1","r2"] [],
-   Line ["r1","r2","v1","v2"] [] "productionDec" [] []]
+  [Line Nothing [] [] "natureStage"             ["v1","v2"] [],
+   Line Nothing [] [] "randomAllocation" ["p1","p2"] [],
+   Line Nothing ["p1","p2","v1","v2"] [] "resaleStage"   ["r1","r2"] [],
+   Line Nothing ["r1","r2","v1","v2"] [] "productionDec" [] []]
   [] []
 
 completeGameResale = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2, r1, r2) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((natureStage)))))) >>> (fromFunctions (\((), (v1, v2)) -> (v1, v2)) (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), ())) (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), (p1, p2, v1, v2))) (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((resaleStage)))))) >>> (fromFunctions (\((v1, v2, p1, p2), (r1, r2)) -> (v1, v2, p1, p2, r1, r2)) (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), (r1, r2, v1, v2))) (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDec)))))) >>> (fromFunctions (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2)) (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2, r1, r2) -> ()) (curry (\((v1, v2, p1, p2, r1, r2), ()) -> (v1, v2, p1, p2, r1, r2)))))
 
 -- 6.4 Random allocation with resale and two production stages
 completeGameResale2Src = Block [] []
-  [Line [] [] "natureStage"             ["v1","v2"] [],
-   Line [] [] "randomAllocation" ["p1","p2"] [],
-   Line ["p1","p2","v1","v2"] [] "productionDecCont" ["r1","r2"] [],
-   Line ["r1","r2","v1","v2"] [] "resaleStage"       ["l1","l2"] [],
-   Line ["l1","l2","v1","v2"] [] "productionDecCont" ["discard1","discard2"][]]
+  [Line Nothing [] [] "natureStage"             ["v1","v2"] [],
+   Line Nothing [] [] "randomAllocation" ["p1","p2"] [],
+   Line Nothing ["p1","p2","v1","v2"] [] "productionDecCont" ["r1","r2"] [],
+   Line Nothing ["r1","r2","v1","v2"] [] "resaleStage"       ["l1","l2"] [],
+   Line Nothing ["l1","l2","v1","v2"] [] "productionDecCont" ["discard1","discard2"][]]
   [] []
 
 completeGameResale2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ())) >>> (reindex (\(a1, a2, a3, a4, a5) -> ((((a1, a2), a3), a4), a5)) (((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((natureStage)))))) >>> (fromFunctions (\((), (v1, v2)) -> (v1, v2)) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2) -> ((v1, v2), ())) (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((randomAllocation)))))) >>> (fromFunctions (\((v1, v2), (p1, p2)) -> (v1, v2, p1, p2)) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2) -> ((v1, v2, p1, p2), (p1, p2, v1, v2))) (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDecCont)))))) >>> (fromFunctions (\((v1, v2, p1, p2), (r1, r2)) -> (v1, v2, p1, p2, r1, r2)) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2, r1, r2) -> ((v1, v2, p1, p2, r1, r2), (r1, r2, v1, v2))) (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((resaleStage)))))) >>> (fromFunctions (\((v1, v2, p1, p2, r1, r2), (l1, l2)) -> (v1, v2, p1, p2, r1, r2, l1, l2)) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(v1, v2, p1, p2, r1, r2, l1, l2) -> ((v1, v2, p1, p2, r1, r2, l1, l2), (l1, l2, v1, v2))) (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((productionDecCont)))))) >>> (fromFunctions (\((v1, v2, p1, p2, r1, r2, l1, l2), (discard1, discard2)) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2)) (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()))))))))) >>> (fromLens (\(v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2) -> ()) (curry (\((v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2), ()) -> (v1, v2, p1, p2, r1, r2, l1, l2, discard1, discard2)))))

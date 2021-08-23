@@ -70,36 +70,92 @@ andGateMarkovGame (AndGateMarkovParams numPlayers reward costOfCapital minBribe 
 
   :---:
 
+  label : population ;
   inputs : replicate numPlayers (summaryStatistic, costOfCapital) ;
   feedback : discard1 ;
   operation : population (map (\n -> depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon) [1 .. numPlayers]) ;
   outputs : deposits ;
   returns : replicate numPlayers unit ;
 
+  label : Attack Payoff ;
   operation : nature (successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff) ;
   outputs : successfulAttackPayoff ;
 
+  label : Attacker ;
   inputs : deposits, successfulAttackPayoff ;
   operation : dependentDecision "Attacker" (const [minBribe, minBribe+incrementBribe .. maxBribe]) ;
   outputs : bribe ;
   returns : attackerPayoff bribesAccepted bribe successfulAttackPayoff ;
 
+  label : population2 ;
   inputs : replicate numPlayers (summaryStatistic, deposits, bribe) ;
   feedback : discard2 ;
   operation : population (map (\n -> playingStagePlayer ("Player " ++ show n) [True, False]) [1 .. numPlayers]) ;
   outputs : moves ;
   returns : zip (payoffAndGate penalty reward deposits (obfuscateAndGate moves)) bribesAccepted ;
 
+  label : bribes ;
   inputs : moves ;
   operation : fromFunctions (map not) id ;
   outputs : bribesAccepted ;
 
+  label : population3 ;
   inputs : replicate numPlayers unit ;
   feedback : discard4 ;
   operation : population (map (\n -> discount ("Player " ++ show n) (\x -> x * discountFactor)) [1 .. numPlayers]) ;
   outputs : discard3 ;
   returns : replicate numPlayers unit ;
 
+  label : DiscountFactor ;
+  operation : discount "Attacker" (\x -> x * discountFactor) ;
+
+  :---:
+
+  outputs : (deposits, obfuscateAndGate moves) ;
+|]
+
+andGateMarkovGameTree = [parseTree|
+  inputs : summaryStatistic ;
+
+  :---:
+
+  label : population ;
+  inputs : replicate numPlayers (summaryStatistic, costOfCapital) ;
+  feedback : discard1 ;
+  operation : population (map (\n -> depositStagePlayer ("Player " ++ show n) minDeposit maxDeposit incrementDeposit epsilon) [1 .. numPlayers]) ;
+  outputs : deposits ;
+  returns : replicate numPlayers unit ;
+
+  label : Attack Payoff ;
+  operation : nature (successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff) ;
+  outputs : successfulAttackPayoff ;
+
+  label : Attacker ;
+  inputs : deposits, successfulAttackPayoff ;
+  operation : dependentDecision "Attacker" (const [minBribe, minBribe+incrementBribe .. maxBribe]) ;
+  outputs : bribe ;
+  returns : attackerPayoff bribesAccepted bribe successfulAttackPayoff ;
+
+  label : population2 ;
+  inputs : replicate numPlayers (summaryStatistic, deposits, bribe) ;
+  feedback : discard2 ;
+  operation : population (map (\n -> playingStagePlayer ("Player " ++ show n) [True, False]) [1 .. numPlayers]) ;
+  outputs : moves ;
+  returns : zip (payoffAndGate penalty reward deposits (obfuscateAndGate moves)) bribesAccepted ;
+
+  label : bribes ;
+  inputs : moves ;
+  operation : fromFunctions (map not) id ;
+  outputs : bribesAccepted ;
+
+  label : population3 ;
+  inputs : replicate numPlayers unit ;
+  feedback : discard4 ;
+  operation : population (map (\n -> discount ("Player " ++ show n) (\x -> x * discountFactor)) [1 .. numPlayers]) ;
+  outputs : discard3 ;
+  returns : replicate numPlayers unit ;
+
+  label : Discount Factor ;
   operation : discount "Attacker" (\x -> x * discountFactor) ;
 
   :---:

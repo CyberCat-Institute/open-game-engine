@@ -39,8 +39,8 @@ payoffTG end trans received return  = (end - trans + return, received - return)
 -- 1. Stage games
 
 ultimatumGameSrc = Block ["(sender, receiver)"] []
-   [Line ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffUG endowment amountProposed accDec" ],
-    Line ["(receiver,amountProposed)"] [] "roleDecision [True,False]" ["accDec"] ["snd $ payoffUG endowment amountProposed accDec"]
+   [Line Nothing ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffUG endowment amountProposed accDec" ],
+    Line Nothing ["(receiver,amountProposed)"] [] "roleDecision [True,False]" ["accDec"] ["snd $ payoffUG endowment amountProposed accDec"]
    ]
    [] []
 
@@ -49,8 +49,8 @@ ultimatumGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunction
 
 
 trustGameSrc = Block ["(sender, receiver)"] []
-   [Line ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffTG endowment amountProposed (amountProposed * tgFactor) return" ],
-    Line ["(receiver,amountProposed)"] [] "dependentRoleDecision (\\x -> [0..(x * tgFactor)])" ["return"] ["snd $ payoffTG endowment amountProposed (amountProposed * tgFactor) return"]
+   [Line Nothing ["(sender,())"] [] "roleDecision  [0..endowment]" ["amountProposed"] ["fst $ payoffTG endowment amountProposed (amountProposed * tgFactor) return" ],
+    Line Nothing ["(receiver,amountProposed)"] [] "dependentRoleDecision (\\x -> [0..(x * tgFactor)])" ["return"] ["snd $ payoffTG endowment amountProposed (amountProposed * tgFactor) return"]
    ]
    [] []
 
@@ -70,10 +70,10 @@ majorityGame (ag1,ag2) _ _ = Left (ag1,ag2)
 
 -- Voting on the game; roles are random
 votingGameSrc = Block [] []
-                    [Line [] [] "dependentDecision \"player1\" (const [Left (), Right ()])" ["vote1"] ["0"],
-                     Line [] [] "dependentDecision \"player2\" (const [Left (), Right ()])" ["vote2"] ["0"],
-                     Line [] [] "nature (uniform [(\"player1\",\"player2\"),(\"player2\",\"player2\")])" ["roles"] [],
-                     Line ["majorityGame roles vote1 vote2"] [] "trustGame +++ ultimatumGame" ["discard"] []]
+                    [Line Nothing [] [] "dependentDecision \"player1\" (const [Left (), Right ()])" ["vote1"] ["0"],
+                     Line Nothing [] [] "dependentDecision \"player2\" (const [Left (), Right ()])" ["vote2"] ["0"],
+                     Line Nothing [] [] "nature (uniform [(\"player1\",\"player2\"),(\"player2\",\"player2\")])" ["roles"] [],
+                     Line Nothing ["majorityGame roles vote1 vote2"] [] "trustGame +++ ultimatumGame" ["discard"] []]
                     [] []
 votingGame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles, discard) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const [Left (), Right ()]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const [Left (), Right ()]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), ())) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [("player1","player2"),("player2","player2")]))))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), majorityGame roles vote1 vote2)) (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((trustGame +++ ultimatumGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), discard) -> (vote1, vote2, roles, discard)) (\(vote1, vote2, roles, discard) -> ((vote1, vote2, roles, discard), ()))))))))) >>> (fromLens (\(vote1, vote2, roles, discard) -> ()) (curry (\((vote1, vote2, roles, discard), ()) -> (vote1, vote2, roles, discard)))))
 
@@ -90,10 +90,10 @@ votingRole (_,_)                 = uniform [("player1","player2"),("player2","pl
 
 -- Voting on roles in trust game
 votingRoleTrustSrc = Block [] []
-                    [Line [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
-                     Line [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
-                     Line ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
-                     Line ["roles"] [] "trustGame" [] []]
+                    [Line Nothing [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
+                     Line Nothing [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
+                     Line Nothing ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
+                     Line Nothing ["roles"] [] "trustGame" [] []]
                     [] []
 
 votingRoleTrust = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const ["player1", "player2"]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const ["player1", "player2"]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1,vote2))) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic votingRole)))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), roles)) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((trustGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ()))))))))) >>> (fromLens (\(vote1, vote2, roles) -> ()) (curry (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)))))
@@ -103,10 +103,10 @@ votingRoleTrust = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFuncti
 -- 4. Voting role in ultimatum game
 
 votingRoleUltimatumSrc = Block [] []
-                    [Line [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
-                     Line [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
-                     Line ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
-                     Line ["roles"] [] "ultimatumGame" [] []]
+                    [Line Nothing [] [] "dependentDecision \"player1\" (const [\"player1\", \"player2\"])" ["vote1"] ["0"],
+                     Line Nothing [] [] "dependentDecision \"player2\" (const [\"player1\", \"player2\"])" ["vote2"] ["0"],
+                     Line Nothing ["(vote1,vote2)"] [] "liftStochastic votingRole" ["roles"] [],
+                     Line Nothing ["roles"] [] "ultimatumGame" [] []]
                     [] []
 
 votingRoleUltimatum = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, roles) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player1" (const ["player1", "player2"]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "player2" (const ["player1", "player2"]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), 0)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1,vote2))) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic votingRole)))))) >>> (fromFunctions (\((vote1, vote2), roles) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, roles) -> ((vote1, vote2, roles), roles)) (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((ultimatumGame)))))) >>> (fromFunctions (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)) (\(vote1, vote2, roles) -> ((vote1, vote2, roles), ()))))))))) >>> (fromLens (\(vote1, vote2, roles) -> ()) (curry (\((vote1, vote2, roles), ()) -> (vote1, vote2, roles)))))

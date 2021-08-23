@@ -74,10 +74,11 @@ data Pattern
   | PLit Literal        -- Match a literal exactly
   deriving (Eq, Show)
 
-langaugeKeywords = ["if", "then", "else", "data", "import", "do", "let", "in"
-                   , "inputs", "outputs"
-                   , "feedback", "returns"
-                   , "operation"
+langaugeKeywords = ["if", "then", "else", "data", "import", "do", "let", "in" -- language keywords
+                   , "inputs", "outputs" -- the covariant arguments
+                   , "feedback", "returns" -- the contravariant arguments
+                   , "operation" -- the operation of the line 
+                   , "label" -- the label of a line
                    ]
 
 modifiedHaskell :: LanguageDef st
@@ -290,14 +291,14 @@ expr :: Parser Lambda
 expr =  infixParser appl
 
 
-parseLine :: Parser p -> Parser e -> Parser (Line p e)
+parseLine :: Parser p -> Parser e -> Parser (Line (Maybe String) p e)
 parseLine parseP parseE = do
     covo <- (commaSep parseP <* reservedOp "|")
     coni <- (commaSep parseE  <* reservedOp "<-")
     matrix <- (parseE <* reservedOp "-<")
     cono <- (commaSep parseP <* reservedOp "|")
     covi <- (commaSep parseE <* reservedOp ";")
-    pure (Line covi cono matrix covo coni)
+    pure (Line Nothing covi cono matrix covo coni)
 
 parseBlock :: Parser p -> Parser e -> Parser (Block p e)
 parseBlock parseP parseE = do
@@ -320,12 +321,13 @@ parseOutput = parseTwoLines "outputs" "returns"
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
-parseVerboseLine :: Parser p -> Parser e -> Parser (Line p e)
+parseVerboseLine :: Parser p -> Parser e -> Parser (Line (Maybe String) p e)
 parseVerboseLine parseP parseE = do
+  lbl <- optionMaybe (reserved "label" *> colon *> manyTill anyChar semi)
   (input, feedback) <- option ([], []) (parseInput parseE parseP)
   program <- reserved "operation" *> colon *> parseE <* semi
   (outputs,returns) <- option ([], []) (parseOutput parseP parseE)
-  pure $ Line input feedback program outputs returns
+  pure $ Line lbl input feedback program outputs returns
 
 parseVerboseSyntax :: Parser p -> Parser e -> Parser (Block p e)
 parseVerboseSyntax parseP parseE =

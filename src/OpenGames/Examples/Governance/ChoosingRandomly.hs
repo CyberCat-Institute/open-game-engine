@@ -17,8 +17,8 @@ pdMatrix Cooperate Defect    = (0, 3)
 pdMatrix Defect Cooperate    = (3, 0)
 
 prisonersDilemmaSrc = Block [] ["pdMatrix move1 move2"]
-                            [Line [] [] "reindex const (decision \"player1\" [Cooperate, Defect])" ["move1"] ["fst (pdMatrix move1 move2)"],
-                             Line [] [] "reindex const (decision \"player2\" [Cooperate, Defect])" ["move2"] ["snd (pdMatrix move1 move2)"]]
+                            [Line Nothing [] [] "reindex const (decision \"player1\" [Cooperate, Defect])" ["move1"] ["fst (pdMatrix move1 move2)"],
+                             Line Nothing [] [] "reindex const (decision \"player2\" [Cooperate, Defect])" ["move2"] ["snd (pdMatrix move1 move2)"]]
                             [] []
 
 prisonersDilemma = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(move1, move2) -> pdMatrix move1 move2)) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((move1, move2), ()) -> (move1, move2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [Cooperate, Defect]))))))) >>> (fromFunctions (\((), move1) -> move1) (\(move1, move2) -> ((move1, move2), fst (pdMatrix move1 move2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\move1 -> (move1, ())) (\((move1, move2), ()) -> (move1, move2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player2" [Cooperate, Defect]))))))) >>> (fromFunctions (\(move1, move2) -> (move1, move2)) (\(move1, move2) -> ((move1, move2), snd (pdMatrix move1 move2)))))))))) >>> (fromLens (\(move1, move2) -> ()) (curry (\((move1, move2), ()) -> (move1, move2)))))
@@ -31,17 +31,17 @@ stagMatrix Hare Stag = (1, 0)
 stagMatrix Hare Hare = (1, 1)
 
 stagHuntSrc = Block [] ["stagMatrix move1 move2"]
-                            [Line [] [] "reindex const (decision \"player1\" [Stag, Hare])" ["move1"] ["fst (stagMatrix move1 move2)"],
-                             Line [] [] "reindex const (decision \"player2\" [Stag, Hare])" ["move2"] ["snd (stagMatrix move1 move2)"]]
+                            [Line Nothing [] [] "reindex const (decision \"player1\" [Stag, Hare])" ["move1"] ["fst (stagMatrix move1 move2)"],
+                             Line Nothing [] [] "reindex const (decision \"player2\" [Stag, Hare])" ["move2"] ["snd (stagMatrix move1 move2)"]]
                             [] []
 
 stagHunt = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(move1, move2) -> stagMatrix move1 move2)) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((move1, move2), ()) -> (move1, move2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [Stag, Hare]))))))) >>> (fromFunctions (\((), move1) -> move1) (\(move1, move2) -> ((move1, move2), fst (stagMatrix move1 move2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\move1 -> (move1, ())) (\((move1, move2), ()) -> (move1, move2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player2" [Stag, Hare]))))))) >>> (fromFunctions (\(move1, move2) -> (move1, move2)) (\(move1, move2) -> ((move1, move2), snd (stagMatrix move1 move2)))))))))) >>> (fromLens (\(move1, move2) -> ()) (curry (\((move1, move2), ()) -> (move1, move2)))))
 
 metagameSrc = Block [] []
-                    [Line [] [] "reindex const (decision \"player1\" [Left (), Right ()])" ["vote1"] ["payoff1"],
-                     Line [] [] "reindex const (decision \"player2\" [Left (), Right ()])" ["vote2"] ["payoff2"],
-                     Line ["vote1", "vote2"] [] "liftStochastic (uncurry majority2)" ["result"] [],
-                     Line ["result"] ["payoff1", "payoff2"] "prisonersDilemma +++ stagHunt" ["discard"] []]
+                    [Line Nothing [] [] "reindex const (decision \"player1\" [Left (), Right ()])" ["vote1"] ["payoff1"],
+                     Line Nothing [] [] "reindex const (decision \"player2\" [Left (), Right ()])" ["vote2"] ["payoff2"],
+                     Line Nothing ["vote1", "vote2"] [] "liftStochastic (uncurry majority2)" ["result"] [],
+                     Line Nothing ["result"] ["payoff1", "payoff2"] "prisonersDilemma +++ stagHunt" ["discard"] []]
                     [] []
 
 metagame = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player1" [Left (), Right ()]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), payoff1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "player2" [Left (), Right ()]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), payoff2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2) -> ((vote1, vote2), (vote1, vote2))) (\((vote1, vote2, result, discard, payoff1, payoff2), ()) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((liftStochastic (uncurry majority2))))))) >>> (fromFunctions (\((vote1, vote2), result) -> (vote1, vote2, result)) (\(vote1, vote2, result, discard, payoff1, payoff2) -> ((vote1, vote2, result, discard, payoff1, payoff2), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(vote1, vote2, result) -> ((vote1, vote2, result), result)) (\((vote1, vote2, result, discard), (payoff1, payoff2)) -> (vote1, vote2, result, discard, payoff1, payoff2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((prisonersDilemma +++ stagHunt)))))) >>> (fromFunctions (\((vote1, vote2, result), discard) -> (vote1, vote2, result, discard)) (\(vote1, vote2, result, discard) -> ((vote1, vote2, result, discard), ()))))))))) >>> (fromLens (\(vote1, vote2, result, discard) -> ()) (curry (\((vote1, vote2, result, discard), ()) -> (vote1, vote2, result, discard)))))

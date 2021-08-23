@@ -30,18 +30,18 @@ payoff ls _      Wait = 0
 -- One step interaction between 2 players
 generateGame "centipedeStepRolesState" []
   (Block ["payoffSender","payoffReceiver","sender","receiver","pastDecs"] []
-  [Line [ [|sender|], [|payoffSender |]]   [] [|roleDecision   [Take,Wait]|] ["dec"] [[|payoff pastDecs payoffSender dec|]]
-  ,Line [ [|receiver|],[|payoffReceiver|]] [] [|roleDecision [True]|]   ["ignore"]   [[|payoff pastDecs payoffReceiver dec|]]]
+  [Line Nothing [ [|sender|], [|payoffSender |]]   [] [|roleDecision   [Take,Wait]|] ["dec"] [[|payoff pastDecs payoffSender dec|]]
+  ,Line Nothing [ [|receiver|],[|payoffReceiver|]] [] [|roleDecision [True]|]   ["ignore"]   [[|payoff pastDecs payoffReceiver dec|]]]
   [[|payoffSender|],[|payoffReceiver|],[|dec:pastDecs|]] [] :: Block String (Q Exp))
 
 
 -- Centipede game with 4 iterations
 generateGame "centipede4" [] (
   Block [] []
-  [Line [[|1|], [|0|], [|"player1"|], [|"player2"|],[|[Wait]|]] [] [|centipedeStepRolesState|] ["payoffSenderR1", "payoffReceiverR1","decs1"] []
-  ,Line [[|payoffSenderR1+1|],[|payoffReceiverR1|],[|"player2"|],[|"player1"|],[|decs1|]] [] [|centipedeStepRolesState|] ["payoffSenderR2", "payoffReceiverR2","decs2"] []
-  ,Line [[|payoffSenderR2+1|],[|payoffReceiverR1+1|],[|"player1"|],[|"player2"|],[|decs2|]] [] [|centipedeStepRolesState|] ["payoffSenderR3", "payoffReceiverR3","decs3"] []
-  ,Line [[|payoffSenderR3+1|],[|payoffReceiverR3+1|],[|"player2"|],[|"player1"|],[|decs3|]] [] [|centipedeStepRolesState|] ["payoffSenderR4", "payoffReceiverR4","decs4"] []]
+  [Line Nothing [[|1|], [|0|], [|"player1"|], [|"player2"|],[|[Wait]|]] [] [|centipedeStepRolesState|] ["payoffSenderR1", "payoffReceiverR1","decs1"] []
+  ,Line Nothing [[|payoffSenderR1+1|],[|payoffReceiverR1|],[|"player2"|],[|"player1"|],[|decs1|]] [] [|centipedeStepRolesState|] ["payoffSenderR2", "payoffReceiverR2","decs2"] []
+  ,Line Nothing [[|payoffSenderR2+1|],[|payoffReceiverR1+1|],[|"player1"|],[|"player2"|],[|decs2|]] [] [|centipedeStepRolesState|] ["payoffSenderR3", "payoffReceiverR3","decs3"] []
+  ,Line Nothing [[|payoffSenderR3+1|],[|payoffReceiverR3+1|],[|"player2"|],[|"player1"|],[|decs3|]] [] [|centipedeStepRolesState|] ["payoffSenderR4", "payoffReceiverR4","decs4"] []]
   [] [] :: Block String (Q Exp))
 
 

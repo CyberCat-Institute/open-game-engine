@@ -42,8 +42,8 @@ assignWaterNoTax (startLevel, farmerMove, monitorWorks)
 
 
 irrigationStepRoleDepSrc = Block ["name" :: Agent, "startLevel", "monitorWorks"] []
-  [Line ["(name,())"] [] "roleDecision [Crack, Flood]" ["farmerMove"] ["farmerWater"],
-   Line ["startLevel", "farmerMove", "monitorWorks"] ["()"] "fromFunctions assignWaterNoTax id" ["farmerWater", "downstreamWater"] ["()"]]
+  [Line Nothing ["(name,())"] [] "roleDecision [Crack, Flood]" ["farmerMove"] ["farmerWater"],
+   Line Nothing ["startLevel", "farmerMove", "monitorWorks"] ["()"] "fromFunctions assignWaterNoTax id" ["farmerWater", "downstreamWater"] ["()"]]
     ["downstreamWater"] []
 
 irrigationStepRoleDep = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks) -> ((name, startLevel, monitorWorks), (name,()))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [Crack, Flood])))))) >>> (fromFunctions (\((name, startLevel, monitorWorks), farmerMove) -> (name, startLevel, monitorWorks, farmerMove)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()), farmerWater))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(name, startLevel, monitorWorks, farmerMove) -> ((name, startLevel, monitorWorks, farmerMove), (startLevel, farmerMove, monitorWorks))) (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater, ()))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions assignWaterNoTax id)))))) >>> (fromFunctions (\((name, startLevel, monitorWorks, farmerMove), (farmerWater, downstreamWater)) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater)) (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater) -> ((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()))))))))) >>> (fromLens (\(name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater) -> downstreamWater) (curry (\((name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater), ()) -> (name, startLevel, monitorWorks, farmerMove, farmerWater, downstreamWater)))))
@@ -57,11 +57,11 @@ randomOrder = do
            lst' x = delete x lst
 
 irrigationRandomRoleSrc = Block [] []
-  [Line [][] "nature randomOrder" ["m", "p2", "p3"] [],
-   Line ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
-   Line ["p2", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
-   Line ["p3", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
-   Line ["m", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] []]
+  [Line Nothing [][] "nature randomOrder" ["m", "p2", "p3"] [],
+   Line Nothing ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
+   Line Nothing ["p2", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
+   Line Nothing ["p3", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
+   Line Nothing ["m", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] []]
   [] []
 
 irrigationRandomRole = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ())) >>> (reindex (\(a1, a2, a3, a4, a5) -> ((((a1, a2), a3), a4), a5)) (((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature randomOrder)))))) >>> (fromFunctions (\((), (m,p2,p3)) -> (m,p2,p3)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(m,p2,p3) -> ((m,p2,p3), (m,()))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((roleDecision [Work, Shirk])))))) >>> (fromFunctions (\((m,p2,p3), monitorWorks) -> ((m,p2,p3), monitorWorks)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), monitorPayoff 0 0 0 monitorWorks)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks) -> (((m,p2,p3), monitorWorks), ("p2", 9, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks), levelAfter1) -> ((m,p2,p3), monitorWorks, levelAfter1)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks, levelAfter1) -> (((m,p2,p3), monitorWorks, levelAfter1), ("p3", levelAfter1, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks, levelAfter1), levelAfter2) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ())))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2), ("m", levelAfter2, monitorWorks))) (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStepRoleDep)))))) >>> (fromFunctions (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2), levelAfter3) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3)) (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> (((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()))))))))) >>> (fromLens (\((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3) -> ()) (curry (\(((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3), ()) -> ((m,p2,p3), monitorWorks, levelAfter1, levelAfter2, levelAfter3)))))
@@ -69,12 +69,12 @@ irrigationRandomRole = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromF
 -- Irrigation Game with fixed sequence of players (as in IrrigationRandom)
 
 irrigationRandomRoleSimpleSrc = Block [] []
-  [Line [][] "nature (uniform [\"player1\",\"player2\",\"player3\"])" ["m"] [],
-   Line ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
-   Line ["\"player1\"", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
-   Line ["\"player2\"", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
-   Line ["\"player3\"", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] [],
-   Line ["m", "levelAfter3", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfte4"] []]
+  [Line Nothing [][] "nature (uniform [\"player1\",\"player2\",\"player3\"])" ["m"] [],
+   Line Nothing ["m", "()"] [] "roleDecision [Work, Shirk]" ["monitorWorks"] ["monitorPayoff 0 0 0 monitorWorks"],
+   Line Nothing ["\"player1\"", "9", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter1"] [],
+   Line Nothing ["\"player2\"", "levelAfter1", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter2"] [],
+   Line Nothing ["\"player3\"", "levelAfter2", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfter3"] [],
+   Line Nothing ["m", "levelAfter3", "monitorWorks"] [] "irrigationStepRoleDep" ["levelAfte4"] []]
   [] []
 
 

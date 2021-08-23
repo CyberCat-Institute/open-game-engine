@@ -36,22 +36,22 @@ signallingUtilityFirm _ _ NotAccept = 0
 
 -- Using TH
 generateGame "signallingTH" []
-  [Line []
+  [Line (Nothing :: Maybe String) []
         []
         [|nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)])|]
         ["productivity"]
         [],
-   Line [param "productivity"]
+   Line (Nothing :: Maybe String) [param "productivity"]
         []
         [|decision "worker-effort" [LowEffort, HighEffort]|]
         ["effort"]
         [[|signallingUtilityWorker productivity effort wage contract|]],
-   Line [param "effort"]
+   Line (Nothing :: Maybe String) [param "effort"]
         []
         [|decision "firm" [LowWage, HighWage]|]
         ["wage"]
         [[|signallingUtilityFirm productivity wage contract|]],
-   Line [param "productivity", param "wage"]
+   Line (Nothing :: Maybe String) [param "productivity", param "wage"]
         []
         [|decision "worker-contract" [Accept, NotAccept]|]
         ["contract"]
@@ -59,10 +59,10 @@ generateGame "signallingTH" []
 --
 -- Using Blocks
 signallingSrc = Block [] []
-                   [Line [] [] "nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)])" ["productivity"] [],
-                    Line ["productivity"] [] "decision \"worker-effort\" [LowEffort, HighEffort]" ["effort"] ["signallingUtilityWorker productivity effort wage contract"],
-                    Line ["effort"] [] "decision \"firm\" [LowWage, HighWage]" ["wage"] ["signallingUtilityFirm productivity wage contract"],
-                    Line ["productivity", "wage"] [] "decision \"worker-contract\" [Accept, NotAccept]" ["contract"] ["signallingUtilityWorker productivity effort wage contract"]]
+                   [Line (Nothing :: Maybe String) [] [] "nature (fromFreqs [(LowProductivity, 8), (HighProductivity, 1)])" ["productivity"] [],
+                    Line (Nothing :: Maybe String) ["productivity"] [] "decision \"worker-effort\" [LowEffort, HighEffort]" ["effort"] ["signallingUtilityWorker productivity effort wage contract"],
+                    Line (Nothing :: Maybe String) ["effort"] [] "decision \"firm\" [LowWage, HighWage]" ["wage"] ["signallingUtilityFirm productivity wage contract"],
+                    Line (Nothing :: Maybe String) ["productivity", "wage"] [] "decision \"worker-contract\" [Accept, NotAccept]" ["contract"] ["signallingUtilityWorker productivity effort wage contract"]]
                    [] []
 
 -- Using QuasiQuotes

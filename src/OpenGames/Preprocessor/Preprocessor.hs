@@ -15,7 +15,7 @@ simultaneousTrivialR g h = Reindex UnitIntroR (Simultaneous g h) -- \x -> (x, ()
 -- Pre-compilation pass to figure out what's in scope at each point
 
 data LineWithContext = LineWithContext {
-  line :: Line String String,
+  line :: Line (Maybe String) String String,
   covariantContext :: Variables String,
   contravariantContext :: Variables String}
 

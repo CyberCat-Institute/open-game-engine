@@ -20,8 +20,8 @@ sequentialMatrix2 _ _ = 0
 
 -- Using TH
 generateGame "sequentialTH" [] $
-                   [Line []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
-                   ,Line [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
+                   [Line (Nothing :: Maybe String) []    [] [|reindex const (decision "player1" [GoLeft, GoRight])|] ["x"] [[|sequentialMatrix1 x y|]]
+                   ,Line (Nothing :: Maybe String) [param "x"] [] [|decision "player2" [GoLeft, GoRight]|] ["y"] [[|sequentialMatrix2 x y|]]]
 
 -- Using QuasiQuotes
 sequential = [game| || =>>
