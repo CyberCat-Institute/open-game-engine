@@ -33,21 +33,25 @@ discountFactor = 0.9
 
 -- | Payoff for a specific game state
 payoffGameN 0 = 0.5
-payoffGameN 1 = 1
-payoffGameN 2 = 0.2
+payoffGameN 1 = 0.3
+payoffGameN 2 = 1
+payoffGameN 3 = 0.2
 payoffGameN _ = 0
-
 
 ----------------------
 -- Auxiliary functions
 
 -- The transition happens deterministically if one of the players does not play _Cooperate_
 transitionEndStateDetermN :: EndStateN -> ActionPD -> ActionPD -> Stochastic EndStateN
-transitionEndStateDetermN 2  _         _         = playDeterministically 2
+transitionEndStateDetermN 3  _         _         = playDeterministically 3
 transitionEndStateDetermN 0 Cooperate Cooperate  = playDeterministically 0
 transitionEndStateDetermN 0 _         _          = playDeterministically 1
 transitionEndStateDetermN 1 Cooperate Cooperate  = playDeterministically 1
 transitionEndStateDetermN 1 _         _          = playDeterministically 2
+transitionEndStateDetermN 2 Cooperate Cooperate  = playDeterministically 2
+transitionEndStateDetermN 2 _         _          = playDeterministically 3
+
+
 
 -------------
 -- Open games
@@ -132,10 +136,12 @@ strategyEq = Kleisli $
    (\case
        (_,_, 0) -> playDeterministically Defect
        -- ^ If in stage 0, play to get to stage 1
-       (_,_, 1) -> playDeterministically Cooperate
-       -- ^ If in stage 1, play to stay there
+       (_,_, 1) -> playDeterministically Defect
+       -- ^ If in stage 1, play to get to stage 2
+       (_,_, 2) -> playDeterministically Cooperate
+       -- ^ If in stage 2, stay there
        (_,_, _) -> uniform [Cooperate,Defect])
-       -- ^ If in stage 2, play whatever you want
+       -- ^ If in stage 3, play whatever you want
 
 strategyAlt :: Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
 strategyAlt = Kleisli $
