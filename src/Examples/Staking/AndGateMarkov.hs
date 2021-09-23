@@ -10,6 +10,46 @@ module Examples.Staking.AndGateMarkov where
 import           Engine.Engine
 import           Preprocessor.Preprocessor
 
+import           Control.Monad.State  hiding (state,void)
+import qualified Control.Monad.State  as ST
+--------
+-- Types
+andGateMarkovTestParams = AndGateMarkovParams {
+    reward = 1.0,
+    costOfCapital = 0.05,
+    minBribe = 0.0,
+    maxBribe = 5.0,
+    incrementBribe = 1.0,
+    maxSuccessfulAttackPayoff = 1000.0,
+    attackerProbability = 0.001,
+    penalty = 0.5,
+    minDeposit = 0.0,
+    maxDeposit = 10.0,
+    incrementDeposit = 0.1,
+    epsilon = 0.001,
+    discountFactor = 0.5
+}
+
+
+data AndGateMarkovParams = AndGateMarkovParams {
+  reward :: Double,
+  costOfCapital :: Double,
+  minBribe :: Double,
+  maxBribe :: Double,
+  incrementBribe :: Double,
+  maxSuccessfulAttackPayoff :: Double,
+  attackerProbability :: Double,
+  penalty :: Double,
+  minDeposit :: Double,
+  maxDeposit :: Double,
+  incrementDeposit :: Double,
+  epsilon :: Double,
+  discountFactor :: Double
+}
+
+
+
+
 ---------------------
 -- Auxilary functions
 
@@ -72,22 +112,6 @@ playingStagePlayer name moves = [opengame|
 |]
 
 
-data AndGateMarkovParams = AndGateMarkovParams {
-  reward :: Double,
-  costOfCapital :: Double,
-  minBribe :: Double,
-  maxBribe :: Double,
-  incrementBribe :: Double,
-  maxSuccessfulAttackPayoff :: Double,
-  attackerProbability :: Double,
-  penalty :: Double,
-  minDeposit :: Double,
-  maxDeposit :: Double,
-  incrementDeposit :: Double,
-  epsilon :: Double,
-  discountFactor :: Double
-}
-
 stakingRound costOfCapital minDeposit maxDeposit incrementDeposit epsilon = [opengame|
 
 
@@ -131,18 +155,19 @@ nothing = 0.0
 playingRound :: OpenGame
                           StochasticStatefulOptic
                           StochasticStatefulContext
-                          ('[Kleisli Stochastic (Double, [Double], Double) Bool,
-                             Kleisli Stochastic (Double, [Double], Double) Bool,
-                             Kleisli Stochastic (Double, [Double], Double) Bool]
+                          ('[Kleisli Stochastic (([Double],Bool), [Double], Double) Bool,
+                             Kleisli Stochastic (([Double],Bool), [Double], Double) Bool,
+                             Kleisli Stochastic (([Double],Bool), [Double], Double) Bool]
                            )
-                          ('[[DiagnosticInfoBayesian (Double, [Double], Double) Bool],
-                             [DiagnosticInfoBayesian (Double, [Double], Double) Bool],
-                             [DiagnosticInfoBayesian (Double, [Double], Double) Bool]]
+                          ('[[DiagnosticInfoBayesian (([Double],Bool), [Double], Double) Bool],
+                             [DiagnosticInfoBayesian (([Double],Bool), [Double], Double) Bool],
+                             [DiagnosticInfoBayesian (([Double],Bool), [Double], Double) Bool]]
                            )
-                          (Double, [Double], Double)
+                          (([Double],Bool), [Double], Double)
                           ()
                           [Bool]
-                          [(Double,Bool)]
+                          [(Double, Bool)]
+
 playingRound = [opengame|
 
   inputs : (summaryStatistic, deposits, bribe) ;
@@ -232,3 +257,55 @@ andGateMarkovGame (AndGateMarkovParams  reward costOfCapital minBribe maxBribe i
 
   outputs : (deposits, obfuscateAndGate moves) ;
 |]
+
+
+---------------
+-- continuation
+
+-- extract continuation
+extractContinuation :: StochasticStatefulOptic s () s () -> s -> StateT Vector Stochastic ()
+extractContinuation (StochasticStatefulOptic v u) x = do
+  (z,a) <- ST.lift (v x)
+  u z ()
+
+-- extract next state (action)
+extractNextState :: StochasticStatefulOptic s () s () -> s -> Stochastic s
+extractNextState (StochasticStatefulOptic v _) x = do
+  (z,a) <- v x
+  pure a
+
+extractContinuation2 :: StochasticStatefulOptic Double () ([Double],Bool) () -> Double -> StateT Vector Stochastic ()
+extractContinuation2 (StochasticStatefulOptic v u) x = do
+  (z,a) <- ST.lift (v x)
+  u z ()
+
+-- extract next state (action)
+extractNextState2 :: StochasticStatefulOptic Double () ([Double],Bool) () -> Double -> Stochastic ([Double],Bool)
+extractNextState2 (StochasticStatefulOptic v _) x = do
+  (z,a) <- v x
+  pure a
+
+
+
+executeStrat parameters strat = play (andGateMarkovGame parameters) strat
+
+
+
+determineContinuationPayoffs parameters 1        strat action = pure ()
+determineContinuationPayoffs parameters iterator strat action = do
+   extractContinuation executeStrat action
+   nextInput <- ST.lift $ extractNextState executeStrat action
+   determineContinuationPayoffs parameters (pred iterator) strat nextInput
+ where executeStrat =  play (andGateMarkovGame parameters) strat
+
+
+-----------
+-- Strategy
+
+depositStrategy =  Kleisli $ \((_, previousRoundTrue), _) -> playDeterministically $ if previousRoundTrue then 4.6 else 0.0
+
+attackerStrategy :: Kleisli
+                              Stochastic
+                              ([Double], Double)
+                              Double
+attackerStrategy = Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then playDeterministically 5.0 else playDeterministically 0.0)
