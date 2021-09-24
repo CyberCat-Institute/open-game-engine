@@ -77,6 +77,11 @@ payoffAndGate penalty reward deposits True
 payoffAndGate penalty reward deposits False
   = [-penalty*deposit | deposit <- deposits]
 
+
+andGateTestPrior = do
+  deposits <- uniformDist [replicate 3 x | x <- [0.0, 1.0 .. 10.0]]
+  andResults <- uniformDist [True, False]
+  return (deposits, andResults)
 --------
 -- Games
 
@@ -224,7 +229,7 @@ discountingStage discountFactor = [opengame|
 
 |]
 
-andGateMarkovGame (AndGateMarkovParams  reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor) = [opengame|
+andGateGame (AndGateMarkovParams  reward costOfCapital minBribe maxBribe incrementBribe maxSuccessfulAttackPayoff attackerProbability penalty minDeposit maxDeposit incrementDeposit epsilon discountFactor) = [opengame|
 
   inputs : summaryStatistic ;
 
@@ -285,18 +290,30 @@ extractNextState2 (StochasticStatefulOptic v _) x = do
   (z,a) <- v x
   pure a
 
-
-
-executeStrat parameters strat = play (andGateMarkovGame parameters) strat
-
-
-
+-- Random prior indpendent of previous moves
 determineContinuationPayoffs parameters 1        strat action = pure ()
 determineContinuationPayoffs parameters iterator strat action = do
    extractContinuation executeStrat action
+   nextInput <- ST.lift $ andGateTestPrior
+   determineContinuationPayoffs parameters (pred iterator) strat nextInput
+ where executeStrat =  play (andGateGame parameters) strat
+
+-- Actual moves affect next moves
+determineContinuationPayoffs' parameters 1        strat action = pure ()
+determineContinuationPayoffs' parameters iterator strat action = do
+   extractContinuation executeStrat action
    nextInput <- ST.lift $ extractNextState executeStrat action
    determineContinuationPayoffs parameters (pred iterator) strat nextInput
- where executeStrat =  play (andGateMarkovGame parameters) strat
+ where executeStrat =  play (andGateGame parameters) strat
+
+
+
+-- fix context used for the evaluation
+contextCont parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
+
+contextCont' parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
+
+
 
 
 -----------
@@ -309,3 +326,37 @@ attackerStrategy :: Kleisli
                               ([Double], Double)
                               Double
 attackerStrategy = Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then playDeterministically 5.0 else playDeterministically 0.0)
+
+signalStrategy = Kleisli $ \((_, previousRoundTrue), _, bribe) -> playDeterministically $ previousRoundTrue && bribe < 5.0
+
+
+strategyTuple =
+      depositStrategy
+  ::- depositStrategy
+  ::- depositStrategy
+  ::- attackerStrategy
+  ::- signalStrategy
+  ::- signalStrategy
+  ::- signalStrategy
+  ::- Nil
+
+
+-----------------------
+-- Equilibrium analysis
+
+
+andGateMarkovGameEq parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
+  where context  = contextCont parameters iterator strat initialAction
+
+eqOutput parameters iterator strat initialAction = generateIsEq $ andGateMarkovGameEq parameters iterator strat initialAction
+
+
+
+andGateMarkovGameEq' parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
+  where context  = contextCont' parameters iterator strat initialAction
+
+eqOutput' parameters iterator strat initialAction = generateIsEq $ andGateMarkovGameEq' parameters iterator strat initialAction
+
+
+
+testInitialAction = ([10.0,10.0,10.0],True)
