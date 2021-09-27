@@ -48,7 +48,7 @@ randomTegime tech "wa" = Right tech
 -- Nature determining the technology 
 
 technologySrc = Block [] []
-                     [Line [] [] "nature (uniform [0, 0.1 .. 1])" ["tech"] []]
+                     [Line Nothing [] [] "nature (uniform [0, 0.1 .. 1])" ["tech"] []]
                      ["tech"] []
 
 technology = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\tech -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\(tech, ()) -> tech)) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature (uniform [0, 0.1 .. 1]))))))) >>> (fromFunctions (\((), tech) -> tech) (\tech -> (tech, ())))))))) >>> (fromLens (\tech -> tech) (curry (\(tech, ()) -> tech))))
@@ -58,7 +58,7 @@ technology = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (
 -- 2.0 Landowners setting the share 
 
 landLordShareSrc = Block ["tech"] []
-                  [Line ["tech"] [] "dependentDecision \"landLord\" (const [0, 0.1 .. 1])" ["share"] ["payoffLandLordShare (productionFunction tech effort) share"]]
+                  [Line Nothing ["tech"] [] "dependentDecision \"landLord\" (const [0, 0.1 .. 1])" ["share"] ["payoffLandLordShare (productionFunction tech effort) share"]]
                   ["share"] ["effort"]
 
 
@@ -68,7 +68,7 @@ landLordShare = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunction
 -- 2.1 Landowners setting the wage
 
 landLordWageSrc = Block ["tech"] []
-                  [Line ["tech"] [] "dependentDecision \"landLord\" (const [0, 1 .. 10])" ["wage"] ["payoffLandLordWage (productionFunction tech effort) wage"]]
+                  [Line Nothing ["tech"] [] "dependentDecision \"landLord\" (const [0, 1 .. 10])" ["wage"] ["payoffLandLordWage (productionFunction tech effort) wage"]]
                   ["wage"] ["effort"]
 
 
@@ -81,7 +81,7 @@ landLordWage = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions
 -- 3.0 Workers spending effort
 
 workerShareSrc = Block ["tech","share"] []
-                  [Line ["(tech,share)"] [] "dependentDecision \"worker\" (const [1, 1 .. 10])" ["effort"] ["payoffWorkerShare (productionFunction tech effort) share"]]
+                  [Line Nothing ["(tech,share)"] [] "dependentDecision \"worker\" (const [1, 1 .. 10])" ["effort"] ["payoffWorkerShare (productionFunction tech effort) share"]]
                   ["effort"] []
 
 workerShare = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, share, effort) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, share) -> ((tech, share), (tech,share))) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "worker" (const [1, 1 .. 10]))))))) >>> (fromFunctions (\((tech, share), effort) -> (tech, share, effort)) (\(tech, share, effort) -> ((tech, share, effort), payoffWorkerShare (productionFunction tech effort) share)))))))) >>> (fromLens (\(tech, share, effort) -> effort) (curry (\((tech, share, effort), ()) -> (tech, share, effort)))))
@@ -90,7 +90,7 @@ workerShare = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions 
 -- Workers spending effort
 
 workerWageSrc = Block ["wage"] []
-                  [Line ["wage"] [] "dependentDecision \"worker\" (const [1, 1 .. 10])" ["effort"] ["payoffWorkerWage wage"]]
+                  [Line Nothing ["wage"] [] "dependentDecision \"worker\" (const [1, 1 .. 10])" ["effort"] ["payoffWorkerWage wage"]]
                   ["effort"] []
 
 workerWage = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(wage, effort) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\wage -> (wage, wage)) (\((wage, effort), ()) -> (wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "worker" (const [1, 1 .. 10]))))))) >>> (fromFunctions (\(wage, effort) -> (wage, effort)) (\(wage, effort) -> ((wage, effort), payoffWorkerWage wage)))))))) >>> (fromLens (\(wage, effort) -> effort) (curry (\((wage, effort), ()) -> (wage, effort)))))
@@ -101,16 +101,16 @@ workerWage = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (
 -- 4.0 share-cropping
 
 cropGameSrc = Block ["tech"] ["effort"]
-                  [Line ["tech"] [] "landLordShare" ["share"] ["effort"],
-                   Line ["tech","share"] [] "workerShare" ["effort"] []]
+                  [Line Nothing ["tech"] [] "landLordShare" ["share"] ["effort"],
+                   Line Nothing ["tech","share"] [] "workerShare" ["effort"] []]
                   [] []
 
 cropGame =reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, share, effort) -> effort)) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, tech)) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((landLordShare)))))) >>> (fromFunctions (\(tech, share) -> (tech, share)) (\(tech, share, effort) -> ((tech, share, effort), effort))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, share) -> ((tech, share), (tech, share))) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((workerShare)))))) >>> (fromFunctions (\((tech, share), effort) -> (tech, share, effort)) (\(tech, share, effort) -> ((tech, share, effort), ()))))))))) >>> (fromLens (\(tech, share, effort) -> ()) (curry (\((tech, share, effort), ()) -> (tech, share, effort)))))
 
 -- 4.1 wage setting
 wageGameSrc = Block ["tech"] ["effort"]
-                  [Line ["tech"] [] "landLordWage" ["wage"] ["effort"],
-                   Line ["wage"] [] "workerWage" ["effort"] []]
+                  [Line Nothing ["tech"] [] "landLordWage" ["wage"] ["effort"],
+                   Line Nothing ["wage"] [] "workerWage" ["effort"] []]
                   [] []
 
 wageGame =  reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, wage, effort) -> effort)) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, tech)) (\((tech, wage, effort), ()) -> (tech, wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((landLordWage)))))) >>> (fromFunctions (\(tech, wage) -> (tech, wage)) (\(tech, wage, effort) -> ((tech, wage, effort), effort))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, wage) -> ((tech, wage), wage)) (\((tech, wage, effort), ()) -> (tech, wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((workerWage)))))) >>> (fromFunctions (\((tech, wage), effort) -> (tech, wage, effort)) (\(tech, wage, effort) -> ((tech, wage, effort), ()))))))))) >>> (fromLens (\(tech, wage, effort) -> ()) (curry (\((tech, wage, effort), ()) -> (tech, wage, effort)))))
@@ -119,8 +119,8 @@ wageGame =  reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\
 -- 5  Voting game
 
 votingInstSrc = Block [] []
-                    [Line [] [] "dependentDecision \"gov1\" (const [Left (), Right ()])" ["vote1"] ["0"],
-                     Line [] [] "dependentDecision \"gov2\" (const [Left (), Right ()])" ["vote2"] ["0"]]
+                    [Line Nothing [] [] "dependentDecision \"gov1\" (const [Left (), Right ()])" ["vote1"] ["0"],
+                     Line Nothing [] [] "dependentDecision \"gov2\" (const [Left (), Right ()])" ["vote2"] ["0"]]
                     ["vote1","vote2"] []
 
 votingInst =reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(vote1, vote2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((vote1, vote2), ()) -> (vote1, vote2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "gov1" (const [Left (), Right ()]))))))) >>> (fromFunctions (\((), vote1) -> vote1) (\(vote1, vote2) -> ((vote1, vote2), 0))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\vote1 -> (vote1, ())) (\((vote1, vote2), ()) -> (vote1, vote2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision "gov2" (const [Left (), Right ()]))))))) >>> (fromFunctions (\(vote1, vote2) -> (vote1, vote2)) (\(vote1, vote2) -> ((vote1, vote2), 0))))))))) >>> (fromLens (\(vote1, vote2) -> (vote1, vote2)) (curry (\((vote1, vote2), ()) -> (vote1, vote2)))))
@@ -130,9 +130,9 @@ votingInst =reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\
 -- 6.0 Simple share-cropping
 
 cropGameCompleteSrc = Block [] []
-                 [Line [] [] "technology" ["tech"] [],
-                  Line ["tech"] [] "landLordShare" ["share"] ["effort"],
-                  Line ["tech","share"] [] "workerShare" ["effort"] []]
+                 [Line Nothing [] [] "technology" ["tech"] [],
+                  Line Nothing ["tech"] [] "landLordShare" ["share"] ["effort"],
+                  Line Nothing ["tech","share"] [] "workerShare" ["effort"] []]
                   [] []
 
 cropGameComplete = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, share, effort) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, share, effort) -> ((tech, share, effort), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, tech)) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((landLordShare)))))) >>> (fromFunctions (\(tech, share) -> (tech, share)) (\(tech, share, effort) -> ((tech, share, effort), effort)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, share) -> ((tech, share), (tech, share))) (\((tech, share, effort), ()) -> (tech, share, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((workerShare)))))) >>> (fromFunctions (\((tech, share), effort) -> (tech, share, effort)) (\(tech, share, effort) -> ((tech, share, effort), ()))))))))) >>> (fromLens (\(tech, share, effort) -> ()) (curry (\((tech, share, effort), ()) -> (tech, share, effort)))))
@@ -142,18 +142,18 @@ cropGameComplete = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunct
 
 
 wageGameCompleteSrc = Block [] []
-                 [Line [] [] "technology" ["tech"] [],
-                  Line ["tech"] [] "landLordWage" ["wage"] ["effort"],
-                  Line ["wage"] [] "workerWage" ["effort"] []]
+                 [Line Nothing [] [] "technology" ["tech"] [],
+                  Line Nothing ["tech"] [] "landLordWage" ["wage"] ["effort"],
+                  Line Nothing ["wage"] [] "workerWage" ["effort"] []]
                   [] []
 
 wageGameComplete = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(tech, wage, effort) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((tech, wage, effort), ()) -> (tech, wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((technology)))))) >>> (fromFunctions (\((), tech) -> tech) (\(tech, wage, effort) -> ((tech, wage, effort), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\tech -> (tech, tech)) (\((tech, wage, effort), ()) -> (tech, wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((landLordWage)))))) >>> (fromFunctions (\(tech, wage) -> (tech, wage)) (\(tech, wage, effort) -> ((tech, wage, effort), effort)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(tech, wage) -> ((tech, wage), wage)) (\((tech, wage, effort), ()) -> (tech, wage, effort))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((workerWage)))))) >>> (fromFunctions (\((tech, wage), effort) -> (tech, wage, effort)) (\(tech, wage, effort) -> ((tech, wage, effort), ()))))))))) >>> (fromLens (\(tech, wage, effort) -> ()) (curry (\((tech, wage, effort), ()) -> (tech, wage, effort)))))
 
 -- 6.2 Branching game with actual choice
 branchingGameSrc = Block [] []
-                 [Line [] [] "technology" ["tech"] [],
-                  Line [] [] "votingInst" ["vote1","vote2"] [],
-                  Line ["majority tech vote1 vote2"] ["discard"] "cropGame +++ wageGame" ["discard'"] []
+                 [Line Nothing [] [] "technology" ["tech"] [],
+                  Line Nothing [] [] "votingInst" ["vote1","vote2"] [],
+                  Line Nothing ["majority tech vote1 vote2"] ["discard"] "cropGame +++ wageGame" ["discard'"] []
                  ]
                  [] []
 
@@ -162,9 +162,9 @@ branchingGame  = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctio
 
 -- 6.3 Random evolution of institution
 randomInstSrc = Block [] []
-                 [Line [] [] "technology" ["tech"] [],
-                  Line [] [] "nature (uniform [\"cr\", \"wa\"])" ["inst"] [],
-                  Line ["regimeChoice tech inst"] ["discard"] "cropGame +++ wageGame " ["discard'"] []
+                 [Line Nothing [] [] "technology" ["tech"] [],
+                  Line Nothing [] [] "nature (uniform [\"cr\", \"wa\"])" ["inst"] [],
+                  Line Nothing ["regimeChoice tech inst"] ["discard"] "cropGame +++ wageGame " ["discard'"] []
                  ]
                  [] []
 
@@ -174,9 +174,9 @@ randomInst = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (
 
 -- 6.4 Dictator deciding the institution; payoff based on the effort spent
 dictatorInstSrc = Block [] []
-                 [Line [] [] "technology" ["tech"] [],
-                  Line [] [] "dependentDecision \"dictator\" (const [\"cr\", \"wa\"])" ["inst"] ["effort"],
-                  Line ["regimeChoice tech inst"] ["effort"] "cropGame +++ wageGame " ["discard"] []
+                 [Line Nothing [] [] "technology" ["tech"] [],
+                  Line Nothing [] [] "dependentDecision \"dictator\" (const [\"cr\", \"wa\"])" ["inst"] ["effort"],
+                  Line Nothing ["regimeChoice tech inst"] ["effort"] "cropGame +++ wageGame " ["discard"] []
                  ]
                  [] []
 

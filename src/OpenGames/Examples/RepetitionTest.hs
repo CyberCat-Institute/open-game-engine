@@ -45,9 +45,9 @@ repetitionTestDiscountFactor = 0.1
 --   |]
 
 -- generateGame "stagePDTH" [] $  GBlock ["titForTatState", "grimTriggerState"] ["payoff1", "payoff2"]
---   [Line [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
---    Line [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
---    Line [] ["payoff1", "payoff2"]
+--   [mkLine [param "titForTatState"]   [] [|pureDecision [Cooperate, Defect]|] ["move1"] [[|payoff1|]],
+--    mkLine [param "grimTriggerState"] [] [|pureDecision [Cooperate, Defect]|] ["move2"] [[|payoff2|]],
+--    mkLine [] ["payoff1", "payoff2"]
 --          [|fromFunctions id (\(move1, move2, continuation1, continuation2) ->
 --            let (u1, u2) = stagePDPayoffs move1 move2 in (u1 + repetitionTestDiscountFactor*continuation1,
 --                                                          u2 + repetitionTestDiscountFactor*continuation2))|]
@@ -60,7 +60,7 @@ stagePD = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x 
 repeatedPDStates = [(a, b) | a <- [TitForTatState1, TitForTatState2], b <- [GrimTriggerState1, GrimTriggerState2]]
 
 generateGame "repeatedPDTH" [] $
-  [Line [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
+  [mkLine [[|TitForTatState1|], [|GrimTriggerState1|]] ["payoff1", "payoff2"] [|repeated 10 (0, 0) repeatedPDStates stagePD|] ["moves"] []]
 
 repeatedPD = [game| || =>>
   moves | <- repeated 10 (0, 0) repeatedPDStates stagePD -< payoff1, payoff2 | TitForTatState1, GrimTriggerState1 ;

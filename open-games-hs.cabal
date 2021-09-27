@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4820c50bac4d9617c8ad0f417ec912641044a72287c39cc86f28ad27f8aed5c7
+-- hash: 99f1136e2a5ff335603e117500bac2210a88c23cbb1f6285f0014b2dc39c503f
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      OpenGames.Graphics
       OpenGames.Engine.OpenGamesClass
       OpenGames.Engine.Diagnostics
       OpenGames.Engine.PureOpenGames
@@ -94,8 +95,11 @@ library
     , ad
     , base >=4.7 && <5
     , comonad
+    , fgl
+    , graphviz
     , hashable
     , hashmap
+    , lens
     , mtl
     , parsec
     , poly
@@ -103,6 +107,18 @@ library
     , profunctors
     , template-haskell
     , transformers
+  default-language: Haskell2010
+
+executable graphics
+  main-is: graphics/Main.hs
+  other-modules:
+      Paths_open_games_hs
+  build-depends:
+      base
+    , graphviz
+    , open-games-hs
+    , probability
+    , template-haskell
   default-language: Haskell2010
 
 executable opengame

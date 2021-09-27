@@ -16,12 +16,12 @@ import OpenGames.Examples.Consensus.Censor
 
 generateGame "censorGame2" ["censorPenalty"] $
   Block ["daveStake", "erikaStake", "frankStake", "bribe"] []
-    [Line [param "daveStake", param "bribe"] []
+    [Line Nothing [param "daveStake", param "bribe"] []
             [|dependentDecision "Dave" (const [Honest, Censor])|]
           ["daveMove"] [[|case daveMove of {Honest -> davePayoff; Censor -> davePayoff + bribe}|]],
-     Line [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
-     Line [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
-     Line [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] []
+     Line Nothing [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
+     Line Nothing [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
+     Line Nothing [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] []
             [|fromFunctions (uncurry (payoffs censorPenalty)) id|]
           ["davePayoff", "erikaPayoff", "frankPayoff"] []]
     [[|daveMove|], [|erikaMove|], [|frankMove|]] []
@@ -47,12 +47,12 @@ costOfCapital :: Double
 costOfCapital = 0.1
 
 generateGame "censorBribeGame2" ["censorPenalty"] $ Block [] []
-  [Line [param "costOfCapital"] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
-   Line [] [] [|nature attackerTypeDistribution|] ["successfulAttackPayoff"] [],
-   Line (map param ["daveStake", "erikaStake", "frankStake", "successfulAttackPayoff"]) []
+  [Line Nothing [param "costOfCapital"] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
+   Line Nothing [] [] [|nature attackerTypeDistribution|] ["successfulAttackPayoff"] [],
+   Line Nothing (map param ["daveStake", "erikaStake", "frankStake", "successfulAttackPayoff"]) []
           [|dependentDecision "Attacker" (const [0, 0.1 .. 10])|]
         ["bribe"] [[|attackerPayoff (attackSuccessful daveMove erikaMove frankMove) bribe successfulAttackPayoff|]],
-   Line (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame2 censorPenalty|] ["daveMove", "erikaMove", "frankMove"] []]
+   Line Nothing (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame2 censorPenalty|] ["daveMove", "erikaMove", "frankMove"] []]
   [] []
 
 attackerStrategy (_, _, _, 0) = 0
