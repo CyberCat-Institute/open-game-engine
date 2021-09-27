@@ -360,3 +360,7 @@ eqOutput' parameters iterator strat initialAction = generateIsEq $ andGateMarkov
 
 
 testInitialAction = ([10.0,10.0,10.0],True)
+
+testEq iterator = eqOutput andGateMarkovTestParams iterator strategyTuple testInitialAction
+
+testEq' iterator = eqOutput' andGateMarkovTestParams iterator strategyTuple testInitialAction
