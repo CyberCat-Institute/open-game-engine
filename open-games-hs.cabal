@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d1e9f94ef4c9273aed97e2d8216abc66cfd6e21fccacf0569d75f857161c4b98
+-- hash: 430bd19a8d5793f9f2ae10ac247227525ca27dcd62ea3363ce88f762277464ba
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -82,6 +82,7 @@ library
       OpenGames.Examples.Consensus.DepositGame
   other-modules:
       OpenGames.Engine.Costrategies
+      OpenGames.Examples.Consensus.TestPayoffs
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
       Paths_open_games_hs

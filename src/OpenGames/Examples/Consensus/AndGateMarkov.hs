@@ -4,10 +4,11 @@
 
 module OpenGames.Examples.Consensus.AndGateMarkov where
 
-import Data.HashMap (Map)
+import Prelude hiding (lookup)
+import Data.HashMap hiding (map)
 
 import Control.Monad.State
-import Numeric.Probability.Distribution (T(..), certainly, uniform, fromFreqs)
+import Numeric.Probability.Distribution (T(..), certainly, uniform, fromFreqs, expected)
 
 import OpenGames.Preprocessor.THSyntax
 import OpenGames.Preprocessor.AbstractSyntax
@@ -109,7 +110,8 @@ andGateMarkovGame (AndGateMarkovParams numPlayers reward costOfCapital minBribe 
 
 iteratedAndGateMarkovGame numIterations params
   | (numIterations == 1) = andGateMarkovGame params
-  | (numIterations > 1)  = reindex (\x -> (x, x)) ((andGateMarkovGame params)
+  | (numIterations > 1)  = expectateGame ["Player 1", "Player 2", "Player 3", "Attacker"]
+                          $ reindex (\x -> (x, x)) ((andGateMarkovGame params)
                         >>> (iteratedAndGateMarkovGame (numIterations - 1) params))
 
 andGateMarkovTestParams = AndGateMarkovParams {
@@ -167,3 +169,22 @@ Known equilibrium: every deposits 0, plays False, attacker plays 0 in every stat
 {-
 TODO: Extreme values of discount factor aren't making sense
 -}
+
+-- flatten all payoff distributions to their expectation
+expectate :: [String] -> StochasticStatefulOptic x () y r -> StochasticStatefulOptic x () y r
+expectate names (StochasticStatefulOptic v u) = StochasticStatefulOptic v u'
+  where u' z r = let StateT f = u z r
+                  in StateT $ \hm -> let Cons old = f hm
+                                         new = [(name, expected (Cons [(case lookup name hm' of
+                                                                          Nothing -> error $ show old
+                                                                          Just payoff -> payoff,
+                                                                        p)
+                                                                      | (((), hm'), p) <- old]))
+                                               | name <- names]
+                                      in certainly ((), fromList new)
+
+expectateGame :: [String] -> StochasticStatefulOpenGame a x () y r -> StochasticStatefulOpenGame a x () y r
+expectateGame names g = OpticOpenGame {
+  play = \a -> expectate names (play g a),
+  equilibrium = equilibrium g
+}
