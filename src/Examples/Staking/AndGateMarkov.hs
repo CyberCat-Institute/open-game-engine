@@ -7,11 +7,17 @@
 
 module Examples.Staking.AndGateMarkov where
 
+import           Debug.Trace
 import           Engine.Engine
 import           Preprocessor.Preprocessor
 
 import           Control.Monad.State  hiding (state,void)
 import qualified Control.Monad.State  as ST
+
+
+-- TODO change the structure of the continuation iteration
+-- DONE What effect happens through the state hack and the discounting? The discounting at least does not seem to make a difference.
+
 --------
 -- Types
 andGateMarkovTestParams = AndGateMarkovParams {
@@ -271,6 +277,7 @@ andGateGame (AndGateMarkovParams  reward costOfCapital minBribe maxBribe increme
 extractContinuation :: StochasticStatefulOptic s () s () -> s -> StateT Vector Stochastic ()
 extractContinuation (StochasticStatefulOptic v u) x = do
   (z,a) <- ST.lift (v x)
+  trace ",,2" (pure ())
   u z ()
 
 -- extract next state (action)
@@ -293,6 +300,7 @@ extractNextState2 (StochasticStatefulOptic v _) x = do
 -- Random prior indpendent of previous moves
 determineContinuationPayoffs parameters 1        strat action = pure ()
 determineContinuationPayoffs parameters iterator strat action = do
+   trace ",,1" (pure ())
    extractContinuation executeStrat action
    nextInput <- ST.lift $ andGateTestPrior
    determineContinuationPayoffs parameters (pred iterator) strat nextInput
@@ -301,17 +309,35 @@ determineContinuationPayoffs parameters iterator strat action = do
 -- Actual moves affect next moves
 determineContinuationPayoffs' parameters 1        strat action = pure ()
 determineContinuationPayoffs' parameters iterator strat action = do
+   trace ",,1" (pure ())
    extractContinuation executeStrat action
    nextInput <- ST.lift $ extractNextState executeStrat action
-   determineContinuationPayoffs parameters (pred iterator) strat nextInput
+   determineContinuationPayoffs' parameters (pred iterator) strat nextInput
  where executeStrat =  play (andGateGame parameters) strat
 
+determineContinuationPayoffs2 iterator initialAction = do
+  extractContinuation executeStrat initialAction
+  nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
+  determineContinuationPayoffs2 (pred iterator) nextInput
+ where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
 
+determineContinuationPayoffs3 1        _             = pure ()
+determineContinuationPayoffs3 iterator initialAction = do
+  trace ",,1" (pure ())
+  -- extractContinuation executeStrat initialAction
+  -- 2nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
+  -- determineContinuationPayoffs3 (pred iterator) initialAction
+  --pure ()
+-- where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
 
 -- fix context used for the evaluation
 contextCont parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
 
 contextCont' parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
+
+contextCont2 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs2 iterator action)
+
+contextCont3 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace ",,1" (pure ())) -- determineContinuationPayoffs3 iterator action)
 
 
 
@@ -357,6 +383,16 @@ andGateMarkovGameEq' parameters iterator strat initialAction = evaluate (andGate
 
 eqOutput' parameters iterator strat initialAction = generateIsEq $ andGateMarkovGameEq' parameters iterator strat initialAction
 
+andGateMarkovGameEq2 iterator initialAction = evaluate (andGateGame andGateMarkovTestParams) strategyTuple context
+  where context  = contextCont2 iterator initialAction
+
+eqOutput2 iterator initialAction = generateIsEq $ andGateMarkovGameEq2 iterator initialAction
+
+andGateMarkovGameEq3 iterator initialAction = evaluate (andGateGame andGateMarkovTestParams) strategyTuple context
+  where context  = contextCont3 iterator initialAction
+
+eqOutput3 iterator initialAction = generateIsEq $ andGateMarkovGameEq3 iterator initialAction
+
 
 
 testInitialAction = ([10.0,10.0,10.0],True)
@@ -364,3 +400,8 @@ testInitialAction = ([10.0,10.0,10.0],True)
 testEq iterator = eqOutput andGateMarkovTestParams iterator strategyTuple testInitialAction
 
 testEq' iterator = eqOutput' andGateMarkovTestParams iterator strategyTuple testInitialAction
+
+
+testEq2 iterator = eqOutput2 iterator testInitialAction
+
+testEq3 iterator = eqOutput3 iterator testInitialAction
