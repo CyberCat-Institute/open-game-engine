@@ -31,7 +31,7 @@ andGateMarkovTestParams = AndGateMarkovParams {
     penalty = 0.5,
     minDeposit = 0.0,
     maxDeposit = 10.0,
-    incrementDeposit = 0.1,
+    incrementDeposit = 1,
     epsilon = 0.001,
     discountFactor = 0.5
 }
@@ -323,12 +323,12 @@ determineContinuationPayoffs2 iterator initialAction = do
 
 determineContinuationPayoffs3 1        _             = pure ()
 determineContinuationPayoffs3 iterator initialAction = do
-  trace ",,1" (pure ())
-  -- extractContinuation executeStrat initialAction
-  -- 2nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
-  -- determineContinuationPayoffs3 (pred iterator) initialAction
-  --pure ()
--- where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
+  trace ",,2" (pure ())
+  extractContinuation executeStrat initialAction
+  nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
+  determineContinuationPayoffs3 (pred iterator) initialAction
+  pure ()
+ where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
 
 -- fix context used for the evaluation
 contextCont parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
@@ -337,7 +337,7 @@ contextCont' parameters iterator strat initialAction = StochasticStatefulContext
 
 contextCont2 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs2 iterator action)
 
-contextCont3 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace ",,1" (pure ())) -- determineContinuationPayoffs3 iterator action)
+contextCont3 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
 
 
 
