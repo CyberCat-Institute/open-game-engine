@@ -21,6 +21,7 @@ module Engine.BayesianGames
   , pureAction
   , playDeterministically
   , discount
+  , addPayoffs
   ) where
 
 
@@ -94,7 +95,7 @@ dependentEpsilonDecision epsilon name ys = OpenGame {
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
-                                                   r <- k t y; 
+                                                   r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
@@ -143,5 +144,13 @@ discount :: String -> (Double -> Double) -> StochasticStatefulBayesianOpenGame '
 discount name f = OpenGame {
   play = \_ -> let v () = return ((), ())
                    u () () = modify (adjustOrAdd f (f 0) name)
+                 in StochasticStatefulOptic v u,
+  evaluate = \_ _ -> Nil}
+
+-- add payoffs
+addPayoffs :: String -> StochasticStatefulBayesianOpenGame '[] '[] Double () () ()
+addPayoffs name = OpenGame {
+  play = \_ -> let v x = return (x, ())
+                   u value () = modify (adjustOrAdd (\x -> x + value) value name)
                  in StochasticStatefulOptic v u,
   evaluate = \_ _ -> Nil}
