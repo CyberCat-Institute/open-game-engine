@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, DataKinds, GADTs #-}
+{-# LANGUAGE TypeOperators, DataKinds, GADTs, ConstraintKinds #-}
 
 module OpenGames.Engine.OpenGames where
 
@@ -25,7 +25,7 @@ reindex v u g = OpenGame {
   evaluate = \a c -> u a (evaluate g (v a) c)
 }
 
-(>>>) :: (Optic o, Context c o, Unappend a, Unappend b)
+(>>>) :: (Optic ctx1 o, Context ctx1 ctx2 o c, Unappend a, Unappend b)
       => OpenGame o c a b x s y r -> OpenGame o c a' b' y r z q
       -> OpenGame o c (a ++ a') (b ++ b') x s z q
 (>>>) g h = OpenGame {
@@ -34,7 +34,7 @@ reindex v u g = OpenGame {
                                                   ++ evaluate h a' (cmap (play g a) identity c)
 }
 
-(&&&) :: (Optic o, Context c o, Unappend a, Unappend b, Show x, Show x')
+(&&&) :: (Optic ctx1 o, Context ctx1 ctx2 o c, Unappend a, Unappend b, ctx2 x, ctx2 x')
       => OpenGame o c a b x s y r -> OpenGame o c a' b' x' s' y' r'
       -> OpenGame o c (a ++ a') (b ++ b') (x, x') (s, s') (y, y') (r, r')
 (&&&) g h = OpenGame {
