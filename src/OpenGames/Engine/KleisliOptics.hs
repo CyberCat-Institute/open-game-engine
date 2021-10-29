@@ -10,22 +10,26 @@ import Control.Monad.Trans.Class
 
 import OpenGames.Engine.OpticClass
 
-type KleisliOptic :: (ctx :: * ~> Constraint) -> (m :: * -> *) -> (mt :: (* -> *) -> * -> *) -> (s :: *) -> (t :: *) -> (a :: *) -> (b :: *) -> *
+-- type KleisliOptic :: (ctx :: * -> Constraint) -> (m :: * -> *) -> (mt :: (* -> *) -> * -> *) -> (s :: *) -> (t :: *) -> (a :: *) -> (b :: *) -> *
 data KleisliOptic ctx m mt s t a b where
-  KleisliOptic :: ctx @@ z => (s -> m (z, a)) -> (z -> b -> mt m t) -> KleisliOptic ctx m mt s t a b
+  KleisliOptic :: ctx z => (s -> m (z, a)) -> (z -> b -> mt m t) -> KleisliOptic ctx m mt s t a b
+
+class Empty a where
+
+instance Empty a where
 
 {-
   This ought to be
   type Cartesian ctx = (ctx (), forall a1 a2 . (ctx a1, ctx a2) => ctx (a1, a2))
   but we can't figure out how to make it work
 -}
-type Cartesian :: (* ~> Constraint) -> Constraint
-type Cartesian ctx = forall a1 a2 . (ctx @@ a1, ctx @@ a2) => ctx @@ (a1, a2)
+type Cartesian :: (* -> Constraint) -> Constraint
+type Cartesian ctx = forall a1 a2 . (ctx a1, ctx a2) => ctx (a1, a2)
 
-type Cocartesian :: (* ~> Constraint) -> Constraint
-type Cocartesian ctx = forall a1 a2 . (ctx @@ a1, ctx @@ a2) => ctx @@ (Either a1 a2)
+type Cocartesian :: (* -> Constraint) -> Constraint
+type Cocartesian ctx = forall a1 a2 . (ctx a1, ctx a2) => ctx (Either a1 a2)
 
-instance (ctx @@ (), Cartesian ctx, Cocartesian ctx, Monad m, Monad (mt m))
+instance (ctx (), Cartesian ctx, Cocartesian ctx, Monad m, Monad (mt m))
       => Optic ctx (KleisliOptic ctx m mt) where
   adaptor f g = KleisliOptic v u where
     v s = return ((), f s)
@@ -45,11 +49,11 @@ instance (ctx @@ (), Cartesian ctx, Cocartesian ctx, Monad m, Monad (mt m))
     u (Left z1) b = u1 z1 b
     u (Right z2) b = u2 z2 b
 
-type KleisliContext :: (* ~> Constraint) (m :: * -> *) (mt :: (* -> *) -> * -> *) (s :: *) (t :: *) (a :: *) (b :: *)
+-- type KleisliContext :: (* ~> Constraint) (m :: * -> *) (mt :: (* -> *) -> * -> *) (s :: *) (t :: *) (a :: *) (b :: *)
 data KleisliContext ctx m mt s t a b where
-  KleisliContext :: ctx @@ z => m (z, s) -> (z -> a -> mt m b) -> KleisliContext ctx m mt s t a b
+  KleisliContext :: ctx z => m (z, s) -> (z -> a -> mt m b) -> KleisliContext ctx m mt s t a b
 
-instance (Monad m, Monad (mt m), ctx @@ ()) => Precontext (KleisliContext ctx m mt) where
+instance (Monad m, Monad (mt m), ctx ()) => Precontext (KleisliContext ctx m mt) where
   void = KleisliContext h k where
     h = return ((), ())
     k () () = return ()

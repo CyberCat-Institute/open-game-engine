@@ -16,14 +16,9 @@ type Empty :: * -> Constraint
 type Empty a = (() :: Constraint)
 -}
 
-type Empty :: Constraint
-type Empty = ()
+-- type Empty :: Constraint
+-- type Empty = ()
 
-{-decision :: forall (c :: * -> Constraint) s t. c ()
-         => [t] -> OpenGame (KleisliOptic c Identity IdentityT)
-                            (KleisliContext c Identity IdentityT)
-                            '[s -> t] '[Bool]
-                            s () t Double-}
 decision :: [t] -> OpenGame (KleisliOptic Empty Identity IdentityT)
                    (KleisliContext Empty Identity IdentityT)
                    '[s -> t] '[Bool]
