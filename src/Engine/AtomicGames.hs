@@ -139,6 +139,6 @@ liftStochasticForward process =  [opengame|
 
 generateGame "pureDecision2" ["actionSpace","payoffFunction","playerName"] $
   (Block ["observation"] []
-         [Line [[|observation|]] [] [|dependentDecision playerName (\y -> actionSpace)|] ["action"] [[|payoffFunction observation action returns|]]]
+         [mkLine [[|observation|]] [] [|dependentDecision playerName (\y -> actionSpace)|] ["action"] [[|payoffFunction observation action returns|]]]
          [[|action|]] ["returns"])
 

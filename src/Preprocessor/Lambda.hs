@@ -7,8 +7,6 @@ module Preprocessor.Lambda
   , Literal(..)
   , LRange(..)
   , Pattern(..)
-  , ParsedBlock(..)
-  , ParsedLine(..)
   , expr
   , parseLine
   , parseBlock
@@ -28,6 +26,7 @@ import qualified Text.Parsec.Expr     as Ex
 import qualified Text.Parsec.Token    as Tok
 import Text.Parsec.Language
 import Text.ParserCombinators.Parsec.Expr
+import Preprocessor.AbstractSyntax as ABS
 
 type Name = String
 
@@ -273,54 +272,48 @@ appl = do
 expr :: Parser Lambda
 expr =  infixParser appl
 
-data ParsedLine p e = MkParsedLine { covOut :: [p]
-                                   , conIn :: [e]
-                                   , op :: e
-                                   , conOut :: [p]
-                                   , covIn :: [e]
-                                   } deriving (Eq, Show)
+parseLine :: Parser p -> Parser e -> Parser (ABS.Line (Maybe String) p e)
+parseLine parseP parseE = do
+    covo <- (commaSep parseP <* reservedOp "|")
+    coni <- (commaSep parseE  <* reservedOp "<-")
+    matrix <- (parseE <* reservedOp "-<")
+    cono <- (commaSep parseP <* reservedOp "|")
+    covi <- (commaSep parseE <* reservedOp ";")
+    pure (Line Nothing covi cono matrix covo coni)
 
-data ParsedBlock p e l = MkParsedBlock [p] [e] [l] [p] [e]
-
-parseLine :: Parser p -> Parser e -> Parser (ParsedLine p e)
-parseLine parseP parseE = pure MkParsedLine
-    <*> (commaSep parseP <* reservedOp "|")
-    <*> (commaSep parseE  <* reservedOp "<-")
-    <*> (parseE <* reservedOp "-<")
-    <*> (commaSep parseP <* reservedOp "|")
-    <*> (commaSep parseE <* reservedOp ";")
-
-parseBlock :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p e l)
-parseBlock parseP parseE lineParser =
-  pure MkParsedBlock  <*> (commaSep parseP <* reservedOp "||")
-                      <*> (commaSep parseE <* reservedOp "=>>")
-                      <*> (many lineParser <* reservedOp "<<=")
-                      <*> (commaSep parseP <* reservedOp "||")
-                      <*> (commaSep parseE)
+parseBlock :: Parser p -> Parser e -> Parser (Block p e)
+parseBlock parseP parseE = do
+    covi <- (commaSep parseP <* reservedOp "||")
+    cono <- (commaSep parseE <* reservedOp "=>>")
+    lines <- (many (parseLine parseP parseE) <* reservedOp "<<=")
+    coni <- (commaSep parseP <* reservedOp "||")
+    covo <- (commaSep parseE)
+    pure (Block covi cono lines covo coni)
 
 parseTwoLines :: String -> String -> Parser p -> Parser e -> Parser ([p], [e])
 parseTwoLines kw1 kw2 parseP parseE =
     pair (reserved kw1 *> colon *> commaSep parseP <* semi )
          (option [] (reserved kw2 *> colon *> commaSep parseE <* semi ))
- <|> (([], ) <$> (reserved kw2 *> colon *> commaSep parseE <* semi))
+     <|> (([], ) <$> (reserved kw2 *> colon *> commaSep parseE <* semi))
 
 parseInput = parseTwoLines "inputs" "feedback"
 
-parseOutput = parseTwoLines "outputs" "returns" 
+parseOutput = parseTwoLines "outputs" "returns"
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
-parseVerboseLine :: Parser p -> Parser e -> Parser (ParsedLine p e)
+parseVerboseLine :: Parser p -> Parser e -> Parser (ABS.Line (Maybe String) p e)
 parseVerboseLine parseP parseE = do
+  lbl <- optionMaybe (reserved "label" *> colon *> manyTill anyChar semi)
   (input, feedback) <- option ([], []) (parseInput parseE parseP)
   program <- reserved "operation" *> colon *> parseE <* semi
   (outputs,returns) <- option ([], []) (parseOutput parseP parseE)
-  pure $ MkParsedLine outputs returns program feedback input
+  pure $ ABS.Line lbl input feedback program outputs returns
 
-
-parseVerboseSyntax :: Parser p -> Parser e -> Parser l -> Parser (ParsedBlock p e l)
-parseVerboseSyntax parseP parseE parseL =
+parseVerboseSyntax :: Parser p -> Parser e -> Parser (Block p e)
+parseVerboseSyntax parseP parseE =
   do (input, feedback) <- try (parseInput parseP parseE <* parseDelimiter) <|> pure ([], [])
-     lines <- many parseL
+     lines <- many (parseVerboseLine parseP parseE)
      (outputs,returns) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
-     return $ MkParsedBlock input feedback lines returns outputs
+     eof
+     return $ Block input feedback lines outputs returns

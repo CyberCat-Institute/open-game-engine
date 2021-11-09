@@ -40,6 +40,7 @@ library:
     - Examples.Markov.RepeatedPD
     - Examples.Markov.RepeatedPDNonState
     - Examples.Markov.TwoStageMarkov
+    - Graphics
 
 dependencies:
     - base >=4.7 && <5
@@ -56,7 +57,10 @@ dependencies:
     - haskeline
     - hashmap
     - hashable
-    - extra 
+    - extra
+    - fgl
+    - graphviz
+    - lens
 
 executables:
   open-games-exe:
@@ -68,6 +72,13 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - open-games-hs
+  graphics:
+    main:                Main.hs
+    source-dirs:         graphics
+    dependencies:
+      - open-games-hs
+      - graphviz
+      - template-haskell
 
 benchmarks:
   learning-bench:
