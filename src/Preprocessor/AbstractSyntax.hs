@@ -1,10 +1,12 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Preprocessor.AbstractSyntax
   ( Line(..)
   , pureLine
+  , mkLine
   , Block(..)
   ) where
 
@@ -31,42 +33,47 @@ import Data.Bifunctor
 -- I decided to keep the record field names verbose, and I expect the user to specify lines in constructor syntax
 -- rather than record syntax
 
-data Line p e = Line {
+data Line l p e = Line {
+  label :: l,
   covariantInputs :: [e], contravariantOutputs :: [p],
   matrix :: e, --
   covariantOutputs :: [p], contravariantInputs :: [e]} deriving (Eq, Show, Functor)
 
-instance Comonad (Line p) where
-  extract (Line _ _ e _ _) = e
+mkLine :: [e] -> [p] -> e -> [p] -> [e] -> Line (Maybe l) p e
+mkLine = Line Nothing
+
+
+instance Comonad (Line (Maybe l) p) where
+  extract (Line _ _ _ e _ _) = e
   extend f v = pure (f v)
 
-instance Bifunctor Line where
-  first f (Line covi cono m covo coni) =
-    Line covi (fmap f cono) m (fmap f covo) coni
+instance Bifunctor (Line l) where
+  first f (Line lbl covi cono m covo coni) =
+    Line lbl covi (fmap f cono) m (fmap f covo) coni
   second = fmap
 
-pureLine :: forall p a. a -> Line p a
-pureLine v = Line [] [] v [] []
+pureLine :: forall l p a. a -> Line (Maybe l) p a
+pureLine v = Line Nothing [] [] v [] []
 
-instance Applicative (Line p) where
+instance Applicative (Line (Maybe l) p) where
   pure = pureLine
-  (Line _ _ f _ _) <*> (Line covIn conOut m covOut conIn) =
-    Line (fmap f covIn) conOut (f m) covOut (fmap f conIn)
+  (Line _ _ _ f _ _) <*> (Line label covIn conOut m covOut conIn) =
+    Line label (fmap f covIn) conOut (f m) covOut (fmap f conIn)
 
-instance Foldable (Line p) where
-  foldr f init (Line _ _ arg _ _)  = f arg init
+instance Foldable (Line l p) where
+  foldr f init (Line _ _ _ arg _ _)  = f arg init
 
-instance Traversable (Line p) where
-  traverse f (Line covIn conOut m covOut conIn) =
-    pure Line <*> traverse f covIn
-              <*> pure conOut
-              <*> f m
-              <*> pure covOut
-              <*> traverse f conIn
+instance Traversable (Line l p) where
+  traverse f (Line lbl covIn conOut m covOut conIn) =
+    pure (Line lbl) <*> traverse f covIn
+                    <*> pure conOut
+                    <*> f m
+                    <*> pure covOut
+                    <*> traverse f conIn
 
 data Block p e = Block {
   blockCovariantInputs :: [p], blockContravariantOutputs :: [e],
-  blockLines :: [Line p e],
+  blockLines :: [Line (Maybe String) p e],
   blockCovariantOutputs :: [e], blockContravariantInputs :: [p]} deriving (Eq, Show, Functor)
 
 
@@ -81,7 +88,7 @@ instance Applicative (Block p) where
           (mapLines f covOut)
           conIn
       where
-        mapLines :: [Line p (a -> b)] -> [a] -> [b]
+        mapLines :: [Line (Maybe String) p (a -> b)] -> [a] -> [b]
         mapLines f as = fmap extract f <*> as
 
 

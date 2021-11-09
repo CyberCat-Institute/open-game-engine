@@ -8,8 +8,6 @@ module Preprocessor.Preprocessor
   , compilePattern
   , compLine
   , convertGame
-  , compileGameLine
-  , compileAST
   , parseLambdaAsOpenGame
   , parseLambdaAsExp
   , game
