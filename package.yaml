@@ -61,6 +61,7 @@ dependencies:
     - fgl
     - graphviz
     - lens
+    - typed-process
 
 executables:
   open-games-exe:
@@ -92,4 +93,3 @@ benchmarks:
     dependencies:
       - open-games-hs
       - criterion
-
