@@ -15,7 +15,7 @@ bug-reports:    https://github.com/jules-hedges/open-games-hs/issues
 author:         Jules Hedges & other contributors
 maintainer:     juleshedges.invariant@gmail.com
 copyright:      2020 Jules Hedges & other contributors
-license:        AGPL
+license:        BSD 3-clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
