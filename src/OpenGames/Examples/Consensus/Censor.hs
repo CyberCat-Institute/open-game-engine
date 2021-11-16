@@ -40,21 +40,21 @@ payoffs censorPenalty (x, y, z) (Online, Offline, Online) = (-censorPenalty*x/(x
 payoffs censorPenalty (x, y, z) (Online, Online, Offline) = (-censorPenalty*x/(x+y+z), -censorPenalty*y/(x+y+z), -offlinePenalty*z/(x+y+z))
 
 generateGame "depositGame" [] (Block ["costOfCapital"] []
-  [Line [] [] [|dependentDecision "Dave"  (const [0.0 .. 10.0])|] ["daveStake"]  [[|-costOfCapital*daveStake|]],
-   Line [] [] [|dependentDecision "Erika" (const [0.0 .. 10.0])|] ["erikaStake"] [[|-costOfCapital*erikaStake|]],
-   Line [] [] [|dependentDecision "Frank" (const [0.0 .. 10.0])|] ["frankStake"] [[|-costOfCapital*frankStake|]]]
+  [Line Nothing [] [] [|dependentDecision "Dave"  (const [0.0 .. 10.0])|] ["daveStake"]  [[|-costOfCapital*daveStake|]],
+   Line Nothing [] [] [|dependentDecision "Erika" (const [0.0 .. 10.0])|] ["erikaStake"] [[|-costOfCapital*erikaStake|]],
+   Line Nothing [] [] [|dependentDecision "Frank" (const [0.0 .. 10.0])|] ["frankStake"] [[|-costOfCapital*frankStake|]]]
   [[|daveStake|], [|erikaStake|], [|frankStake|]] [])
 
 generateGame "censorGame" ["censorPenalty"] $ Block ["daveStake", "erikaStake", "frankStake", "bribe"] []
-  [Line (map param ["daveStake", "bribe"]) [] [|dependentDecision "Dave" (const [Honest, Censor])|] ["daveMove"] [[|case daveMove of {Honest -> davePayoff; Censor -> davePayoff + bribe}|]],
-   Line [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
-   Line [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
-   Line [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] [] [|fromFunctions (uncurry (payoffs censorPenalty)) id|] ["davePayoff", "erikaPayoff", "frankPayoff"] []]
+  [Line Nothing (map param ["daveStake", "bribe"]) [] [|dependentDecision "Dave" (const [Honest, Censor])|] ["daveMove"] [[|case daveMove of {Honest -> davePayoff; Censor -> davePayoff + bribe}|]],
+   Line Nothing [param "erikaStake"] [] [|dependentDecision "Erika" (const [Honest, Censor])|] ["erikaMove"] [param "erikaPayoff"],
+   Line Nothing [param "frankStake"] [] [|dependentDecision "Frank" (const [Honest, Censor])|] ["frankMove"] [param "frankPayoff"],
+   Line Nothing [[|(daveStake, erikaStake, frankStake)|], [|carolObservation (daveMove, erikaMove, frankMove)|]] [] [|fromFunctions (uncurry (payoffs censorPenalty)) id|] ["davePayoff", "erikaPayoff", "frankPayoff"] []]
   [[|daveMove|]] []
 
 generateGame "fullCensorGame" ["censorPenalty"] $ Block [] []
-  [Line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
-   Line (map param ["daveStake", "erikaStake", "frankStake"] ++ [[|0|]]) [] [|censorGame censorPenalty|] ["daveMove"] []]
+  [Line Nothing [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
+   Line Nothing (map param ["daveStake", "erikaStake", "frankStake"] ++ [[|0|]]) [] [|censorGame censorPenalty|] ["daveMove"] []]
   [] []
 
 fullCensorGameEq censorPenalty a b c d e f =
@@ -62,17 +62,17 @@ fullCensorGameEq censorPenalty a b c d e f =
                void ((Kleisli $ const a, Kleisli $ const b, Kleisli $ const c), (Kleisli d, Kleisli e, Kleisli f, ()))
 
 bribeGameSrc = Block ["target", "move", "bribe"] []
-  [Line ["target", "()"] [] "roleDecision [()]" ["dummy"] ["case move of {Honest -> 0; Censor -> bribe}"]]
+  [Line Nothing ["target", "()"] [] "roleDecision [()]" ["dummy"] ["case move of {Honest -> 0; Censor -> bribe}"]]
   [] []
 
 generateGame "bribeGame" [] $ Block ["target", "move", "bribe"] []
-  [Line [param "target", [|()|]] [] [|roleDecision [()]|] ["dummy"] [[|case move of {Honest -> 0; Censor -> bribe}|]]]
+  [Line Nothing [param "target", [|()|]] [] [|roleDecision [()]|] ["dummy"] [[|case move of {Honest -> 0; Censor -> bribe}|]]]
   [] []
 
 generateGame "censorBribeGame" ["censorPenalty", "bribeBudget"] $ Block [] []
-  [Line [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
-   Line [] [] [|nature (uniform [0, bribeBudget])|] ["bribe"] [],
-   Line (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame censorPenalty|] ["daveMove"] []]
+  [Line Nothing [[|0.05|]] [] [|depositGame|] ["daveStake", "erikaStake", "frankStake"] [],
+   Line Nothing [] [] [|nature (uniform [0, bribeBudget])|] ["bribe"] [],
+   Line Nothing (map param ["daveStake", "erikaStake", "frankStake", "bribe"]) [] [|censorGame censorPenalty|] ["daveMove"] []]
    [] []
 
 censorBribeGameEq censorPenalty bribeBudget a b c d e f =

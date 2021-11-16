@@ -21,7 +21,7 @@ generateGame "depositStagePlayerTH" ["name", "minDeposit", "maxDeposit", "increm
  (Block ["costOfCapital"]
         []
 
-  [Line [[|costOfCapital|]]
+  [Line Nothing [[|costOfCapital|]]
         []
         [|epsilonDecision epsilon name [minDeposit, minDeposit + incrementDeposit .. maxDeposit]|]
         ["deposit"]
@@ -35,7 +35,7 @@ depositStagePlayerSrc =
   Block ["costOfCapital"]
         []
   ---------------
-    [Line ["costOfCapital"]
+    [Line Nothing ["costOfCapital"]
     []
     "dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit])"
     ["deposit"]
@@ -49,7 +49,7 @@ depositStagePlayerEpsilon name minDeposit maxDeposit incrementDeposit epsilon = 
 depositStagePlayer name minDeposit maxDeposit incrementDeposit = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(costOfCapital, deposit) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\costOfCapital -> (costOfCapital, costOfCapital)) (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((dependentDecision name (const [minDeposit, minDeposit + incrementDeposit .. maxDeposit]))))))) >>> (fromFunctions (\(costOfCapital, deposit) -> (costOfCapital, deposit)) (\(costOfCapital, deposit) -> ((costOfCapital, deposit), -deposit * costOfCapital)))))))) >>> (fromLens (\(costOfCapital, deposit) -> deposit) (curry (\((costOfCapital, deposit), ()) -> (costOfCapital, deposit)))))
 
 generateGame "playingStagePlayer" ["name", "moves"] $ (Block ["observation", "bribe"] []
-  [Line [[|observation|], [|bribe|]]
+  [Line Nothing [[|observation|], [|bribe|]]
   []
   [|dependentDecision name (const moves)|]
   ["move"]
@@ -101,38 +101,38 @@ attackerPayoff bribesAccepted bribe successfulAttackPayoff
         numBribed  = length (filter id bribesAccepted)
 
 generateGame "completeGame" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "safeDepositProportion"] $ (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt safeDepositProportion reward deposits (obfuscate moves)) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt safeDepositProportion reward deposits (obfuscate moves)) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 
 -- Using weighted deposits
 generateGame "completeGameWeighted" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "safeDepositProportion"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits safeDepositProportion reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [ [| deposits |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits safeDepositProportion reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 
 generateGame "randomAttacker" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
-   Line [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
+   Line Nothing [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 
 -- Using weighted deposits
 generateGame "randomAttackerWeighted" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter", "prob0Attacker"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [] [] [| nature (fromFreqs [(0, prob0Attacker), (maxSuccessfulAttackPayoff, (1.00 - prob0Attacker))]) |] ["successfulAttackPayoff"] [],
-   Line [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits payoffParameter reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [] [] [| nature (fromFreqs [(0, prob0Attacker), (maxSuccessfulAttackPayoff, (1.00 - prob0Attacker))]) |] ["successfulAttackPayoff"] [],
+   Line Nothing [ [| deposits |], [| successfulAttackPayoff |] ] [] [| dependentDecision "Attacker" (const [0, 0.025 .. maxBribe]) |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffWeightedDeposits payoffParameter reward deposits (obfuscate (zip moves deposits))) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 
@@ -140,27 +140,27 @@ generateGame "randomAttackerWeighted" ["numPlayers", "reward", "costOfCapital", 
 -- replacing the attacker by an epsilon decision
 
 generateGame "completeGameEpsilon" ["numPlayers", "reward", "costOfCapital", "maxBribe", "successfulAttackPayoff", "safeDepositProportion", "epsilonAtt"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [ [| deposits |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt safeDepositProportion reward deposits (obfuscate moves)) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [ [| deposits |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt safeDepositProportion reward deposits (obfuscate moves)) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 generateGame "randomAttackerEpsilon" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter", "epsilonAtt"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
-   Line [ [| (deposits,successfulAttackPayoff) |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [] [] [| nature (fromFreqs [(0, 0.05), (maxSuccessfulAttackPayoff, 0.95)]) |] ["successfulAttackPayoff"] [],
+   Line Nothing [ [| (deposits,successfulAttackPayoff) |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 -- To explore the effect of different distributions on players
 generateGame "randomAttackerEpsilonProb" ["numPlayers", "reward", "costOfCapital", "maxBribe", "maxSuccessfulAttackPayoff", "payoffParameter", "epsilonAtt", "prob0Attacker"] (Block [] []
-  [Line [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
-   Line [] [] [| nature (fromFreqs [(0, prob0Attacker), (maxSuccessfulAttackPayoff, (1.00 - prob0Attacker))]) |] ["successfulAttackPayoff"] [],
-   Line [ [| (deposits,successfulAttackPayoff) |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
-   Line [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
-   Line [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
+  [Line Nothing [ [| replicate numPlayers costOfCapital |] ] ["discard1"] [| population [depositStagePlayerTH ("Player " ++ show n) 0 10 0.1 0.001 | n <- [1 .. numPlayers]] |] ["deposits"] [ [| replicate numPlayers () |] ],
+   Line Nothing [] [] [| nature (fromFreqs [(0, prob0Attacker), (maxSuccessfulAttackPayoff, (1.00 - prob0Attacker))]) |] ["successfulAttackPayoff"] [],
+   Line Nothing [ [| (deposits,successfulAttackPayoff) |] ] [] [| epsilonDecision epsilonAtt "Attacker" [0, 0.025 .. maxBribe] |] ["bribe"] [ [| attackerPayoff bribesAccepted bribe successfulAttackPayoff |] ],
+   Line Nothing [ [| replicate numPlayers (deposits, bribe) |] ] ["discard2"] [| population [playingStagePlayer ("Player " ++ show n) [True, False] | n <- [1 .. numPlayers]] |] ["moves"] [ [| zip (payoffInt payoffParameter reward deposits (obfuscate moves)) bribesAccepted |] ],
+   Line Nothing [ [| moves |] ] [] [| fromFunctions (map not) id |] ["bribesAccepted"] []]
   [] [] :: Block String (Q Exp))
 
 

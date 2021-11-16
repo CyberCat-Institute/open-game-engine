@@ -23,17 +23,33 @@ matchingPenniesMatrix2 x y = if x == y then 0 else 1
 
 -- Using TH
 generateGame "matchingPenniesTH" []
-                        [Line [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
-                         Line [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
+                        [mkLine [] [] [|reindex const (decision "player1" [Heads, Tails])|] ["x"] [[|matchingPenniesMatrix1 x y|]],
+                         mkLine [] [] [|reindex const (decision "player2" [Heads, Tails])|] ["y"] [[|matchingPenniesMatrix2 x y|]]]
 
 --
 -- Using Quasiquotes
 matchingPennies = [opengame|
 
+    label : player1 ;
     operation : reindex const (decision "player1" [Heads, Tails]) ;
     outputs : x ;
     returns : matchingPenniesMatrix1 x $ y ;
 
+    label : player2 ;
+    operation : reindex const (decision "player2" [Heads, Tails]) ;
+    outputs : y ;
+    returns : matchingPenniesMatrix2 x y ;
+
+|]
+
+matchingPenniesBlock = [parseTree|
+
+    label : player1 ;
+    operation : reindex const (decision "player1" [Heads, Tails]) ;
+    outputs : x ;
+    returns : matchingPenniesMatrix1 x $ y ;
+
+    label : player2 ;
     operation : reindex const (decision "player2" [Heads, Tails]) ;
     outputs : y ;
     returns : matchingPenniesMatrix2 x y ;
@@ -52,8 +68,8 @@ meetingInNYMatrix x y = if x == y then 1 else 0
 
 -- Using TH
 generateGame "meetingInNYTH" []
-                        [Line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix x y|]],
-                         Line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix x y|]]]
+                        [mkLine [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix x y|]],
+                         mkLine [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix x y|]]]
 
 -- Using Quasiquotes
 meetingInNY = [game| || =>>
@@ -71,9 +87,9 @@ meetingInNYMatrix3 x y z = if x == y && x == z then 1 else 0
 
 -- Using TH
 generateGame "meetingInNY3TH" []
-                        [Line [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix3 x y z|]],
-                         Line [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix3 x y z|]],
-                         Line [] [] [|reindex const (decision "player3" [GCT, ES])|] ["z"] [[|meetingInNYMatrix3 x y z|]]]
+                        [mkLine [] [] [|reindex const (decision "player1" [GCT, ES])|] ["x"] [[|meetingInNYMatrix3 x y z|]],
+                         mkLine [] [] [|reindex const (decision "player2" [GCT, ES])|] ["y"] [[|meetingInNYMatrix3 x y z|]],
+                         mkLine [] [] [|reindex const (decision "player3" [GCT, ES])|] ["z"] [[|meetingInNYMatrix3 x y z|]]]
 
 -- Using Quasiquotes
 meetingInNY3 = [game| || =>>

@@ -3,8 +3,6 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 430bd19a8d5793f9f2ae10ac247227525ca27dcd62ea3363ce88f762277464ba
 
 name:           open-games-hs
 version:        0.1.0.0
@@ -27,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      OpenGames.Graphics
       OpenGames.Engine.OpenGamesClass
       OpenGames.Engine.Diagnostics
       OpenGames.Engine.PureOpenGames
@@ -80,9 +79,10 @@ library
       OpenGames.Examples.Consensus.AndGate
       OpenGames.Examples.Consensus.AndGateMarkov
       OpenGames.Examples.Consensus.DepositGame
-  other-modules:
-      OpenGames.Engine.Costrategies
       OpenGames.Examples.Consensus.TestPayoffs
+  other-modules:
+      Data.Utils
+      OpenGames.Engine.Costrategies
       OpenGames.Examples.TheoryTest.Centipede
       OpenGames.Preprocessor.Types
       Paths_open_games_hs
@@ -93,7 +93,11 @@ library
     , ad
     , base >=4.7 && <5
     , comonad
+    , fgl
+    , graphviz
+    , hashable
     , hashmap
+    , lens
     , mtl
     , parsec
     , poly
@@ -101,6 +105,18 @@ library
     , profunctors
     , template-haskell
     , transformers
+  default-language: Haskell2010
+
+executable graphics
+  main-is: graphics/Main.hs
+  other-modules:
+      Paths_open_games_hs
+  build-depends:
+      base
+    , graphviz
+    , open-games-hs
+    , probability
+    , template-haskell
   default-language: Haskell2010
 
 executable opengame
@@ -119,6 +135,7 @@ test-suite test-open-games
   main-is: THTests.hs
   other-modules:
       CensorTests
+      EqTests
       VerboseTests
       Paths_open_games_hs
   hs-source-dirs:
@@ -138,6 +155,7 @@ test-suite test-verbose-syntax
   main-is: VerboseTests.hs
   other-modules:
       CensorTests
+      EqTests
       THTests
       Paths_open_games_hs
   hs-source-dirs:

@@ -70,7 +70,7 @@ compilePattern (PList ls) = ListP $ fmap compilePattern ls
 compilePattern (PTuple ts) = TupP $ fmap compilePattern ts
 compilePattern (PVar i) = VarP (mkName i)
 
-compLine :: Line Pattern Lambda -> Line Pat Exp
+compLine :: Line (Maybe String) Pattern Lambda -> Line (Maybe String) Pat Exp
 compLine = bimap compilePattern compileLambda
 
 
@@ -105,6 +105,7 @@ getParseTree = convertGame . parseOrFail
 
 parseVerboseGame :: String -> Q Exp
 parseVerboseGame = interpretOpenGame . compileBlock . getParseTree
+
 opengame :: QuasiQuoter
 opengame = QuasiQuoter
      { quoteExp  = parseVerboseGame . dropWhile isSpace

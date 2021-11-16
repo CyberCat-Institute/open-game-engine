@@ -43,9 +43,9 @@ pgResale_prior = fromFreqs [((LowSellerType, LowBuyerType), 2), ((HighSellerType
 
 -- Using TH
 generateGame "resaleMarketTH" [] $
-  [Line []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] []
-  ,Line [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]]
-  ,Line [param "price'"]     [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
+  [mkLine []                   [] [|nature pgResale_prior|]                                ["sellerType", "buyerType"] []
+  ,mkLine [param "sellerType"] [] [|decision "seller" [LowPrice, MediumPrice, HighPrice]|] ["price'"]                   [[|sellerUtility sellerType price' buy|]]
+  ,mkLine [param "price'"]     [] [|decision "buyer" [BuyGood, NotBuyGood]|]               ["buy"]                     [[|buyerUtility buyerType price' buy|]]]
 
 resaleMarketQQ = [game|
   || =>>
@@ -65,9 +65,9 @@ resaleMarketQQ = [game|
 |]
 -- Using Blocks
 resaleMarketSrc = Block [] []
-                     [Line [] [] "nature pgResale_prior" ["sellerType", "buyerType"] [],
-                      Line ["sellerType"] [] "decision \"seller\" [LowPrice, MediumPrice, HighPrice]" ["price"] ["sellerUtility sellerType price buy"],
-                      Line ["price"] [] "decision \"buyer\" [BuyGood, NotBuyGood]" ["buy"] ["buyerUtility buyerType price buy"]]
+                     [mkLine [] [] "nature pgResale_prior" ["sellerType", "buyerType"] [],
+                      mkLine ["sellerType"] [] "decision \"seller\" [LowPrice, MediumPrice, HighPrice]" ["price"] ["sellerUtility sellerType price buy"],
+                      mkLine ["price"] [] "decision \"buyer\" [BuyGood, NotBuyGood]" ["buy"] ["buyerUtility buyerType price buy"]]
                      [] []
 
 resaleMarket = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(sellerType, buyerType, price, buy) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((sellerType, buyerType, price, buy), ()) -> (sellerType, buyerType, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((nature pgResale_prior)))))) >>> (fromFunctions (\((), (sellerType, buyerType)) -> (sellerType, buyerType)) (\(sellerType, buyerType, price, buy) -> ((sellerType, buyerType, price, buy), ()))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sellerType, buyerType) -> ((sellerType, buyerType), sellerType)) (\((sellerType, buyerType, price, buy), ()) -> (sellerType, buyerType, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "seller" [LowPrice, MediumPrice, HighPrice])))))) >>> (fromFunctions (\((sellerType, buyerType), price) -> (sellerType, buyerType, price)) (\(sellerType, buyerType, price, buy) -> ((sellerType, buyerType, price, buy), sellerUtility sellerType price buy)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(sellerType, buyerType, price) -> ((sellerType, buyerType, price), price)) (\((sellerType, buyerType, price, buy), ()) -> (sellerType, buyerType, price, buy))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((decision "buyer" [BuyGood, NotBuyGood])))))) >>> (fromFunctions (\((sellerType, buyerType, price), buy) -> (sellerType, buyerType, price, buy)) (\(sellerType, buyerType, price, buy) -> ((sellerType, buyerType, price, buy), buyerUtility buyerType price buy))))))))) >>> (fromLens (\(sellerType, buyerType, price, buy) -> ()) (curry (\((sellerType, buyerType, price, buy), ()) -> (sellerType, buyerType, price, buy)))))

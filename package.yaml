@@ -12,6 +12,7 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
+    - OpenGames.Graphics
     - OpenGames.Engine.OpenGamesClass
     - OpenGames.Engine.Diagnostics
     - OpenGames.Engine.PureOpenGames
@@ -65,6 +66,7 @@ library:
     - OpenGames.Examples.Consensus.AndGate
     - OpenGames.Examples.Consensus.AndGateMarkov
     - OpenGames.Examples.Consensus.DepositGame
+    - OpenGames.Examples.Consensus.TestPayoffs
   dependencies:
     - base >=4.7 && <5
     - mtl
@@ -78,6 +80,10 @@ library:
     - QuickCheck
     - comonad
     - hashmap
+    - graphviz
+    - fgl
+    - hashable
+    - lens
 tests:
   test-open-games:
     main: THTests
@@ -108,3 +114,12 @@ executables:
           - probability
           - open-games-hs
           - template-haskell
+
+  graphics:
+    main: graphics/Main.hs
+    dependencies:
+          - base
+          - probability
+          - open-games-hs
+          - template-haskell
+          - graphviz

@@ -6,8 +6,8 @@ import           OpenGames.Preprocessor.AbstractSyntax
 import           OpenGames.Preprocessor.Preprocessor
 
 monitoringGame1Src   = Block [] []
-                       [Line [] [] "reindex const (decision \"upstreamFarmer\" [Crack, Flood])" ["x"] ["payoff1 x"],
-                        Line [] [] "reindex const (decision \"downstreamFarmer\" [Crack, Flood])" ["y"] ["payoff2 x y"]]
+                       [Line Nothing [] [] "reindex const (decision \"upstreamFarmer\" [Crack, Flood])" ["x"] ["payoff1 x"],
+                        Line Nothing [] [] "reindex const (decision \"downstreamFarmer\" [Crack, Flood])" ["y"] ["payoff2 x y"]]
                        [] []
 
 monitoringGame1 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y), ()) -> (x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "upstreamFarmer" [Crack, Flood]))))))) >>> (fromFunctions (\((), x) -> x) (\(x, y) -> ((x, y), payoff1 x))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> (x, ())) (\((x, y), ()) -> (x, y))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "downstreamFarmer" [Crack, Flood]))))))) >>> (fromFunctions (\(x, y) -> (x, y)) (\(x, y) -> ((x, y), payoff2 x y))))))))) >>> (fromLens (\(x, y) -> ()) (curry (\((x, y), ()) -> (x, y)))))
@@ -39,15 +39,15 @@ Example usage:
 -- Stable institutional configuration 2
 
 monitoringGame2Src   = Block [] []
-                       [Line [] [] "reindex const (decision \"upstreamFarmer\" [Crack, Flood])" ["x"] ["payoff1 x - punishment1"],
-                        Line [] [] "reindex const (decision \"downstreamFarmer\" [Crack, Flood])" ["y"] ["payoff2 x y - punishment2"]]
+                       [Line Nothing [] [] "reindex const (decision \"upstreamFarmer\" [Crack, Flood])" ["x"] ["payoff1 x - punishment1"],
+                        Line Nothing [] [] "reindex const (decision \"downstreamFarmer\" [Crack, Flood])" ["y"] ["payoff2 x y - punishment2"]]
                        ["x", "y"] ["punishment1", "punishment2"]
 
 monitoringGame2 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y, punishment1, punishment2) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y, punishment1, punishment2), ()) -> (x, y, punishment1, punishment2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "upstreamFarmer" [Crack, Flood]))))))) >>> (fromFunctions (\((), x) -> x) (\(x, y, punishment1, punishment2) -> ((x, y, punishment1, punishment2), payoff1 x - punishment1))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> (x, ())) (\((x, y, punishment1, punishment2), ()) -> (x, y, punishment1, punishment2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "downstreamFarmer" [Crack, Flood]))))))) >>> (fromFunctions (\(x, y) -> (x, y)) (\(x, y, punishment1, punishment2) -> ((x, y, punishment1, punishment2), payoff2 x y - punishment2))))))))) >>> (fromLens (\(x, y) -> (x, y)) (curry (\((x, y), (punishment1, punishment2)) -> (x, y, punishment1, punishment2)))))
 
 monitoringGame3Src = Block [] []
-                           [Line [] [] "monitoringGame2" ["x", "y"] ["punisher x monitorMove", "punisher y monitorMove"],
-                            Line [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff monitorMove"]]
+                           [Line Nothing [] [] "monitoringGame2" ["x", "y"] ["punisher x monitorMove", "punisher y monitorMove"],
+                            Line Nothing [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff monitorMove"]]
                            [] []
 
 monitoringGame3 = reindex (\(x,y,z) -> ((x,y),z)) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y, monitorMove) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y, monitorMove), ()) -> (x, y, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((monitoringGame2)))))) >>> (fromFunctions (\((), (x, y)) -> (x, y)) (\(x, y, monitorMove) -> ((x, y, monitorMove), (punisher x monitorMove, punisher y monitorMove)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(x, y) -> ((x, y), ())) (\((x, y, monitorMove), ()) -> (x, y, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "monitor" [Work, Shirk]))))))) >>> (fromFunctions (\((x, y), monitorMove) -> (x, y, monitorMove)) (\(x, y, monitorMove) -> ((x, y, monitorMove), monitorPayoff monitorMove))))))))) >>> (fromLens (\(x, y, monitorMove) -> ()) (curry (\((x, y, monitorMove), ()) -> (x, y, monitorMove))))))
@@ -79,8 +79,8 @@ Usage example
 -- Stable institutional configuation 3
 
 monitoringGame4Src = Block [] []
-                           [Line [] [] "monitoringGame2" ["x", "y"] ["punisher x monitorMove", "punisher y monitorMove"],
-                            Line [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff2 monitorMove x y"]]
+                           [Line Nothing [] [] "monitoringGame2" ["x", "y"] ["punisher x monitorMove", "punisher y monitorMove"],
+                            Line Nothing [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff2 monitorMove x y"]]
                            [] []
 
 monitoringGame4 = reindex (\(x,y,z) -> ((x,y),z)) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(x, y, monitorMove) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((x, y, monitorMove), ()) -> (x, y, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((monitoringGame2)))))) >>> (fromFunctions (\((), (x, y)) -> (x, y)) (\(x, y, monitorMove) -> ((x, y, monitorMove), (punisher x monitorMove, punisher y monitorMove)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(x, y) -> ((x, y), ())) (\((x, y, monitorMove), ()) -> (x, y, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "monitor" [Work, Shirk]))))))) >>> (fromFunctions (\((x, y), monitorMove) -> (x, y, monitorMove)) (\(x, y, monitorMove) -> ((x, y, monitorMove), monitorPayoff2 monitorMove x y))))))))) >>> (fromLens (\(x, y, monitorMove) -> ()) (curry (\((x, y, monitorMove), ()) -> (x, y, monitorMove))))))
@@ -102,9 +102,9 @@ monitoringGame4Eq = equilibrium monitoringGame4 trivialContext
 -- Stable institutional configuration 4
 
 monitoringGame5Src = Block [] []
-                            [Line [] [] "monitoringGame2" ["farmerMove1", "farmerMove2"] ["punishment1", "punishment2"],
-                             Line [] [] "reindex const (decision \"starvedFarmer\" [Flood])" ["farmerMove3"] ["monitorPayoff"],
-                             Line ["(farmerMove1, farmerMove2, farmerMove3)"] [] "fromFunctions (\\(x,y,z) -> payoff3 x y z) (id)" ["monitorPayoff"] []]
+                            [Line Nothing [] [] "monitoringGame2" ["farmerMove1", "farmerMove2"] ["punishment1", "punishment2"],
+                             Line Nothing [] [] "reindex const (decision \"starvedFarmer\" [Flood])" ["farmerMove3"] ["monitorPayoff"],
+                             Line Nothing ["(farmerMove1, farmerMove2, farmerMove3)"] [] "fromFunctions (\\(x,y,z) -> payoff3 x y z) (id)" ["monitorPayoff"] []]
                             ["farmerMove1", "farmerMove2", "farmerMove3", "monitorPayoff"] ["punishment1", "punishment2"]
 
 monitoringGame5 = reindex (\(x,y,z) -> ((x,y),z,())) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2) -> ())) >>> (reindex (\(a1, a2, a3) -> ((a1, a2), a3)) (((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((monitoringGame2)))))) >>> (fromFunctions (\((), (farmerMove1, farmerMove2)) -> (farmerMove1, farmerMove2)) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), (punishment1, punishment2)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(farmerMove1, farmerMove2) -> ((farmerMove1, farmerMove2), ())) (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "starvedFarmer" [Flood]))))))) >>> (fromFunctions (\((farmerMove1, farmerMove2), farmerMove3) -> (farmerMove1, farmerMove2, farmerMove3)) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), monitorPayoff)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(farmerMove1, farmerMove2, farmerMove3) -> ((farmerMove1, farmerMove2, farmerMove3), (farmerMove1, farmerMove2, farmerMove3))) (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((fromFunctions (\(x,y,z) -> payoff3 x y z) (id))))))) >>> (fromFunctions (\((farmerMove1, farmerMove2, farmerMove3), monitorPayoff) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff)) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2), ()))))))))) >>> (fromLens (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff)) (curry (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff), (punishment1, punishment2)) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, punishment1, punishment2))))))
@@ -117,8 +117,8 @@ payoff3 _ Flood _     = 0
 payoff3 Crack Crack _ = 3
 
 monitoringGame6Src = Block [] []
-                           [Line [] [] "monitoringGame5" ["farmerMove1", "farmerMove2", "farmerMove3", "monitorPayoff"] ["punisher farmerMove1 monitorMove", "punisher farmerMove2 monitorMove"],
-                            Line [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff"]]
+                           [Line Nothing [] [] "monitoringGame5" ["farmerMove1", "farmerMove2", "farmerMove3", "monitorPayoff"] ["punisher farmerMove1 monitorMove", "punisher farmerMove2 monitorMove"],
+                            Line Nothing [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["monitorPayoff"]]
                            [] []
 
 monitoringGame6 = reindex (\(a,b,c,d) -> ((a,b,c),d)) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove) -> ())) >>> (reindex (\(a1, a2) -> (a1, a2)) ((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), ())) (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((monitoringGame5)))))) >>> (fromFunctions (\((), (farmerMove1, farmerMove2, farmerMove3, monitorPayoff)) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff)) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove), (punisher farmerMove1 monitorMove, punisher farmerMove2 monitorMove)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff), ())) (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "monitor" [Work, Shirk]))))))) >>> (fromFunctions (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff), monitorMove) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove)) (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove) -> ((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove), monitorPayoff))))))))) >>> (fromLens (\(farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove) -> ()) (curry (\((farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove), ()) -> (farmerMove1, farmerMove2, farmerMove3, monitorPayoff, monitorMove))))))
@@ -139,7 +139,7 @@ monitoringGame6Eq = equilibrium monitoringGame6 trivialContext
 -- Stable institutional configuration 5
 
 irrigationStepSrc = Block ["startLevel"] []
-                          [Line [] [] "reindex const (decision \"farmer\" [Crack, Flood])" ["farmerMove"] ["farmerWater startLevel farmerMove - punishment"]]
+                          [Line Nothing [] [] "reindex const (decision \"farmer\" [Crack, Flood])" ["farmerMove"] ["farmerWater startLevel farmerMove - punishment"]]
                           ["startLevel - farmerWater startLevel farmerMove"] ["punishment"]
 
 irrigationStep = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(startLevel, farmerMove, punishment) -> ())) >>> (reindex (\a1 -> a1) (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\startLevel -> (startLevel, ())) (\((startLevel, farmerMove, punishment), ()) -> (startLevel, farmerMove, punishment))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "farmer" [Crack, Flood]))))))) >>> (fromFunctions (\(startLevel, farmerMove) -> (startLevel, farmerMove)) (\(startLevel, farmerMove, punishment) -> ((startLevel, farmerMove, punishment), farmerWater startLevel farmerMove - punishment)))))))) >>> (fromLens (\(startLevel, farmerMove) -> startLevel - farmerWater startLevel farmerMove) (curry (\((startLevel, farmerMove), punishment) -> (startLevel, farmerMove, punishment)))))
@@ -149,9 +149,9 @@ farmerWater startLevel Crack = if startLevel >= 2 then 2 else startLevel
 farmerWater startLevel Flood = if startLevel >= 5 then 5 else startLevel
 
 monitoringGame7Src = Block [] []
-                           [Line ["10"] [] "irrigationStep" ["levelAfter1"] ["0"],
-                            Line ["levelAfter1"] [] "irrigationStep" ["levelAfter2"] ["0"],
-                            Line ["levelAfter2"] [] "irrigationStep" ["levelAfter3"] ["0"]]
+                           [Line Nothing ["10"] [] "irrigationStep" ["levelAfter1"] ["0"],
+                            Line Nothing ["levelAfter1"] [] "irrigationStep" ["levelAfter2"] ["0"],
+                            Line Nothing ["levelAfter2"] [] "irrigationStep" ["levelAfter3"] ["0"]]
                            [] []
 
 
@@ -171,10 +171,10 @@ monitoringGame7Eq = equilibrium monitoringGame7 trivialContext
 -}
 
 monitoringGame8Src = Block [] []
-                            [Line ["10"] [] "irrigationStep" ["levelAfter1"] ["punisher2 (10 - levelAfter1) monitorMove"],
-                             Line ["levelAfter1"] [] "irrigationStep" ["levelAfter2"] ["punisher2 (levelAfter1 - levelAfter2) monitorMove"],
-                             Line ["levelAfter2"] [] "irrigationStep" ["levelAfter3"] ["punisher2 (levelAfter2 - levelAfter3) monitorMove + monitorEffort monitorMove"],
-                             Line [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["levelAfter2 - levelAfter3 - monitorEffort monitorMove"]]
+                            [Line Nothing ["10"] [] "irrigationStep" ["levelAfter1"] ["punisher2 (10 - levelAfter1) monitorMove"],
+                             Line Nothing ["levelAfter1"] [] "irrigationStep" ["levelAfter2"] ["punisher2 (levelAfter1 - levelAfter2) monitorMove"],
+                             Line Nothing ["levelAfter2"] [] "irrigationStep" ["levelAfter3"] ["punisher2 (levelAfter2 - levelAfter3) monitorMove + monitorEffort monitorMove"],
+                             Line Nothing [] [] "reindex const (decision \"monitor\" [Work, Shirk])" ["monitorMove"] ["levelAfter2 - levelAfter3 - monitorEffort monitorMove"]]
                             [] []
 
 monitoringGame8 = reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ())) >>> (reindex (\(a1, a2, a3, a4) -> (((a1, a2), a3), a4)) ((((reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\() -> ((), 10)) (\((levelAfter1, levelAfter2, levelAfter3, monitorMove), ()) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStep)))))) >>> (fromFunctions (\((), levelAfter1) -> levelAfter1) (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ((levelAfter1, levelAfter2, levelAfter3, monitorMove), punisher2 (10 - levelAfter1) monitorMove))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\levelAfter1 -> (levelAfter1, levelAfter1)) (\((levelAfter1, levelAfter2, levelAfter3, monitorMove), ()) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStep)))))) >>> (fromFunctions (\(levelAfter1, levelAfter2) -> (levelAfter1, levelAfter2)) (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ((levelAfter1, levelAfter2, levelAfter3, monitorMove), punisher2 (levelAfter1 - levelAfter2) monitorMove)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(levelAfter1, levelAfter2) -> ((levelAfter1, levelAfter2), levelAfter2)) (\((levelAfter1, levelAfter2, levelAfter3, monitorMove), ()) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((irrigationStep)))))) >>> (fromFunctions (\((levelAfter1, levelAfter2), levelAfter3) -> (levelAfter1, levelAfter2, levelAfter3)) (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ((levelAfter1, levelAfter2, levelAfter3, monitorMove), punisher2 (levelAfter2 - levelAfter3) monitorMove + monitorEffort monitorMove)))))) >>> (reindex (\x -> (x, ())) ((reindex (\x -> ((), x)) ((fromFunctions (\(levelAfter1, levelAfter2, levelAfter3) -> ((levelAfter1, levelAfter2, levelAfter3), ())) (\((levelAfter1, levelAfter2, levelAfter3, monitorMove), ()) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove))) >>> (reindex (\x -> ((), x)) ((fromFunctions (\x -> x) (\x -> x)) &&& ((reindex const (decision "monitor" [Work, Shirk]))))))) >>> (fromFunctions (\((levelAfter1, levelAfter2, levelAfter3), monitorMove) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove)) (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ((levelAfter1, levelAfter2, levelAfter3, monitorMove), levelAfter2 - levelAfter3 - monitorEffort monitorMove))))))))) >>> (fromLens (\(levelAfter1, levelAfter2, levelAfter3, monitorMove) -> ()) (curry (\((levelAfter1, levelAfter2, levelAfter3, monitorMove), ()) -> (levelAfter1, levelAfter2, levelAfter3, monitorMove)))))

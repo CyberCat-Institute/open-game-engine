@@ -21,17 +21,17 @@ import Data.List (inits, tails)
 import Data.Bifunctor
 
 
-type SLine = Line Pat Exp
-type QLine = Line String (Q Exp)
+type SLine = Line (Maybe String) Pat Exp
+type QLine = Line (Maybe String) String (Q Exp)
 type GBlock = Block SLine
 
 data LineWithContext p e = LineWithContext {
-  line :: Line p e,
+  line :: Line (Maybe String) p e,
   covariantContext :: Variables p,
   contravariantContext :: Variables p}
 
 class ToLine pat exp where
-  toLine :: Line pat exp -> Q SLine
+  toLine :: Line (Maybe String) pat exp -> Q SLine
 
 instance ToLine Pat Exp where
   toLine = pure
@@ -105,7 +105,7 @@ compileQLine qline = do covIn <- traverse id $ covariantInputs qline
                         exp <- matrix qline
                         let covOut = fmap (VarP . mkName) (covariantOutputs qline)
                         let conOut = fmap (VarP . mkName) (contravariantOutputs qline)
-                        pure $ Line covIn conOut exp covOut conIn
+                        pure $ Line Nothing covIn conOut exp covOut conIn
 
 
 class GameCompiler term where
@@ -126,14 +126,14 @@ extract (Block covIn conOut lines covOut conIn) =
      conIn' <- sequence conIn
      pure (Block covIn' conOut' lines' covOut' conIn')
   where
-    extractLines :: Line (Q p) (Q e) -> Q (Line p e)
-    extractLines (Line covIn conOut m covOut conIn) = do
+    extractLines :: Line (Maybe String) (Q p) (Q e) -> Q (Line (Maybe String) p e)
+    extractLines (Line lbl covIn conOut m covOut conIn) = do
       covIn' <- sequence covIn
       conOut' <- sequence conOut
       body <- m
       covOut' <- sequence covOut
       conIn' <- sequence conIn
-      pure (Line covIn' conOut' body covOut' conIn')
+      pure (Line lbl covIn' conOut' body covOut' conIn')
 
 instance GameCompiler (Block (Q Pat) (Q Exp)) where
   generateGame name args block =
