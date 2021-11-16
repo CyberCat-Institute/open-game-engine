@@ -5,7 +5,7 @@ category: Math
 author: Jules Hedges & other contributors
 maintainer: juleshedges.invariant@gmail.com
 copyright: 2020 Jules Hedges & other contributors
-license: AGPL
+license: BSD 3-clause
 github: jules-hedges/open-games-hs
 extra-source-files:
 - README.md
