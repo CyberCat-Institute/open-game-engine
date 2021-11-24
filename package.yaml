@@ -56,7 +56,9 @@ dependencies:
     - haskeline
     - hashmap
     - hashable
-    - extra 
+    - extra
+    - mwc-random
+    - random
 
 executables:
   open-games-exe:
@@ -81,4 +83,3 @@ benchmarks:
     dependencies:
       - open-games-hs
       - criterion
-

@@ -11,6 +11,8 @@ module Engine.OpticClass
   , StochasticStatefulContext(..)
   , StochasticOptic(..)
   , StochasticContext(..)
+  , MonadOptic(..)
+  , MonadContext(..)
   , Optic(..)
   , Precontext(..)
   , Context(..)
@@ -161,12 +163,13 @@ instance ContextAdd StochasticContext where
 
 
 -- Experimental non Stochastic
-data MonadOptic s t a b where
-  MonadOptic :: (s -> IO (z, a))
-                          -> (z -> b -> IO t)
-                          -> MonadOptic s t a b
+-- Same as used in learning implementation
+data MonadOptic m s t a b where
+  MonadOptic :: Monad m => (s -> m (z, a))
+                          -> (z -> b -> m t)
+                          -> MonadOptic m s t a b
 
-instance Optic MonadOptic where
+instance Monad m => Optic (MonadOptic m) where
   lens v u = MonadOptic (\s -> return (s, v s)) (\s b -> return (u s b))
   (>>>>) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
     where v s = do {(z1, a) <- v1 s; (z2, p) <- v2 a; return ((z1, z2), p)}
@@ -174,28 +177,23 @@ instance Optic MonadOptic where
   (&&&&) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
     where v (s1, s2) = do {(z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))}
           u (z1, z2) (b1, b2) = do {t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)}
-  (++++) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
-    where v (Left s1)  = do {(z1, a1) <- v1 s1; return (Left z1, Left a1)}
-          v (Right s2) = do {(z2, a2) <- v2 s2; return (Right z2, Right a2)}
-          u (Left z1) b  = u1 z1 b
-          u (Right z2) b = u2 z2 b
 
-data MonadContext s t a b where
-  MonadContext :: (Show z) => IO (z, s) -> (z -> a -> IO b) -> MonadContext s t a b
+data MonadContext m s t a b where
+  MonadContext :: (Monad m, Show z) => m (z, s) -> (z -> a -> m b) -> MonadContext m s t a b
 
-instance Precontext MonadContext where
+instance Monad m => Precontext (MonadContext m) where
   void = MonadContext (return ((), ())) (\() () -> return ())
 
-instance Context MonadContext MonadOptic where
+instance Monad m => Context (MonadContext m)  (MonadOptic m) where
   cmap (MonadOptic v1 u1) (MonadOptic v2 u2) (MonadContext h k)
             = let h' = do {(z, s) <- h; (_, s') <- v1 s; return (z, s')}
-                  k' z a = do {(z', a') <-  (v2 a); b' <- k z a'; u2 z' b'}
+                  k' z a = do {(z', a') <- (v2 a); b' <- k z a'; u2 z' b'}
                in MonadContext h' k'
   (//) (MonadOptic v u) (MonadContext h k)
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
-                  k' (z, s1) a2 = do {(_, a1) <-  (v s1); (_, b2) <- k z (a1, a2); return b2}
+                  k' (z, s1) a2 = do {(_, a1) <- (v s1); (_, b2) <- k z (a1, a2); return b2}
                in MonadContext h' k'
   (\\) (MonadOptic v u) (MonadContext h k)
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
-                  k' (z, s2) a1 = do {(_, a2) <-  (v s2); (b1, _) <- k z (a1, a2); return b1}
+                  k' (z, s2) a1 = do {(_, a2) <- (v s2); (b1, _) <- k z (a1, a2); return b1}
                in MonadContext h' k'
