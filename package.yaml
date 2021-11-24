@@ -59,6 +59,8 @@ dependencies:
     - extra
     - mwc-random
     - random
+    - vector
+    - monad-bayes
 
 executables:
   open-games-exe:
