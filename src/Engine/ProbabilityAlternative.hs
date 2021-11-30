@@ -43,7 +43,7 @@ uniform vs = do
 
 -- ... Perhaps you could combine them here?
 setUniform :: Monad m => Vector (e, Double) -> ProbT m e ()
-setUniform vs = ProbT (modify (\(s,g) -> (tableFromProbabilities $ ctable vs,g)))
+setUniform vs = ProbT (modify (\(s,g) -> (constructCTable vs,g)))
 
 draw :: Monad m => ProbT m e e
 draw =
@@ -70,7 +70,7 @@ expected = undefined
 -- But that should be doable via the table
 
 -- Need `mapMaybe`
---mapMaybeProb :: (Monad m, Eq y) => y -> Vector ((x,y), Double)  -> ProbT m x ()
---mapMaybeProb y v  =
---  let v' = V.mapMaybe (\((x, y'),val) -> if y' == y then Just (x,val) else Nothing) v
---      in ProbT (modify (\(s,g) -> (tableFromProbabilities  v',g)))
+mapMaybeProb :: (Monad m, Eq y) => y -> Vector ((x,y), Double)  -> ProbT m x ()
+mapMaybeProb y v  =
+  let v' = V.mapMaybe (\((x, y'),val) -> if y' == y then Just (x,val) else Nothing) v
+      in ProbT (modify (\(s,g) -> (constructCTable  v',g)))

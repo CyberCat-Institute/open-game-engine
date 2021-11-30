@@ -63,14 +63,14 @@ fromLens v u = OpenGame {
 fromFunctions :: (x -> y) -> (r -> s) -> IOOpenGame '[] '[] x s y r
 fromFunctions f g = fromLens f (const g)
 
-
+{-
 transformProb :: Weighted m (a,b) -> a -> Weighted m b
 transformProb tab x= do
   tab' <- runWeighted tab
   let reduced = Prelude.filter ((==x) . fst . fst) tab'
   withWeight reduced
 
-{-
+
 -----------------------------
 -- Prob support functionality
 
