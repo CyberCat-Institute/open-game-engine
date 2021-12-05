@@ -13,6 +13,7 @@ module Engine.IOGames
   , dependentDecisionIO
   , fromLens
   , fromFunctions
+  , discount
   ) where
 
 
@@ -28,28 +29,39 @@ import           Data.HashMap                       as HM hiding (null,map,mapMa
 
 import Data.List (maximumBy)
 import Data.Ord (comparing)
-import           Data.Utils
-import Data.Vector.Generic                         as G
+import Data.Utils
 import System.Random.MWC.CondensedTable
 import System.Random
+import System.Random.Stateful
 
 import Engine.OpenGames hiding (lift)
 import Engine.OpticClass
 import Engine.TLL
 import Engine.Diagnostics
 
+
+-- Build game where one element is drawn
+-- Ignore the Bayesian component for now
+-- Build a sampler on top
+
 ---------------------------------------------
 -- Reimplements stateful bayesian from before
 
-type IOOpenGame a b x s y r = OpenGame (MonadOptic IO) (MonadContext IO) a b x s y r
+type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
 type Agent = String
 
--- NOTE we keep the _evaluate_ part undefined as we do not need it.
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String ->  IOOpenGame '[CondensedTableV Double] '[] x () y Double
+-- NOTE we keep the _evaluate_ part undefined as we do not need it; only play is needed
+-- NOTE This ignores the state
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String ->  IOOpenGame '[Kleisli CondensedTableV x y] '[] x () y Double
 dependentDecisionIO name = OpenGame {
-  play = \(a ::- Nil) -> let v x = do pure ((),undefined)
-                             in MonadOptic v (\_ -> (\_ -> pure ())),
+  play = \(a ::- Nil) -> let v x = do
+                                   g <- newStdGen
+                                   gS <- newIOGenM g
+                                   action <- genFromTable (runKleisli a x) gS
+                                   return ((),action)
+                             u () r = modify (adjustOrAdd (+ r) r name)
+                             in MonadOptic v u,
   evaluate = undefined }
 
 
@@ -63,30 +75,12 @@ fromLens v u = OpenGame {
 fromFunctions :: (x -> y) -> (r -> s) -> IOOpenGame '[] '[] x s y r
 fromFunctions f g = fromLens f (const g)
 
-{-
-transformProb :: Weighted m (a,b) -> a -> Weighted m b
-transformProb tab x= do
-  tab' <- runWeighted tab
-  let reduced = Prelude.filter ((==x) . fst . fst) tab'
-  withWeight reduced
 
 
------------------------------
--- Prob support functionality
-
--- sample from a distribution: genFromTable
-
--- update a condensed table by setting values to zero.
-
-updateTable :: Eq a => CondensedTableV (a,b) -> a -> CondensedTableV b
-updateTable (CondensedTable na aa nb bb nc cc dd) = let
-  tbl = G.filter ((== x) . fst) dd
-  in undefined -- tbl
-
-normalize :: CondensedTableV b -> CondensedTableV b
-normalize table
-      | G.null table = error "empty table"
-      | otherwise = G.map (second (/ s)) table
-      where
-        s = G.foldl' (flip $ (+) . snd) 0 table
---}
+-- discount Operation for repeated structures
+discount :: String -> (Double -> Double) -> IOOpenGame '[] '[] () () () ()
+discount name f = OpenGame {
+  play = \_ -> let v () = return ((), ())
+                   u () () = modify (adjustOrAdd f (f 0) name)
+                 in MonadOptic v u,
+  evaluate = \_ _ -> Nil}

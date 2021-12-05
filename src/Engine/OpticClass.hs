@@ -169,12 +169,13 @@ instance ContextAdd StochasticContext where
 
 -- Experimental non Stochastic
 -- Same as used in learning implementation
-data MonadOptic m s t a b where
-  MonadOptic :: Monad m => (s -> m (z, a))
-                          -> (z -> b -> m t)
-                          -> MonadOptic m s t a b
+-- Can be used for IO as well
+data MonadOptic s t a b where
+  MonadOptic :: (s -> IO (z, a))
+                          -> (z -> b -> StateT Vector IO t)
+                          -> MonadOptic s t a b
 
-instance Monad m => Optic (MonadOptic m) where
+instance Optic MonadOptic where
   lens v u = MonadOptic (\s -> return (s, v s)) (\s b -> return (u s b))
   (>>>>) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
     where v s = do {(z1, a) <- v1 s; (z2, p) <- v2 a; return ((z1, z2), p)}
@@ -182,110 +183,28 @@ instance Monad m => Optic (MonadOptic m) where
   (&&&&) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
     where v (s1, s2) = do {(z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))}
           u (z1, z2) (b1, b2) = do {t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)}
-
-data MonadContext m s t a b where
-  MonadContext :: (Monad m, Show z) => m (z, s) -> (z -> a -> m b) -> MonadContext m s t a b
-
-instance Monad m => Precontext (MonadContext m) where
-  void = MonadContext (return ((), ())) (\() () -> return ())
-
-instance Monad m => Context (MonadContext m)  (MonadOptic m) where
-  cmap (MonadOptic v1 u1) (MonadOptic v2 u2) (MonadContext h k)
-            = let h' = do {(z, s) <- h; (_, s') <- v1 s; return (z, s')}
-                  k' z a = do {(z', a') <- (v2 a); b' <- k z a'; u2 z' b'}
-               in MonadContext h' k'
-  (//) (MonadOptic v u) (MonadContext h k)
-            = let h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
-                  k' (z, s1) a2 = do {(_, a1) <- (v s1); (_, b2) <- k z (a1, a2); return b2}
-               in MonadContext h' k'
-  (\\) (MonadOptic v u) (MonadContext h k)
-            = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
-                  k' (z, s2) a1 = do {(_, a2) <- (v s2); (b1, _) <- k z (a1, a2); return b1}
-               in MonadContext h' k'
-
--------------------------------------------
--- Experimental where randomvalues are drawn
-
-data CTable a = CTable
-   { ctable :: !(CondensedTableV a)
-   , population :: !(V.Vector (a,Double))
-   }
-
-constructCTable :: V.Vector (a,Double) -> CTable a
-constructCTable v = CTable
-  { population = v
-  , ctable     = tableFromProbabilities v
-  }
-
-
-
-newtype ProbT m a = ProbT
-  { runProbT :: StateT (CTable a, StdGen) m a
-  }
-instance Monad m => Functor (ProbT m) where fmap = liftM
-instance Monad m => Applicative (ProbT m) where pure = return; (<*>) = ap
-instance Monad m => Monad (ProbT m) where return = return; (>>=) = (>>=) -- FIXME this seems off - not what we actually want
-
-
-draw :: Monad m => ProbT m a
-draw =
-  ProbT
-    (do (table, gen) <- get
-        let (e, g) = runStateGen gen (genFromTable $ ctable table)
-        pure e)
-
-
-data ProbTStatefulOptic s t a b where
-  ProbTStatefulOptic :: (s -> ProbT IO (z, a))
-                          -> (z -> b -> StateT Vector (ProbT IO) t)
-                          -> ProbTStatefulOptic s t a b
-
-instance Optic ProbTStatefulOptic where
-  lens v u = ProbTStatefulOptic (\s -> return (s, v s)) (\s b -> return (u s b))
-  (>>>>) (ProbTStatefulOptic v1 u1) (ProbTStatefulOptic v2 u2) = ProbTStatefulOptic v u
-    where v s = do
-            (z1, a) <- v1 s
-            (z2, p) <- v2 a
-            return ((z1, z2), p)
-          u (z1, z2) q = do {b <- u2 z2 q; u1 z1 b}
-  (&&&&) (ProbTStatefulOptic v1 u1) (ProbTStatefulOptic v2 u2) = ProbTStatefulOptic v u
-    where v (s1, s2) = do {(z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))}
-          u (z1, z2) (b1, b2) = do {t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)}
-  (++++) (ProbTStatefulOptic v1 u1) (ProbTStatefulOptic v2 u2) = ProbTStatefulOptic v u
+  (++++) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
     where v (Left s1)  = do {(z1, a1) <- v1 s1; return (Left z1, Left a1)}
           v (Right s2) = do {(z2, a2) <- v2 s2; return (Right z2, Right a2)}
           u (Left z1) b  = u1 z1 b
           u (Right z2) b = u2 z2 b
 
-data ProbTStatefulContext s t a b where
-  ProbTStatefulContext :: (Show z) => (ProbT IO (z, s)) -> (z -> a -> StateT Vector (ProbT IO) b) -> ProbTStatefulContext s t a b
+data MonadContext s t a b where
+  MonadContext :: (Show z) => IO (z, s) -> (z -> a -> StateT Vector IO b) -> MonadContext s t a b
 
-instance Precontext ProbTStatefulContext where
-  void = ProbTStatefulContext (return ((), ())) (\() () -> return ())
+instance Precontext MonadContext where
+  void = MonadContext (return ((), ())) (\() () -> return ())
 
-instance Context ProbTStatefulContext ProbTStatefulOptic where
-  cmap (ProbTStatefulOptic v1 u1) (ProbTStatefulOptic v2 u2) (ProbTStatefulContext h k)
+instance Context MonadContext MonadOptic where
+  cmap (MonadOptic v1 u1) (MonadOptic v2 u2) (MonadContext h k)
             = let h' = do {(z, s) <- h; (_, s') <- v1 s; return (z, s')}
                   k' z a = do {(z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'}
-               in ProbTStatefulContext h' k'
-  (//) (ProbTStatefulOptic v u) (ProbTStatefulContext h k)
+               in MonadContext h' k'
+  (//) (MonadOptic v u) (MonadContext h k)
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
                   k' (z, s1) a2 = do {(_, a1) <- lift (v s1); (_, b2) <- k z (a1, a2); return b2}
-               in ProbTStatefulContext h' k'
-  (\\) (ProbTStatefulOptic v u) (ProbTStatefulContext h k)
+               in MonadContext h' k'
+  (\\) (MonadOptic v u) (MonadContext h k)
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
                   k' (z, s2) a1 = do {(_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1}
-               in ProbTStatefulContext h' k'
-
-
-instance ContextAdd ProbTStatefulContext where
-  prl (ProbTStatefulContext h k)
-    = do (table,_) <- get
-         let v  = population table
-             v' = V.filter (isJust . fst) v
-         if V.null v' then Nothing
-                      else Just (ProbTStatefulContext (constructCTable v') (\z a1 -> k z (Left a1)))
-  prr (ProbTStatefulContext h k)
-    = let fs = [((z, s2), p) | ((z, Right s2), p) <- decons h]
-       in if null fs then Nothing
-                     else Just (ProbTStatefulContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
+               in MonadContext h' k'

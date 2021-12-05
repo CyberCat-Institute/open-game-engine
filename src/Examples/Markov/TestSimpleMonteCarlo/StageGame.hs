@@ -4,7 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.Markov.TestSimpleMonteCarlo where
+module Examples.Markov.StageGame where
 
 import           Engine.Engine
 import           Preprocessor.Preprocessor
