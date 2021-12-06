@@ -21,24 +21,22 @@ import           Control.Arrow                      hiding ((+:+))
 import           Control.Monad.Bayes.Weighted
 import           Control.Monad.State                hiding (state)
 import           Control.Monad.Trans.Class
-import GHC.TypeLits
-
-import Data.Foldable
+import           Data.Foldable
 import           Data.HashMap                       as HM hiding (null,map,mapMaybe)
+import           Data.List (maximumBy)
+import           Data.Ord (comparing)
+import           Data.Utils
+import qualified Data.Vector as V
+import           GHC.TypeLits
+import           Numeric.Probability.Distribution hiding (map, lift)
+import           System.Random.MWC.CondensedTable
+import           System.Random
+import           System.Random.Stateful
 
-
-import Data.List (maximumBy)
-import Data.Ord (comparing)
-import Data.Utils
-import System.Random.MWC.CondensedTable
-import System.Random
-import System.Random.Stateful
-
-import Engine.OpenGames hiding (lift)
-import Engine.OpticClass
-import Engine.TLL
-import Engine.Diagnostics
-
+import           Engine.OpenGames hiding (lift)
+import           Engine.OpticClass
+import           Engine.TLL
+import           Engine.Diagnostics
 
 -- Build game where one element is drawn
 -- Ignore the Bayesian component for now

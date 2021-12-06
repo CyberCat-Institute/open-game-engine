@@ -40,6 +40,7 @@ library:
     - Examples.Markov.RepeatedPD
     - Examples.Markov.RepeatedPDNonState
     - Examples.Markov.TwoStageMarkov
+    - Examples.Markov.TestSimpleMonteCarlo.Continuation
 
 dependencies:
     - base >=4.7 && <5

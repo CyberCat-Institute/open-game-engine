@@ -5,7 +5,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 
-module Examples.Markov.TestSimpleMonteCarlo.Continuation where
+module Examples.Markov.TestSimpleMonteCarlo.Continuation
+  ( sampleDetermineContinuationPayoffsStoch
+  ) where
 
 import           Engine.Engine hiding (fromLens,Agent,fromFunctions,discount)
 import           Preprocessor.Preprocessor
@@ -17,14 +19,17 @@ import           Control.Monad.State  hiding (state,void)
 import qualified Control.Monad.State  as ST
 import qualified Data.Vector as V
 import           Debug.Trace
-import System.Random.MWC.CondensedTable
-import System.Random
-import System.Random.Stateful
-import Numeric.Probability.Distribution hiding (map, lift, filter)
-import Numeric.Probability.Simulation
+import           System.IO.Unsafe
+import           System.Random.MWC.CondensedTable
+import           System.Random
+import           System.Random.Stateful
+import           Numeric.Probability.Distribution hiding (map, lift, filter)
+import           Numeric.Probability.Simulation
 
--- TODO I probably need to kill the state hack in order to do proper averaging
 
+-- 0. IO to Stochastic?
+-- 1. Replace the enumerated evaluation with a simulated one
+-- 2. Include the sampling facility of Prob library
 
 discountFactor = 0.9
 
@@ -68,7 +73,7 @@ prisonersDilemmaCont = [opengame|
   |]
 
 
-transformStrat :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD -> Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD
+transformStrat :: Kleisli Stochastic x y -> Kleisli CondensedTableV x y
 transformStrat strat = Kleisli (\x ->
   let y = runKleisli strat x
       ls = decons y
@@ -131,17 +136,25 @@ sampleDetermineContinuationPayoffs :: Int
                                   -> StateT Vector IO ()
 sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue = do
   replicateM_ sampleSize (determineContinuationPayoffs iterator strat initialValue)
-  v <- ST.get
-  ST.put (average sampleSize v)
+--  v <- ST.get
+--  ST.put (average sampleSize v)
 
-
--- TODO transform StateT Vector with IO
--- TODO check out https://hackage.haskell.org/package/mmorph-1.2.0/docs/Control-Monad-Morph.html#v:hoist
-
-transformStateTIO ::  StateT Vector IO () ->  StateT Vector Stochastic ()
-transformStateTIO s = do
-  v <- ST.get
-  ST.put v
-
--- Can we use the simulation machinery from probabilities?
-testGenDis v g= (~.) 1 ( \v -> genFromTable (tableFromProbabilities v) g)
+-- NOTE EVIL EVIL
+sampleDetermineContinuationPayoffsStoch :: Int
+                                  -- ^ Sample size
+                                  -> Integer
+                                  -- ^ How many rounds are explored?
+                                  -> List
+                                            '[Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
+                                              Kleisli Stochastic (ActionPD, ActionPD) ActionPD]
+                                  -> (ActionPD,ActionPD)
+                                  -> StateT Vector Stochastic ()
+sampleDetermineContinuationPayoffsStoch sampleSize iterator strat initialValue =
+   transformStateTIO $ sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue
+   where
+      transformStateTIO ::  StateT Vector IO () ->  StateT Vector Stochastic ()
+      transformStateTIO sTT = StateT (\s -> unsafeTransformIO $  ST.runStateT sTT s)
+      unsafeTransformIO :: IO a -> Stochastic a
+      unsafeTransformIO a =
+        let a' = unsafePerformIO a
+            in certainly a'

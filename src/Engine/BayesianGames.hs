@@ -94,7 +94,7 @@ dependentEpsilonDecision epsilon name ys = OpenGame {
                             in StochasticStatefulOptic v u,
   evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
-                                                   r <- k t y; 
+                                                   r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
@@ -145,3 +145,17 @@ discount name f = OpenGame {
                    u () () = modify (adjustOrAdd f (f 0) name)
                  in StochasticStatefulOptic v u,
   evaluate = \_ _ -> Nil}
+
+
+--------------------------------------------------------------------------------------
+-- Implement a version which samples the play using the Prob library build in sampling
+-- Ignore the evaluate part
+
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentDecisionIO name _ = OpenGame {
+  play = \(a ::- Nil) -> let v x = do
+                               y <- runKleisli a x
+                               return ((), y)
+                             u () r = modify (adjustOrAdd (+ r) r name)
+                            in StochasticStatefulOptic v u,
+  evaluate = undefined }
