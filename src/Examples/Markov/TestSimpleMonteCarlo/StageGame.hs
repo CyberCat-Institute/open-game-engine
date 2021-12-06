@@ -104,7 +104,7 @@ determineContinuationPayoffs iterator strat action = do
 
 
 -- fix context used for the evaluation
-contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace ",,1" (determineContinuationPayoffs iterator strat action))
+contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
 
 
 
@@ -116,51 +116,3 @@ repeatedPDEq iterator strat initialAction = evaluate prisonersDilemma strat cont
 
 
 eqOutput iterator strat initialAction = generateIsEq $ repeatedPDEq iterator strat initialAction
-
-
-
-------------------------------------
--- Recreating game for continuations
-
--- Fill in details for game
--- Create context that draws from the table
-
-
-prisonersDilemmaCont = [opengame|
-
-   inputs    : (dec1Old,dec2Old) ;
-   feedback  :      ;
-
-   :----------------------------:
-   inputs    :  (dec1Old,dec2Old)    ;
-   feedback  :      ;
-   operation : dependentDecisionIO "player1" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer1 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
-
-   inputs    :   (dec1Old,dec2Old)   ;
-   feedback  :      ;
-   operation : dependentDecisionIO "player2" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer2 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
-
-   operation : discount "player1" (\x -> x * discountFactor) ;
-
-   operation : discount "player2" (\x -> x * discountFactor) ;
-
-   :----------------------------:
-
-   outputs   : (decisionPlayer1,decisionPlayer2)     ;
-   returns   :      ;
-  |]
-
-
--- transform strategy into vector of probs
--- transform this into condensed table
-
-transformStrat :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD -> ((ActionPD, ActionPD) -> (CondensedTableV ActionPD))
-transformStrat strat = \x ->
-  let y = runKleisli strat x
-      ls = decons y
-      v = V.fromList ls
-      in tableFromProbabilities v

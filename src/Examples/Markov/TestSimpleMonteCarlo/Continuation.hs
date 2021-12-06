@@ -21,6 +21,7 @@ import System.Random.MWC.CondensedTable
 import System.Random
 import System.Random.Stateful
 import Numeric.Probability.Distribution hiding (map, lift, filter)
+import Numeric.Probability.Simulation
 
 -- TODO I probably need to kill the state hack in order to do proper averaging
 
@@ -142,11 +143,5 @@ transformStateTIO s = do
   v <- ST.get
   ST.put v
 
-transformStateTIO2 ::  StateT Vector IO () ->  StateT Vector Stochastic ()
-transformStateTIO2 x = StateT
-  (\s -> (do
-         v <- ST.runStateT x $ s
-         pure  v))
-
-mapStateT2 :: (m ((), s) -> n ((), s))
-mapStateT2 s
+-- Can we use the simulation machinery from probabilities?
+testGenDis v g= (~.) 1 ( \v -> genFromTable (tableFromProbabilities v) g)
