@@ -4,7 +4,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
--- TODO 0 Benchmark against alternative implementation is there a speed update?
 
 module Examples.Markov.TestSimpleMonteCarlo where
 
@@ -15,13 +14,18 @@ import           Examples.Markov.TestSimpleMonteCarlo.Continuation
 
 import           Control.Monad.State  hiding (state,void)
 import qualified Control.Monad.State  as ST
-
 import qualified Data.Vector as V
 import           Debug.Trace
-import System.Random.MWC.CondensedTable
-import System.Random
-import System.Random.Stateful
-import Numeric.Probability.Distribution hiding (map, lift, filter)
+import           System.Random.MWC.CondensedTable
+import           System.Random
+import           System.Random.Stateful
+import           Numeric.Probability.Distribution hiding (map, lift, filter)
+
+
+------------------------------------------------------------
+-- Combines Bayesian game evaluation of the first stage with
+-- a continuation based on Monte Carlo
+
 
 prisonersDilemma  :: OpenGame
                               StochasticStatefulOptic
@@ -34,7 +38,6 @@ prisonersDilemma  :: OpenGame
                               ()
                               (ActionPD, ActionPD)
                               ()
-discountFactor = 1
 
 prisonersDilemma = [opengame|
 
@@ -77,9 +80,9 @@ strategyTuple = stageStrategy ::- stageStrategy ::- Nil
 
 -- Testing for stoch behavior and slow down
 stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
-stageStrategyTest = Kleisli $ const $ uniformDist [Cooperate,Defect]
+stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.9),(Defect, 0.1)]
 -- Stage strategy tuple
-strategyTupleTest = stageStrategy ::- stageStrategy ::- Nil
+strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
 
 
 

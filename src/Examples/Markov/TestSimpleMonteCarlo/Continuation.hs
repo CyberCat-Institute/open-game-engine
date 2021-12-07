@@ -7,6 +7,7 @@
 
 module Examples.Markov.TestSimpleMonteCarlo.Continuation
   ( sampleDetermineContinuationPayoffsStoch
+  , discountFactor
   ) where
 
 import           Engine.Engine hiding (fromLens,Agent,fromFunctions,discount)
@@ -24,14 +25,9 @@ import           System.Random.MWC.CondensedTable
 import           System.Random
 import           System.Random.Stateful
 import           Numeric.Probability.Distribution hiding (map, lift, filter)
-import           Numeric.Probability.Simulation
 
 
--- 0. IO to Stochastic?
--- 1. Replace the enumerated evaluation with a simulated one
--- 2. Include the sampling facility of Prob library
-
-discountFactor = 0.9
+discountFactor = 1.0
 
 prisonersDilemmaCont :: OpenGame
                           MonadOptic
@@ -136,8 +132,8 @@ sampleDetermineContinuationPayoffs :: Int
                                   -> StateT Vector IO ()
 sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue = do
   replicateM_ sampleSize (determineContinuationPayoffs iterator strat initialValue)
---  v <- ST.get
---  ST.put (average sampleSize v)
+  v <- ST.get
+  ST.put (average sampleSize v)
 
 -- NOTE EVIL EVIL
 sampleDetermineContinuationPayoffsStoch :: Int
@@ -149,8 +145,8 @@ sampleDetermineContinuationPayoffsStoch :: Int
                                               Kleisli Stochastic (ActionPD, ActionPD) ActionPD]
                                   -> (ActionPD,ActionPD)
                                   -> StateT Vector Stochastic ()
-sampleDetermineContinuationPayoffsStoch sampleSize iterator strat initialValue =
-   transformStateTIO $ sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue
+sampleDetermineContinuationPayoffsStoch sampleSize iterator strat initialValue = do
+   transformStateTIO $  sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue
    where
       transformStateTIO ::  StateT Vector IO () ->  StateT Vector Stochastic ()
       transformStateTIO sTT = StateT (\s -> unsafeTransformIO $  ST.runStateT sTT s)
