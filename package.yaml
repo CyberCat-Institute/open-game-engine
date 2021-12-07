@@ -40,6 +40,7 @@ library:
     - Examples.Markov.RepeatedPD
     - Examples.Markov.RepeatedPDNonState
     - Examples.Markov.TwoStageMarkov
+    - Examples.Markov.TestSimpleMonteCarlo
     - Examples.Markov.TestSimpleMonteCarlo.Continuation
 
 dependencies:
@@ -62,6 +63,7 @@ dependencies:
     - random
     - vector
     - monad-bayes
+    - criterion
 
 executables:
   open-games-exe:

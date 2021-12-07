@@ -68,6 +68,13 @@ stageStrategy = Kleisli $
 -- Stage strategy tuple
 strategyTuple = stageStrategy ::- stageStrategy ::- Nil
 
+-- Testing for stoch behavior and slow down
+stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
+stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.9),(Defect, 0.1)]
+-- Stage strategy tuple
+strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
+
+
 
 -- extract continuation
 extractContinuation :: StochasticStatefulOptic s () a () -> s -> StateT Vector Stochastic ()
@@ -100,7 +107,7 @@ determineContinuationPayoffs iterator strat action = do
 
 
 -- fix context used for the evaluation
-contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace ",,1" (determineContinuationPayoffs iterator strat action))
+contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
 
 
 
