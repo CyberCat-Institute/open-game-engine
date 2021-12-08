@@ -43,6 +43,10 @@ import           Engine.Diagnostics
 -- Ignore the Bayesian component for now
 -- Build a sampler on top
 
+
+-- TODO implement the sampler
+-- TODO implement printout
+
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
 type Agent = String
