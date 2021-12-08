@@ -11,7 +11,7 @@
 {-# LANGUAGE GADTs                 #-}
 
 
--- Parts of this file were written by Sjoerd Visscher 
+-- Parts of this file were written by Sjoerd Visscher
 
 module Engine.TLL
   ( List(..)

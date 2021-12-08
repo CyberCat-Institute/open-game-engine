@@ -100,14 +100,13 @@ generateOutputIO hlist = putStrLn $
 
 
 deviationsInContext :: (Show a, Ord a)
-                    =>  Agent -> a -> (a -> Double) -> [a] -> [DiagnosticInfoIO a]
-deviationsInContext name strategy u ys =
-   let
-     ls              = fmap u ys
-     strategicPayoff = u strategy
-     zippedLs        = zip ys ls
-     (optimalPlay, optimalPayoff) = maximumBy (comparing snd) zippedLs
-     in [DiagnosticInfoIO
+                    =>  Agent -> a -> (a -> IO Double) -> [a] -> IO [DiagnosticInfoIO a]
+deviationsInContext name strategy u ys = do
+     ls              <- mapM u ys
+     strategicPayoff <- u strategy
+     let zippedLs    =  zip ys ls
+         (optimalPlay, optimalPayoff) = maximumBy (comparing snd) zippedLs
+     pure [ DiagnosticInfoIO
             {  playerIO = name
             , optimalMoveIO = optimalPlay
             , optimalPayoffIO = optimalPayoff
@@ -117,18 +116,31 @@ deviationsInContext name strategy u ys =
 
 
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String ->  IOOpenGame '[Kleisli CondensedTableV x y] '[] x () y Double
-dependentDecisionIO name = OpenGame {
-  play = \(a ::- Nil) -> let v x = do
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO [DiagnosticInfoIO y]] x () y Double
+dependentDecisionIO name ys = OpenGame {
+  play = \(strat ::- Nil) -> let v x = do
                                    g <- newStdGen
                                    gS <- newIOGenM g
-                                   action <- genFromTable (runKleisli a x) gS
+                                   action <- genFromTable (runKleisli strat x) gS
                                    return ((),action)
-                             u () r = modify (adjustOrAdd (+ r) r name)
+                                 u () r = modify (adjustOrAdd (+ r) r name)
                              in MonadOptic v u,
-  evaluate = \(strat ::- Nil) (MonadContext h k) ->
-       let context = deviationsInContext name strat u ys
-           u y     = k  y
+  evaluate = \(strat ::- Nil) (MonadContext h k) -> do
+       let action = do
+              (_,x) <- h
+              g <- newStdGen
+              gS <- newIOGenM g
+              genFromTable (runKleisli strat x) gS
+           context = do
+             action' <- action
+             deviationsInContext name action' u ys
+           u y     = do
+              (z,_) <- h
+              action' <- action
+              evalStateT (do
+                             r <- k z action'
+                             gets ((+ r) . HM.findWithDefault 0.0 name))
+                          HM.empty
               in (context  ::- Nil) }
 
 
