@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Engine.IOGames
   ( IOOpenGame(..)
@@ -42,14 +43,79 @@ import           Engine.Diagnostics
 -- Ignore the Bayesian component for now
 -- Build a sampler on top
 
----------------------------------------------
--- Reimplements stateful bayesian from before
-
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
 type Agent = String
 
--- NOTE we keep the _evaluate_ part undefined as we do not need it; only play is needed
+
+
+data DiagnosticInfoIO y = DiagnosticInfoIO
+  { playerIO          :: String
+  , optimalMoveIO     :: y
+  , optimalPayoffIO   :: Double
+  , currentMoveIO     :: y
+  , currentPayoffIO   :: Double}
+
+showDiagnosticInfoInteractive :: (Show y, Ord y) => DiagnosticInfoIO y -> String
+showDiagnosticInfoInteractive info =
+     "\n"    ++ "Player: " ++ playerIO info
+     ++ "\n" ++ "Optimal Move: " ++ (show $ optimalMoveIO info)
+     ++ "\n" ++ "Optimal Payoff: " ++ (show $ optimalPayoffIO info)
+     ++ "\n" ++ "Current Move: " ++ (show $ currentMoveIO info)
+     ++ "\n" ++ "Current Payoff: " ++ (show $ currentPayoffIO info)
+
+
+
+-- output string information for a subgame expressions containing information from several players - bayesian
+showDiagnosticInfoLIO :: (Show y, Ord y)  => [DiagnosticInfoIO y] -> String
+showDiagnosticInfoLIO [] = "\n --No more information--"
+showDiagnosticInfoLIO (x:xs)  = showDiagnosticInfoInteractive x ++ "\n --other game-- " ++ showDiagnosticInfoLIO xs
+
+
+data PrintOutput = PrintOutput
+
+instance (Show y, Ord y) => Apply PrintOutput [DiagnosticInfoIO y] String where
+  apply _ x = showDiagnosticInfoLIO x
+
+
+data Concat = Concat
+
+instance Apply Concat String (String -> String) where
+  apply _ x = \y -> x ++ "\n NEWGAME: \n" ++ y
+
+
+---------------------
+-- main functionality
+
+-- all information for all players
+generateOutputIO :: forall xs.
+               ( MapL   PrintOutput xs     (ConstMap String xs)
+               , FoldrL Concat String (ConstMap String xs)
+               ) => List xs -> IO ()
+generateOutputIO hlist = putStrLn $
+  "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+
+
+
+
+
+deviationsInContext :: (Show a, Ord a)
+                    =>  Agent -> a -> (a -> Double) -> [a] -> [DiagnosticInfoIO a]
+deviationsInContext name strategy u ys =
+   let
+     ls              = fmap u ys
+     strategicPayoff = u strategy
+     zippedLs        = zip ys ls
+     (optimalPlay, optimalPayoff) = maximumBy (comparing snd) zippedLs
+     in [DiagnosticInfoIO
+            {  playerIO = name
+            , optimalMoveIO = optimalPlay
+            , optimalPayoffIO = optimalPayoff
+            , currentMoveIO   = strategy
+            , currentPayoffIO = strategicPayoff
+            }]
+
+
 -- NOTE This ignores the state
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String ->  IOOpenGame '[Kleisli CondensedTableV x y] '[] x () y Double
 dependentDecisionIO name = OpenGame {
@@ -60,7 +126,11 @@ dependentDecisionIO name = OpenGame {
                                    return ((),action)
                              u () r = modify (adjustOrAdd (+ r) r name)
                              in MonadOptic v u,
-  evaluate = undefined }
+  evaluate = \(strat ::- Nil) (MonadContext h k) ->
+       let context = deviationsInContext name strat u ys
+           u y     = k  y
+              in (context  ::- Nil) }
+
 
 
 -- Support functionality for constructing open games

@@ -45,17 +45,19 @@ prisonersDilemma = [opengame|
    feedback  :      ;
 
    :----------------------------:
-   inputs    :  (dec1Old,dec2Old)    ;
-   feedback  :      ;
-   operation : dependentDecision "player1" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer1 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
 
    inputs    :   (dec1Old,dec2Old)   ;
    feedback  :      ;
    operation : dependentDecision "player2" (const [Cooperate,Defect]);
    outputs   : decisionPlayer2 ;
    returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
+
+   inputs    :  (dec1Old,dec2Old)    ;
+   feedback  :      ;
+   operation : dependentDecision "player1" (const [Cooperate,Defect]);
+   outputs   : decisionPlayer1 ;
+   returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
+
 
    operation : discount "player1" (\x -> x * discountFactor) ;
 
