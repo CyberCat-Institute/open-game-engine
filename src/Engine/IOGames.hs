@@ -41,10 +41,6 @@ import           Engine.OpticClass
 import           Engine.TLL
 import           Engine.Diagnostics
 
--- Build game where one element is drawn
--- Ignore the Bayesian component for now
--- Build a sampler on top
-
 
 -- TODO implement the sampler
 -- TODO implement printout
