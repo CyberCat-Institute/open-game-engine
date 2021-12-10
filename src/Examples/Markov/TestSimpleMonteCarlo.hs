@@ -46,17 +46,17 @@ prisonersDilemma = [opengame|
 
    :----------------------------:
 
-   inputs    :   (dec1Old,dec2Old)   ;
-   feedback  :      ;
-   operation : dependentDecision "player2" (const [Cooperate,Defect]);
-   outputs   : decisionPlayer2 ;
-   returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
-
    inputs    :  (dec1Old,dec2Old)    ;
    feedback  :      ;
    operation : dependentDecision "player1" (const [Cooperate,Defect]);
    outputs   : decisionPlayer1 ;
    returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
+
+   inputs    :   (dec1Old,dec2Old)   ;
+   feedback  :      ;
+   operation : dependentDecision "player2" (const [Cooperate,Defect]);
+   outputs   : decisionPlayer2 ;
+   returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
 
 
    operation : discount "player1" (\x -> x * discountFactor) ;
@@ -89,7 +89,7 @@ strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
 
 
 -- fix context used for the evaluation
-contextCont sampleSize iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> sampleDetermineContinuationPayoffsStoch sampleSize iterator strat action)
+contextCont sampleSize iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace "cont" (sampleDetermineContinuationPayoffsStoch sampleSize iterator strat action))
 
 
 

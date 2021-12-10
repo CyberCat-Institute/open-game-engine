@@ -34,7 +34,7 @@ prisonersDilemmaCont :: OpenGame
                           MonadContext
                           ('[Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD,
                              Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD])
-                          ('[])
+                          ('[IO [DiagnosticInfoIO ActionPD], IO [DiagnosticInfoIO ActionPD]])
                           (ActionPD, ActionPD)
                           ()
                           (ActionPD, ActionPD)
@@ -48,13 +48,13 @@ prisonersDilemmaCont = [opengame|
    :----------------------------:
    inputs    :  (dec1Old,dec2Old)    ;
    feedback  :      ;
-   operation : dependentDecisionIO "player1";
+   operation : dependentDecisionIO "player1" [Cooperate,Defect];
    outputs   : decisionPlayer1 ;
    returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
 
    inputs    :   (dec1Old,dec2Old)   ;
    feedback  :      ;
-   operation : dependentDecisionIO "player2";
+   operation : dependentDecisionIO "player2" [Cooperate,Defect];
    outputs   : decisionPlayer2 ;
    returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
 

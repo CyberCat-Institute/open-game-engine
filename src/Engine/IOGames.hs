@@ -11,12 +11,14 @@
 module Engine.IOGames
   ( IOOpenGame(..)
   , Agent(..)
+  , DiagnosticInfoIO(..)
   , dependentDecisionIO
   , fromLens
   , fromFunctions
   , discount
   ) where
 
+import           Debug.Trace
 
 import           Control.Arrow                      hiding ((+:+))
 import           Control.Monad.Bayes.Weighted
