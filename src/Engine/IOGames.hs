@@ -7,6 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Engine.IOGames
   ( IOOpenGame(..)
@@ -118,8 +119,8 @@ deviationsInContext name strategy u ys = do
 
 
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO [DiagnosticInfoIO y]] x () y Double
-dependentDecisionIO name ys = OpenGame {
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (Double,[Double])] x () y Double
+dependentDecisionIO name sampleSize ys = OpenGame {
   play = \(strat ::- Nil) -> let v x = do
                                    g <- newStdGen
                                    gS <- newIOGenM g
@@ -133,17 +134,28 @@ dependentDecisionIO name ys = OpenGame {
               g <- newStdGen
               gS <- newIOGenM g
               genFromTable (runKleisli strat x) gS
-           context = do
-             action' <- action
-             deviationsInContext name action' u ys
            u y     = do
               (z,_) <- h
-              action' <- action
               evalStateT (do
-                             r <- k z action'
+                             r <- k z y --action'
                              gets ((+ r) . HM.findWithDefault 0.0 name))
                           HM.empty
-              in (context  ::- Nil) }
+           -- Sample the average utility from current strategy
+           averageUtilStrategy = do
+             actionLS' <- replicateM sampleSize action
+             utilLS  <- mapM u actionLS'
+             return (sum utilLS / fromIntegral sampleSize)
+           -- Sample the average utility from a single action
+           sampleY sampleSize y = do
+                  ls1 <- replicateM sampleSize (u y)
+                  pure  (sum ls1 / fromIntegral sampleSize)
+           -- Sample the average utility from all actions
+           samplePayoffs sampleSize = mapM (sampleY sampleSize) ys
+           output = do
+             samplePayoffs' <- samplePayoffs sampleSize
+             averageUtilStrategy' <- averageUtilStrategy
+             return $ (averageUtilStrategy', samplePayoffs')
+              in (output ::- Nil) }
 
 
 

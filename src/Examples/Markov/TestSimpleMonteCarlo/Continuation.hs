@@ -27,6 +27,11 @@ import           System.Random.Stateful
 import           Numeric.Probability.Distribution hiding (map, lift, filter)
 
 
+---------------------------------------------
+-- Contains a first, very, very shaky version
+-- that does Monte Carlo through the evaluate
+---------------------------------------------
+
 discountFactor = 1.0
 
 prisonersDilemmaCont :: OpenGame
@@ -34,7 +39,7 @@ prisonersDilemmaCont :: OpenGame
                           MonadContext
                           ('[Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD,
                              Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD])
-                          ('[IO [DiagnosticInfoIO ActionPD], IO [DiagnosticInfoIO ActionPD]])
+                          ('[IO (Double,[Double]), IO (Double, [Double])])
                           (ActionPD, ActionPD)
                           ()
                           (ActionPD, ActionPD)
@@ -48,13 +53,13 @@ prisonersDilemmaCont = [opengame|
    :----------------------------:
    inputs    :  (dec1Old,dec2Old)    ;
    feedback  :      ;
-   operation : dependentDecisionIO "player1" [Cooperate,Defect];
+   operation : dependentDecisionIO "player1" 100 [Cooperate,Defect];
    outputs   : decisionPlayer1 ;
    returns   : prisonersDilemmaMatrix decisionPlayer1 decisionPlayer2 ;
 
    inputs    :   (dec1Old,dec2Old)   ;
    feedback  :      ;
-   operation : dependentDecisionIO "player2" [Cooperate,Defect];
+   operation : dependentDecisionIO "player2" 100 [Cooperate,Defect];
    outputs   : decisionPlayer2 ;
    returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
 
@@ -105,7 +110,9 @@ extractNextState (MonadOptic v _) x = do
 
 executeStrat strat =  play prisonersDilemmaCont strat
 
-
+--------------------------------
+-- This is for the mixed setting
+-- which includes the Bayesian setup
 -- determine continuation for iterator, with the same repeated strategy
 determineContinuationPayoffs :: Integer
                              -> List
@@ -154,3 +161,75 @@ sampleDetermineContinuationPayoffsStoch sampleSize iterator strat initialValue =
       unsafeTransformIO a =
         let a' = unsafePerformIO a
             in certainly a'
+
+-----------------------------
+-- For IO only
+-- determine continuation for iterator, with the same repeated strategy
+determineContinuationPayoffsIO :: Integer
+                               -> List
+                                     [Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD,
+                                     Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD]
+                               -> (ActionPD,ActionPD)
+                               -> StateT Vector IO ()
+determineContinuationPayoffsIO 1        strat action = pure ()
+determineContinuationPayoffsIO iterator strat action = do
+   extractContinuation executeStrat action
+   nextInput <- ST.lift $ extractNextState executeStrat action
+   determineContinuationPayoffsIO (pred iterator) strat nextInput
+ where executeStrat =  play prisonersDilemmaCont strat
+
+
+
+-- fix context used for the evaluation
+contextCont  iterator strat initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffsIO iterator strat action)
+
+
+
+repeatedPDEq  iterator strat initialAction = evaluate prisonersDilemmaCont strat context
+  where context  = contextCont iterator strat initialAction
+
+
+printOutput iterator strat initialAction = do
+  let (result1 ::- result2 ::- Nil) = repeatedPDEq iterator strat initialAction
+  (stratUtil1,ys1) <- result1
+  (stratUtil2,ys2) <- result2
+  putStrLn "Own util 1"
+  print stratUtil1
+  putStrLn "Other actions"
+  print ys1
+  putStrLn "Own util 2"
+  print stratUtil2
+  putStrLn "Other actions"
+  print ys2
+
+----------------------------------------------------
+-- This is taken from the other MonteCarloTest setup
+-- Needs to be transformed in order to be tested
+
+-- Add strategy for stage game
+stageStrategy :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
+stageStrategy = Kleisli $
+   (\case
+       (Cooperate,Cooperate) -> playDeterministically Cooperate
+       (_,_)         -> playDeterministically Defect)
+-- Stage strategy tuple
+strategyTuple = stageStrategy ::- stageStrategy ::- Nil
+
+-- Testing for stoch behavior and slow down
+stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
+stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.5),(Defect, 0.5)]
+-- Stage strategy tuple
+strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
+
+
+-- Example usage:
+{--
+printOutput 20 (transformStratTuple strategyTupleTest) (Cooperate,Cooperate)
+Own util 1
+45.296
+Other actions
+[43.957,45.309]
+Own util 2
+44.944
+Other actions
+[44.415,45.746]-}

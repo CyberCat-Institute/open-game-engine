@@ -96,4 +96,4 @@ contextCont sampleSize iterator strat initialAction = StochasticStatefulContext 
 repeatedPDEq sampleSize iterator strat initialAction = evaluate prisonersDilemma strat context
   where context  = contextCont sampleSize iterator strat initialAction
 
-eqOutput sampleSize iterator strat initialAction = generateOutput $ repeatedPDEq sampleSize iterator strat initialAction
+eqOutput sampleSize iterator strat initialAction = generateIsEq $ repeatedPDEq sampleSize iterator strat initialAction
