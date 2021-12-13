@@ -1,0 +1,39 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           open-games-engine
+version:        0.0.1
+synopsis:       Rewritten implementation of open games
+license:        AGPL-3
+license-file:   LICENSE
+build-type:     Simple
+
+library
+  exposed-modules:
+      OpenGames.Engine.KleisliOptics
+      OpenGames.Engine.OpenGames
+      OpenGames.Engine.OpticClass
+      OpenGames.Engine.TLL
+      OpenGames.Preprocessor.BlockSyntax
+      OpenGames.Preprocessor.Codegen
+      OpenGames.Preprocessor.CompileBlock
+      OpenGames.Preprocessor.CompileSyntax
+      OpenGames.Preprocessor.Parser
+      OpenGames.Preprocessor.RuntimeAST
+  other-modules:
+      Paths_open_games_engine
+  hs-source-dirs:
+      src
+  build-depends:
+      base
+    , comonad
+    , constraints >=0.13.2
+    , hashmap
+    , parsec
+    , probability
+    , template-haskell
+    , transformers
+  default-language: Haskell2010

@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: nightly-2021-08-15
+resolver: ghc-9.2.1
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,7 +39,22 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps:
+- comonad-5.0.8@sha256:1f1aabd73ec7f80f20cf078a748a60cd48d8e57277802fdf6a9ab3601a9b8f7e,3631
+- hashmap-1.3.3@sha256:831096cd644d1b87f16c1933d19cdf938fe8f3911af7ed68b3e8c0bde4baeba4,2550
+- probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
+- distributive-0.6.2.1@sha256:0f99f5541cca04acf89b64432b03422b6408e830a8dff30e6c4334ef1a48680c,2996
+- hashable-1.4.0.1@sha256:0251ad5228be07909a385152a3ff634fac1f892611f89904aea5c5e7af411e5d,4790
+- indexed-traversable-0.1.2@sha256:d66228887242f93ccb4fc7101a1e25a6560c8e4708f6e9ee1d3dd21901756c65,2519
+- random-1.2.1@sha256:8bee24dc0c985a90ee78d94c61f8aed21c49633686f0f1c14c5078d818ee43a2,6598
+- tagged-0.8.6.1@sha256:29c67d98a4404607f024750ab9c7210dadcbbef4e1944c48c52902f2071b2662,2874
+- transformers-compat-0.7.1@sha256:03534fcfd4a6026d415b0e19d2a48d6ccb639e809db0cd41f313bc771a887a9b,5602
+- utility-ht-0.0.16@sha256:8cae2a7f031783ea49a7057f688236d456a3da98a290090a6954b9dd55679ccd,3115
+- base-orphans-0.8.6@sha256:eb6758d0160d607e0c45dbd6b196f515b9a589fd4f6d2f926929dd5d56282d37,3175
+- splitmix-0.1.0.4@sha256:714a55fd28d3e2533bd5b49e74f604ef8e5d7b06f249c8816f6c54aed431dcf1,6483
+- constraints-0.13.2@sha256:8ff7b39b8495fb43a2b11164c20d362dc4600feaa9658a5f942232b2a66686c0,2504
+- type-equality-1@sha256:bb3a34a93ad02866763b325e889ea9f5aa31f7428e32dcaa1cf14015bd21b9cb,1597
+
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
@@ -48,7 +63,7 @@ packages:
 # extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
-# system-ghc: true
+system-ghc: true
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
@@ -64,3 +79,8 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+# Force the use of rosetta on M1 mac
+arch: x86_64
+# arch: aarch64
+
+allow-newer: true

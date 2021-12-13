@@ -1,0 +1,25 @@
+name: open-games-engine
+version: '0.0.1'
+synopsis: Rewritten implementation of open games
+library:
+  source-dirs: src
+  exposed-modules:
+    - OpenGames.Engine.KleisliOptics
+    - OpenGames.Engine.OpenGames
+    - OpenGames.Engine.OpticClass
+    - OpenGames.Engine.TLL
+    - OpenGames.Preprocessor.BlockSyntax
+    - OpenGames.Preprocessor.Codegen
+    - OpenGames.Preprocessor.CompileBlock
+    - OpenGames.Preprocessor.CompileSyntax
+    - OpenGames.Preprocessor.Parser
+    - OpenGames.Preprocessor.RuntimeAST
+  dependencies:
+    - base
+    - constraints >= 0.13.2
+    - transformers
+    - probability
+    - template-haskell
+    - parsec
+    - comonad
+    - hashmap
