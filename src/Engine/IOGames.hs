@@ -120,7 +120,10 @@ deviationsInContext name strategy u ys = do
 
 -- NOTE This ignores the state
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (Double,[Double])] x () y Double
+          -- s t  a b
+-- ^ (average utility of current strategy, [average utility of all possible alternative actions])
 dependentDecisionIO name sampleSize ys = OpenGame {
+  -- ^ ys is the list of possible actions
   play = \(strat ::- Nil) -> let v x = do
                                    g <- newStdGen
                                    gS <- newIOGenM g
@@ -137,7 +140,8 @@ dependentDecisionIO name sampleSize ys = OpenGame {
            u y     = do
               (z,_) <- h
               evalStateT (do
-                             r <- k z y --action'
+                             r <- k z y
+                           -- ^ utility <- payoff function given other players strategies and my own action y
                              gets ((+ r) . HM.findWithDefault 0.0 name))
                           HM.empty
            -- Sample the average utility from current strategy
