@@ -6,23 +6,19 @@ This repo is a refactored and simplified implementation on the basis of [this](h
 
 If you have questions, drop me (Philipp) a [mail](mailto:philipp.zahn@unisg.ch)!
 
-# Run the code
+# Installation
 
 You can use `stack build` to compile the project, `stack test` will run the tests
 `stack ghci` and `stack ghci --test` will run ghci using the main target or the test
 targets respectively.
 
 
-# Usage
+# Modelling in the software framework
 
-There is a [tutorial](https://github.com/philipp-zahn/open-games-hs/blob/master/Tutorial/TUTORIAL.md) how to use the software for modelling.
+This [tutorial](https://github.com/philipp-zahn/open-games-hs/blob/master/Tutorial/TUTORIAL.md) shows how to use the software for modelling.
 
 
-# Implementation details
-
-tbd
-
-# Using the graph visualiser
+# Graph dependency visualiser
 
 If you run `stack run` you will have a `dotfile` appear, this is a graphviz file that can be interpreted with graphviz with the following
 command:
