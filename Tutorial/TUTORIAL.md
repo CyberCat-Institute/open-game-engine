@@ -368,8 +368,6 @@ This represents a LineBlock where given some initial `draw` from a distribution,
 
 In the following, we consider a series of examples. We begin with decision problems as these are the building block for the games that come later. We also illustrate other essential modelling aspects that are needed again and again. It is best, if you go through the examples in the order as they are listed here.
 
-
-
 [Single Decision](/src/Examples/Decision.hs) illustrates the main elements of modelling a single player making decisions. It also introduces how to model in a modular fashion and how to define strategies.
 
 [Simultaneous move games](/src/Examples/SimultaneousMove.hs) illustrates how simultaneous decisions are modelled.
@@ -378,10 +376,6 @@ In the following, we consider a series of examples. We begin with decision probl
 
 [Bayesian Updating](/src/Examples/Bayesian.hs) illustrates the Bayesian updating under the hood of the _dependentDecision_ operation. It also shows how to model stochastic processes.
 
-
-### Branching games operation
-
-### Piping together different modules: Voting game
 
 ## Analyzing Games
 

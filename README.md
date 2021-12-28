@@ -42,7 +42,7 @@ print the result of executing an equilibrium check on a very simple game. The re
 to use the open-games framework in order to design and analyse games interactively using `ghci`. To invoke it, use
 `stack ghci` and that will start a new interactive session.
 
-# Designing games interactively
+# Designing and analyzing games interactively
 
 During an interactive session you can:
 
@@ -52,7 +52,7 @@ During an interactive session you can:
 - query the type of an expression with `:t`
 
 Most of the programs you will execute will print the result of analyzing a game. In the demo project, the main function
-perform an analysis of two simple games, the first one is in equilibrium and the second one exhibits deviations. To
+perform an analysis of two simple games, the first one is in equilibrium and the second one exhibits profitable deviations. To
 run the program from the interactive sessions type `main`.
 
 # Graph dependency visualiser
