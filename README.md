@@ -6,6 +6,8 @@ This repo is a refactored and simplified implementation on the basis of [this](h
 
 If you have questions, drop me (Philipp) a [mail](mailto:philipp.zahn@unisg.ch)!
 
+This repo is work in progress. Expect changes at any time!
+
 # Installation
 
 You can use `stack build` to compile the project, `stack test` will run the tests
@@ -20,13 +22,10 @@ This [tutorial](https://github.com/philipp-zahn/open-games-hs/blob/master/Tutori
 
 # Graph dependency visualiser
 
-If you run `stack run` you will have a `dotfile` appear, this is a graphviz file that can be interpreted with graphviz with the following
-command:
+There is a rudimentary dependency visualizer for debugging (and inspecting larger games).
 
-```
-dot -Tsvg dotfile > output.svg
-```
+If you run `stack run graphics`, a `dotfile` is created. This is a graphviz file that can be interpreted with graphviz with the following command:
 
-This will create an SVG that you can open with any SVG viewer (like a web browser). The graph is generated from the `parseTree` of a game,
-you will find this in `graphics/Main.hs` where the main function simply prints the dot file from the game passed in argument. If you want
-to use a different game, you can pass it a new parsetree using the `parseTree` quasiquote.
+    dot -Tsvg dotfile > output.svg
+
+This will create an SVG that you can open with any SVG viewer (like a web browser). The graph is generated from the `parseTree` of a game. Files of this form need to be located in `graphics/Main.hs` where the main function simply prints the dot file from the game passed in argument. If you want to use a different game, you can pass it a new parsetree using the `parseTree` quasiquote.
