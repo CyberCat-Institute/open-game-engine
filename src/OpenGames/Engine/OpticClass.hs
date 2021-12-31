@@ -1,10 +1,12 @@
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module OpenGames.Engine.OpticClass where
 
 -- Experimental type classes for optics and contexts
 
-import           OpenGames.Engine.OpenGamesClass
+import           OpenGames.Engine.OpenGamesClass hiding (fromFunctions)
+import           Data.Tuple                             (swap)
 
 class Optic o where
   lens :: Eq s => (s -> a) -> (s -> b -> t) -> o s t a b
@@ -15,19 +17,16 @@ class Optic o where
 identity :: (Eq s, Optic o) => o s t s t
 identity = lens id (flip const)
 
-class Precontext c where
+class (Optic o) => Context c o | c -> o where
   void :: c () () () ()
-
--- Precontext is a separate class to Context because otherwise the typechecker throws a wobbly
-
-class (Optic o, Precontext c) => Context c o where
   cmap :: o s1 t1 s2 t2 -> o a1 b1 a2 b2 -> c s1 t1 a2 b2 -> c s2 t2 a1 b1
   (//) :: (Show s1) => o s1 t1 a1 b1 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s2 t2 a2 b2
   (\\) :: (Show s2) => o s2 t2 a2 b2 -> c (s1, s2) (t1, t2) (a1, a2) (b1, b2) -> c s1 t1 a1 b1
+  l \\ c = l // cmap swapper swapper c
+    where fromFunctions :: (Optic o) => (s -> a) -> (b -> t) -> o s t a b
+          fromFunctions f g = lens f (const g)
 
--- (\\) is derivable from (//) using
--- l \\ c = l // (cmap (lift swap swap) (lift swap swap) c)
--- (and vice versa) but it doesn't typecheck and I don't understand why
+          swapper = fromFunctions swap swap
 
 -- ContextAdd is a separate class to Precontext and Context because its implementation is more ad-hoc,
 -- eg. it can't be done generically in a monad
@@ -40,7 +39,7 @@ data OpticOpenGame o c m a x s y r = OpticOpenGame {
   play        :: a -> o x s y r,
   equilibrium :: c x s y r -> a -> m}
 
-instance (Optic o, Precontext c, Context c o, ContextAdd c, Monoid m) => OG (OpticOpenGame o c m) where
+instance (Optic o, Context c o, ContextAdd c, Monoid m) => OG (OpticOpenGame o c m) where
   fromLens v u = OpticOpenGame {
     play = \() -> lens v u,
     equilibrium = \_ () -> mempty}

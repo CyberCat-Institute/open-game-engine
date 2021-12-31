@@ -28,19 +28,14 @@ instance (Monad m) => Optic (KleisliOptic m) where
 data KleisliContext m s t a b where
   KleisliContext :: m (z, s) -> (z -> a -> m b) -> KleisliContext m s t a b
 
-instance (Monad m) => Precontext (KleisliContext m) where
-  void = KleisliContext (return ((), ())) (\() () -> return ())
-
 instance (Monad m) => Context (KleisliContext m) (KleisliOptic m) where
+  void = KleisliContext (return ((), ())) (\() () -> return ())
   cmap (KleisliOptic v1 u1) (KleisliOptic v2 u2) (KleisliContext h k) = KleisliContext h' k'
     where h' = do {(z, s1) <- h; (_, s2) <- v1 s1; return (z, s2)}
           k' z1 a1 = do {(z2, a2) <- v2 a1; b2 <- k z1 a2; u2 z2 b2}
   (//) (KleisliOptic v u) (KleisliContext h k) = KleisliContext h' k'
     where h' = do {(z, (s1, s2)) <- h; return ((z, s1), s2)}
           k' (z, s1) a2 = do {(_, a1) <- v s1; (_, b2) <- k z (a1, a2); return b2}
-  (\\) (KleisliOptic v u) (KleisliContext h k) = KleisliContext h' k'
-    where h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
-          k' (z, s2) a1 = do {(_, a2) <- v s2; (b1, _) <- k z (a1, a2); return b1}
 
 -- In the following, [] (non-empty lists) is being used as the pointed powerset monad,
 -- with head as the basepoint
