@@ -165,6 +165,14 @@ proposerSelfishStrategyUG = pureAction 1
 responderStrategyUG :: Kleisli Stochastic Proposal ResponderAction
 responderStrategyUG = pureAction Accept
 
+-- illustration of another responder strategy
+responderStrategy' :: Kleisli Stochastic Proposal ResponderAction
+responderStrategy' = Kleisli acceptThreshold
+   where
+    acceptThreshold :: Proposal -> Stochastic ResponderAction
+    acceptThreshold proposal = if proposal > 5 then playDeterministically Accept else uniformDist [Accept,Reject]
+
+
 -- strategy Tuple
 stratTupleUG = proposerSelfishStrategyUG ::- responderStrategyUG ::- Nil
 

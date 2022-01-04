@@ -380,10 +380,8 @@ In the following, we consider a series of examples. We begin with decision probl
 ## Analyzing Games
 
 ### Overview
-TODO: Say something about the construction of the strategies
 
-
-After all that work, what can you actually do with a game that is represented You can analyze it in different ways.
+After all that work, what can you actually do with a game that is represented?
 
 0. You can check whether a given strategy tuple (that you need to come-up with!) is an equilibrium. You will receive a message like this, if it is:
 
@@ -407,27 +405,17 @@ and a message like this, if it is not:
         Unobservable State: "((),())
 
 As you can see, the message contains information about the particular aspects of a specific strategy. It outputs such information for the whole strategy tuple.
+
 If your game depends on outside parameters, you can check for a whole class of parameters
 
-xxx
+1. You can simulate the outcomes for a game given a strategy. And of course you can do all sorts of illustrations with that like simulating the outcome for a specific game.
 
-1. You can simulate the outcomes for a game given a strategy. And of course you can do all sorts of illustrations with that
-
-xxx Simulate outcome for a specific game
-
-xxx Tabulate outcomes for a game.
-
-2. You can also try to solve a game, which means, given a game, you are trying to find an equilibrium. Now, there are limitations in what you can do here. Hard limitations in the sense that computing equilibria in general is a computationally very hard problem. Weak limitations in the sense that we have spent no (nada!) efforts to optimize the code for performance. This will change in the future but for now keep that in mind.
-
-Here is an example:
-
+2. You can also try to solve a game, which means, given a game, you are trying to find an equilibrium. Now, there are limitations in what you can do here. Hard limitations in the sense that computing equilibria in general is a  very hard problem. Weak limitations in the sense that we have spent no (nada!) efforts to optimize the code for performance. This will change in the future but for now keep that in mind.
 
 
 ### Supplying strategies
-TODO Explain better Kleisli types used
 
-
-If you want to check for equilibria, you need to supply strategies. The strategies you need to supply are akin to behavioral strategies in classical game theory. Which means that you need to supply a function for each move that can be made. Which means you need to know how to define functions in our system.
+If you want to check for equilibria, you actually need to supply strategies. The strategies you need to supply are akin to behavioral strategies in classical game theory. Which means that, if want to specify a _pure strategy_ you need to supply a function for each observation that can be made. Which means you need to know how to define functions in our system.
 
 Note, that even if there are no previous moves, no previous information to observe on which a strategy would be conditioned, you still supply a function -- just a constant function. This may look strange at the beginning but in essence it helps to make the system over all more uniform. And do not worry! You will not notice it much because we provide syntactic sugar which allow you to forget about this if you want to.
 
@@ -435,16 +423,66 @@ NOTE: If you are familiar with game theory, then most what we describe here prob
 
 As many teachers of game theory can attest to, for beginning students it is often not so clear that a strategy often really is a function.
 
+So far so good. There are one and half more complications. There are situations where you do not want to supply a pure strategy, i.e. a function which determines a single move with certainty. Instead, you may want the concrete move to be chosen from a probability distribution.
+
+For instance, in the _Matching Pennies_ game, there is only an equilibrium in non pure strategies ("mixed" strategies.) See [here](/src/Examples/SimultaneousMove.hs) for the example. We therefore need to consider something more powerful than pure functions.
+
+The other half of the problem is something specific to Haskell, namely the construction of strategies based on multiple possible inputs which may or may not be conditioned on. We note it here for completeness. In practice, you can ignore that.
+
+Next, we explain how to construct a single strategy.
 
 #### Construction of a single strategy
 
-The strategies you need to supply are expected to be of a certain "shape" or more precisely, type:
+For each player making a move at some point in the game, you need to supply a strategy. The strategies are expected to be of a certain "shape" or more precisely, type:
 
      Kleisli Stochastic a b
 
-This type is from a relatively advanced part of Haskell. You do not need to worry about it to much. The reason for its use in our framework is that it makes several problems easier.
+This type is from a relatively advanced part of Haskell, called `Arrows` (see [here](/https://www.haskell.org/arrows/) for more information). You do not need to worry about it to much.
 
-At the same time it is probably not easiest to grasp what is going on.
+The way to read this type is as the following computation:
+
+     a -> Stochastic b
+
+That is, this type takes an input of type `a` and creates a probability distribution whose support has type `b`.
+
+Let us consider a classical example, the Ultimatum Game (see [here](/src/Examples/SequentialMoves.hs)). There are two players, proposer and responder. There is a pie of resources, and the proposer proposes to the responder a way to split the pie. The responder can either accept that proposal -- in that case the pie is split up according to the proposal -- or reject it. If the responder rejects, both, proposer and responder receive nothing.
+
+Let us consider the strategy for the responder (who moves after the proposer) first. Its type looks like this:
+
+    Kleisli Stochastic Proposal ResponderAction
+
+where `Proposal` is just a `Double` and `ResponderAction` has the following type:
+
+    data ResponderAction = Accept | Reject
+     deriving (Eq,Ord,Show)
+
+What `Kleisli Stochastic Proposal ResponderAction` tells us is that the responder's strategy observes the proposal, and outputs a distribution on whether to accept or to reject the proposal.
+
+Concretely, here is a strategy which always accepts any proposal:
+
+    responderStrategy :: Kleisli Stochastic Proposal ResponderAction
+    responderStrategy = pureAction Accept
+
+First, note that this strategy does not condition on the observed proposal. Secondly, this strategy only plays `Accept`. It does not randomize. As we will often consider such strategies, we have a special construction for it -- the `pureAction`.
+
+It is syntactic sugar for the following construction:
+
+    pureAction x = Kleisli $ const $ certainly x
+
+This says, ignore any observation, and play action `x` with certainty.
+
+
+Alright, let us consider a slightly more involved strategy:
+
+    responderStrategy' :: Kleisli Stochastic Proposal ResponderAction
+    responderStrategy' = Kleisli acceptThreshold
+
+where `acceptThreshold` is an (effectful) function:
+
+    acceptThreshold :: Proposal -> Stochastic ResponderAction
+    acceptThreshold proposal = if proposal > 5 then playDeterministically Accept else uniformDist [Accept,Reject]
+
+This strategy accepts with certainty if the proposal is larger than 5 and else plays either Accept or Reject with equal probability. This strategy may not make much sense in that game but it should illustrate the purpose. In case you are not familiar with Haskell, also note, that the strategy is not expressed in a typical "Haskellish" way and certainly less terse than it could be.
 
 
 #### Construction of the complete strategy tuple

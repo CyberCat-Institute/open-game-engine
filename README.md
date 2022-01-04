@@ -9,7 +9,7 @@ If you have questions, drop me (Philipp) a [mail](mailto:philipp.zahn@unisg.ch)!
 
 This repo is work in progress. Expect changes at any time!
 
-# What are open games
+# What are open games?
 
 _Open games_ are a mathematical structure allowing you to describe game-theoretical games. _Open-games-hs_
 is a framework to write those games in a programmatic way and analyze those games. The framework is
