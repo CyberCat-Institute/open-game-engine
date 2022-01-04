@@ -23,7 +23,7 @@ data ActionPD = Cooperate | Defect
   deriving (Eq, Ord, Show)
 
 -- | Payoff matrix for player i given i's action and j's action
-prisonersDilemmaMatrix :: ActionPD -> ActionPD -> Double
+prisonersDilemmaMatrix :: ActionPD -> ActionPD -> Payoff
 prisonersDilemmaMatrix Cooperate Cooperate   = 3
 prisonersDilemmaMatrix Cooperate Defect  = 0
 prisonersDilemmaMatrix Defect Cooperate  = 5
@@ -34,7 +34,7 @@ prisonersDilemmaMatrix Defect Defect = 1
 data Location = EmpireState | GrandCentral deriving (Eq, Ord, Show)
 
 -- | Payoff matrix for player i and j
-meetingInNYMatrix :: Location -> Location -> Double
+meetingInNYMatrix :: Location -> Location -> Payoff
 meetingInNYMatrix x y = if x == y then 1 else 0
 
 -- 1.2. Matching pennies
@@ -44,7 +44,7 @@ data Coin = Heads | Tails
 -- | Payoff matrix for player 1 and player 2
 -- NOTE: We use two functions here as payoffs are asymmetric
 -- This results in differences how we use payoffs in the game definition below
-matchingPenniesMatrix1, matchingPenniesMatrix2 :: Coin -> Coin -> Double
+matchingPenniesMatrix1, matchingPenniesMatrix2 :: Coin -> Coin -> Payoff
 matchingPenniesMatrix1 x y = if x == y then 1 else 0
 matchingPenniesMatrix2 x y = if x == y then 0 else 1
 
@@ -56,7 +56,7 @@ matchingPenniesMatrix2 x y = if x == y then 0 else 1
 -- | Prisoner's dilemma in verbose form
 -- NOTE there are no ingoing or outgoing arrows
 -- This is a feature that any representation of a classical game shares
--- NOTE the switch of the payoff 
+-- NOTE the switch of the payoff
 prisonersDilemmaVerbose = [opengame|
 
    inputs    :      ;
@@ -167,7 +167,7 @@ strategyTupleEmpireState  = empireStateStrategy ::- empireStateStrategy ::- Nil
 strategyTupleGrandCentral = grandCentralStrategy ::- grandCentralStrategy ::- Nil
 -- ^ Both players meet at EmpireState with certainty
 strategyTupleGrandAndEmpire = grandCentralStrategy ::- empireStateStrategy ::- Nil
--- ^ Player 1 meets at grand central and player 2 meets at empire state 
+-- ^ Player 1 meets at grand central and player 2 meets at empire state
 
 -- isEquilibriumMeetingInNY strategyTupleGrandAndEmpire - NOT eq
 -- isEquilibriumMeetingInNY strategyTupleEmpireState - eq
@@ -192,7 +192,7 @@ uniformActionDist = uniformDist [Heads,Tails]
 -- ^ Define the uniform distribution on action space
 
 mixedStrategy = Kleisli $ const uniformActionDist
--- ^ Define proper mixed strategy 
+-- ^ Define proper mixed strategy
 
 -- | Combine single player's strategies into a tuple
 strategyTupleHeads  = headsStrategy ::- headsStrategy ::- Nil
@@ -200,7 +200,7 @@ strategyTupleHeads  = headsStrategy ::- headsStrategy ::- Nil
 strategyTupleTails = tailsStrategy ::- tailsStrategy ::- Nil
 -- ^ Both players meet at EmpireState with certainty
 strategyTupleMixed = mixedStrategy ::- mixedStrategy ::- Nil
--- ^ Both players choose both action with equal probability 
+-- ^ Both players choose both action with equal probability
 
 -- isEquilibriumMatchingPennies strategyTupleHeads - NOT an eq
 -- isEquilibriumMatchingPennies strategyTupleTails - NOT an eq

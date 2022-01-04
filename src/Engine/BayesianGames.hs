@@ -10,6 +10,7 @@
 module Engine.BayesianGames
   ( StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
+  , Payoff(..)
   , dependentDecision
   , dependentEpsilonDecision
   , fromLens
@@ -51,6 +52,8 @@ type StochasticStatefulBayesianOpenGame a b x s y r = OpenGame StochasticStatefu
 
 type Agent = String
 
+type Payoff = Double
+
 support :: Stochastic x -> [x]
 support = map fst . decons
 
@@ -59,7 +62,7 @@ bayes a y = mapMaybe (\(x, y') -> if y' == y then Just x else Nothing) a
 
 
 deviationsInContext :: (Show x, Show y, Ord y, Show theta)
-                    => Double -> Agent -> x -> theta -> Stochastic y -> (y -> Double) -> [y] -> [DiagnosticInfoBayesian x y]
+                    => Double -> Agent -> x -> theta -> Stochastic y -> (y -> Payoff) -> [y] -> [DiagnosticInfoBayesian x y]
 deviationsInContext epsilon name x theta strategy u ys
   = [DiagnosticInfoBayesian { equilibrium = strategicPayoff >= optimalPayoff - epsilon,
                       player = name,
@@ -74,7 +77,7 @@ deviationsInContext epsilon name x theta strategy u ys
         (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
 
 
-dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
 dependentDecision name ys = OpenGame {
   play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
                              u () r = modify (adjustOrAdd (+ r) r name)
@@ -88,7 +91,7 @@ dependentDecision name ys = OpenGame {
                   in deviationsInContext 0 name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
 
-dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
 dependentEpsilonDecision epsilon name ys = OpenGame {
   play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
                              u () r = modify (adjustOrAdd (+ r) r name)
@@ -140,7 +143,7 @@ playDeterministically = certainly
 
 
 -- discount Operation for repeated structures
-discount :: String -> (Double -> Double) -> StochasticStatefulBayesianOpenGame '[] '[] () () () ()
+discount :: String -> (Payoff -> Payoff) -> StochasticStatefulBayesianOpenGame '[] '[] () () () ()
 discount name f = OpenGame {
   play = \_ -> let v () = return ((), ())
                    u () () = modify (adjustOrAdd f (f 0) name)
@@ -148,7 +151,7 @@ discount name f = OpenGame {
   evaluate = \_ _ -> Nil}
 
 -- add payoffs
-addPayoffs :: String -> StochasticStatefulBayesianOpenGame '[] '[] Double () () ()
+addPayoffs :: String -> StochasticStatefulBayesianOpenGame '[] '[] Payoff () () ()
 addPayoffs name = OpenGame {
   play = \_ -> let v x = return (x, ())
                    u value () = modify (adjustOrAdd (\x -> x + value) value name)

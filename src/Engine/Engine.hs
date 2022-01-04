@@ -10,6 +10,7 @@ module Engine.Engine
   , liftStochasticForward
   , StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
+  , Payoff(..)
   , dependentDecision
   , dependentEpsilonDecision
   , fromFunctions
