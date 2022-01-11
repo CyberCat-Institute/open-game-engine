@@ -8,6 +8,7 @@ library:
     - OpenGames.Engine.OpenGames
     - OpenGames.Engine.OpticClass
     - OpenGames.Engine.TLL
+    - OpenGames.Engine.IOGames
     - OpenGames.Preprocessor.BlockSyntax
     - OpenGames.Preprocessor.Codegen
     - OpenGames.Preprocessor.CompileBlock
@@ -23,3 +24,9 @@ library:
     - parsec
     - comonad
     - hashmap
+    - hashable
+    - rio
+    - mtl
+    - mwc-random
+    - random
+    - bytestring

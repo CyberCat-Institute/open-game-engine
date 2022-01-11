@@ -6,7 +6,6 @@ module OpenGames.Engine.KleisliOptics where
 import Data.Constraint
 import Control.Monad.Trans.Class
 
-
 import OpenGames.Engine.OpticClass
 
 -- type KleisliOptic :: (ctx :: * -> Constraint) -> (m :: * -> *) -> (mt :: (* -> *) -> * -> *) -> (s :: *) -> (t :: *) -> (a :: *) -> (b :: *) -> *

@@ -7,6 +7,7 @@ import Prelude hiding ((++))
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
 
+-- type OpenGame :: (o :: * -> * -> * -> * -> *) (c :: * -> * -> * -> * -> *) (a :: [*]) (b :: [*]) (x :: *) (s :: *) (y :: *) (r :: *)
 data OpenGame o c a b x s y r = OpenGame {
   play :: List a -> o x s y r,
   evaluate :: List a -> c x s y r -> List b

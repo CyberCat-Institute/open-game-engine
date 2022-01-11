@@ -17,6 +17,7 @@ library
       OpenGames.Engine.OpenGames
       OpenGames.Engine.OpticClass
       OpenGames.Engine.TLL
+      OpenGames.Engine.IOGames
       OpenGames.Preprocessor.BlockSyntax
       OpenGames.Preprocessor.Codegen
       OpenGames.Preprocessor.CompileBlock
@@ -24,6 +25,7 @@ library
       OpenGames.Preprocessor.Parser
       OpenGames.Preprocessor.RuntimeAST
   other-modules:
+      OpenGames.Engine.MonadOptic
       Paths_open_games_engine
   hs-source-dirs:
       src
@@ -32,8 +34,11 @@ library
     , comonad
     , constraints >=0.13.2
     , hashmap
+    , mtl
+    , mwc-random
     , parsec
     , probability
+    , rio
     , template-haskell
     , transformers
   default-language: Haskell2010
