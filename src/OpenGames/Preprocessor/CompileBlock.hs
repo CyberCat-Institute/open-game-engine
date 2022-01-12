@@ -60,13 +60,14 @@ instance ToExpr (Q Exp) where
 -- The business end of the compiler
 
 compileLine :: LineWithContext p e -> FreeOpenGame p e
-compileLine (LineWithContext l cov con) = (l1 `sequentialTrivialL` l2) `sequentialTrivialR` l3
+compileLine (LineWithContext l cov con) = Sequential (Sequential l1 l2 )  l3
   where l1 = Function (CopyLambda cov (Expressions (covariantInputs l))) (Multiplex con (Variables (contravariantOutputs l)))
-        l2 = Function Identity Identity `simultaneousTrivialL` Atom (matrix l)
-        l3 = Function (Multiplex cov (Variables $ (covariantOutputs l))) (CopyLambda con (Expressions (contravariantInputs l)))
+        l2 = Simultaneous (Function Identity Identity) (Atom (matrix l))
+        l3 = Function (Multiplex cov (Variables $ (covariantOutputs l)))
+                      (CopyLambda con (Expressions (contravariantInputs l)))
 
 compileBlock :: forall p e. Block p e -> FreeOpenGame p e
-compileBlock block = (l1 `sequentialTrivialL` l2) `sequentialTrivialR` l3
+compileBlock block = Sequential (Sequential l1 l2) l3
   where lines :: [LineWithContext p e]
         lines = linesWithContext block
         covariantBlockContext = flattenVariables [
@@ -74,15 +75,9 @@ compileBlock block = (l1 `sequentialTrivialL` l2) `sequentialTrivialR` l3
         contravariantBlockContext = flattenVariables [contravariantContext (head lines)
                                                      , Variables (contravariantOutputs (line (head lines)))]
         l1 = Function Identity (Lambda contravariantBlockContext (Expressions (blockContravariantOutputs block)))
-        l2 = Reindex (FlattenTuples (length lines)) (foldl1 Sequential (map compileLine lines))
+        l2 = foldl1 Sequential (map compileLine lines)
         l3 = Lens (Lambda covariantBlockContext (Expressions (blockCovariantOutputs block)))
                   (Curry (Multiplex covariantBlockContext (Variables (blockContravariantInputs block))))
-
-sequentialTrivialL, sequentialTrivialR, simultaneousTrivialL, simultaneousTrivialR :: FreeOpenGame p e -> FreeOpenGame p e -> FreeOpenGame p e
-sequentialTrivialL g h   = Reindex UnitIntroL (Sequential g h)
-sequentialTrivialR g h   = Reindex UnitIntroR (Sequential g h)
-simultaneousTrivialL g h = Reindex UnitIntroL (Simultaneous g h)
-simultaneousTrivialR g h = Reindex UnitIntroR (Simultaneous g h)
 
 covariantContexts :: Block p e -> [Variables p]
 covariantContexts block = map f (init (inits (map (Variables . covariantOutputs) (blockLines block))))
