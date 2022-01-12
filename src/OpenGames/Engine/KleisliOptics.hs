@@ -14,10 +14,6 @@ import OpenGames.Engine.OpticClass
 data KleisliOptic ctx m mt s t a b where
   KleisliOptic :: ctx z => (s -> m (z, a)) -> (z -> b -> mt m t) -> KleisliOptic ctx m mt s t a b
 
-class Empty a where
-
-instance Empty a where
-
 {-
   This ought to be
   type Cartesian ctx = (ctx (), forall a1 a2 . (ctx a1, ctx a2) => ctx (a1, a2))

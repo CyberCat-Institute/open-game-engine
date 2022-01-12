@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     OpenGames.Engine.OpticClass, OpenGames.Engine.TLL, OpenGames.Engine.OpenGames, OpenGames.Engine.KleisliOptics, OpenGames.Engine.Pure
+  exposed-modules:     OpenGames.Engine.OpticClass, OpenGames.Engine.TLL, OpenGames.Engine.OpenGames, OpenGames.Engine.KleisliOptics, OpenGames.Engine.Diagnostics, OpenGames.Engine.Pure
   build-depends:       base >= 4.7 && < 5, constraints, transformers, singletons
   default-language:    Haskell2010
 
