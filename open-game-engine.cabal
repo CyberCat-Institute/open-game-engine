@@ -24,6 +24,7 @@ library
       OpenGames.Preprocessor.CompileSyntax
       OpenGames.Preprocessor.Parser
       OpenGames.Preprocessor.RuntimeAST
+      OpenGames.Engine.TemporaryTest
   other-modules:
       OpenGames.Data.Utils
       OpenGames.Engine.Diagnostics

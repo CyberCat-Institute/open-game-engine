@@ -15,6 +15,7 @@ library:
     - OpenGames.Preprocessor.CompileSyntax
     - OpenGames.Preprocessor.Parser
     - OpenGames.Preprocessor.RuntimeAST
+    - OpenGames.Engine.TemporaryTest
   dependencies:
     - base
     - constraints >= 0.13.2
