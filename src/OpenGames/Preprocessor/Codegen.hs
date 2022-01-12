@@ -53,10 +53,9 @@ reindexExpr (FlattenTuples n) = do names <- traverse (const (newName "x")) [1..n
 
 interpretOpenGame :: FreeOpenGame Pat Exp -> Q Exp
 interpretOpenGame (Atom n) = pure n
-interpretOpenGame (Lens f1 f2) = [| fromLens $(interpretFunction f1) $(interpretFunction f2) |]
-interpretOpenGame (Function f1 f2) = [| fromFunctions $(interpretFunction f1) $(interpretFunction f2)|]
-interpretOpenGame Counit = [| counit |]
+interpretOpenGame (Lens f1 f2) = [| lift (lens $(interpretFunction f1) $(interpretFunction f2))|]
+interpretOpenGame (Function f1 f2) = [| lift (adaptor $(interpretFunction f1) $(interpretFunction f2))|]
+interpretOpenGame Counit = [| lift (continuation id) |]
 interpretOpenGame (Sequential g1 g2) = [| $(interpretOpenGame g1) >>> $(interpretOpenGame g2)|]
 interpretOpenGame (Simultaneous g1 g2) = [| $(interpretOpenGame g1) &&& $(interpretOpenGame g2)|]
 interpretOpenGame (Reindex idx game) = [|reindex $(reindexExpr idx) $(interpretOpenGame game)|]
-

@@ -12,6 +12,9 @@ class Optic ctx o | o -> ctx where
 identity :: (Optic ctx o) => o s t s t
 identity = adaptor id id
 
+lens :: (Optic ctx o) => (s -> a) -> (s -> b -> t) -> o s t a b
+lens = undefined
+
 {-
   void ought to be a member of Context, but poor Haskell finds it tricky, so Precontext is a workaround.
   Daan Rijks pointed out that adding a (c -> o) fundep in Context makes that work in simple cases,
