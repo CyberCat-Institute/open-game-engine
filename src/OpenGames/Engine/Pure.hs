@@ -20,10 +20,10 @@ decision :: [t] -> OpenGame (KleisliOptic Empty Identity IdentityT)
                    '[s -> t] '[Bool]
                    s () t Double
 decision ts = OpenGame {
-  play = \(f ::- Nil) -> let v s = Identity ((), f s)
-                             u () _ = IdentityT (Identity ())
-                          in KleisliOptic v u,
-  evaluate = \(f ::- Nil) (KleisliContext (Identity (z, h)) k) ->
+  play = \(f :- Nil) -> let v s = Identity ((), f s)
+                            u () _ = IdentityT (Identity ())
+                         in KleisliOptic v u,
+  evaluate = \(f :- Nil) (KleisliContext (Identity (z, h)) k) ->
     let k' = runIdentity . runIdentityT . k z
-     in all (\t -> k' (f h) >= k' t) ts ::- Nil
+     in all (\t -> k' (f h) >= k' t) ts :- Nil
 }

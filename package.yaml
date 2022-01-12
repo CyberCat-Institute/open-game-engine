@@ -1,4 +1,4 @@
-name: open-games-engine
+name: open-game-engine
 version: '0.0.1'
 synopsis: Rewritten implementation of open games
 library:
@@ -30,3 +30,4 @@ library:
     - mwc-random
     - random
     - bytestring
+    - singletons

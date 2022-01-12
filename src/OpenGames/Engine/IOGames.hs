@@ -65,6 +65,9 @@ import           OpenGames.Engine.KleisliOptics
 
 type Vector = HM.Map String Double
 
+class Empty a where
+instance Empty a where
+
 type MonadOptic :: * -> * -> * -> * -> * -> *
 type MonadOptic msg = KleisliOptic Empty (RIO (GLogFunc msg)) (StateT Vector)
 
