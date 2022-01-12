@@ -12,6 +12,7 @@ module OpenGames.Preprocessor.CompileBlock
     , asPat
     , compileLine
     , generateGame
+    , opengame
     )
     where
 
