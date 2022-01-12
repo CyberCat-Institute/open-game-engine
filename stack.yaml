@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: nightly-2021-08-15
+resolver: ghc-9.2.1
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,7 +39,34 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
+extra-deps:
+- comonad-5.0.8@sha256:1f1aabd73ec7f80f20cf078a748a60cd48d8e57277802fdf6a9ab3601a9b8f7e,3631
+- hashmap-1.3.3@sha256:831096cd644d1b87f16c1933d19cdf938fe8f3911af7ed68b3e8c0bde4baeba4,2550
+- probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
+- distributive-0.6.2.1@sha256:0f99f5541cca04acf89b64432b03422b6408e830a8dff30e6c4334ef1a48680c,2996
+- hashable-1.4.0.1@sha256:0251ad5228be07909a385152a3ff634fac1f892611f89904aea5c5e7af411e5d,4790
+- indexed-traversable-0.1.2@sha256:d66228887242f93ccb4fc7101a1e25a6560c8e4708f6e9ee1d3dd21901756c65,2519
+- random-1.2.1@sha256:8bee24dc0c985a90ee78d94c61f8aed21c49633686f0f1c14c5078d818ee43a2,6598
+- tagged-0.8.6.1@sha256:29c67d98a4404607f024750ab9c7210dadcbbef4e1944c48c52902f2071b2662,2874
+- transformers-compat-0.7.1@sha256:03534fcfd4a6026d415b0e19d2a48d6ccb639e809db0cd41f313bc771a887a9b,5602
+- utility-ht-0.0.16@sha256:8cae2a7f031783ea49a7057f688236d456a3da98a290090a6954b9dd55679ccd,3115
+- base-orphans-0.8.6@sha256:eb6758d0160d607e0c45dbd6b196f515b9a589fd4f6d2f926929dd5d56282d37,3175
+- splitmix-0.1.0.4@sha256:714a55fd28d3e2533bd5b49e74f604ef8e5d7b06f249c8816f6c54aed431dcf1,6483
+- constraints-0.13.2@sha256:8ff7b39b8495fb43a2b11164c20d362dc4600feaa9658a5f942232b2a66686c0,2504
+- type-equality-1@sha256:bb3a34a93ad02866763b325e889ea9f5aa31f7428e32dcaa1cf14015bd21b9cb,1597
+- rio-0.1.21.0@sha256:a49aaac7af792eeb641bd7f34b26b428e570e1804b32cac85952319275b61b24,3669
+- microlens-0.4.12.0@sha256:2d799d17c9e36fb5a62fbed1f07231cf5e423d9d82ac24b5137263bcef1cc4ed,4520
+- microlens-mtl-0.2.0.1@sha256:ac604347d822e07215ca4374d7d13881be2e53c29d5c12882bd82e782f42369e,1777
+- primitive-0.7.3.0@sha256:6b28a1c0572f5ca50597ba8388aeade21515842969ae192cdc6bfca81367bf56,2951
+- typed-process-0.2.8.0@sha256:04debca208eab3457c9cc10ede1e5ea6f004174b9ac023af6519a2266de49cf6,2051
+- unliftio-0.2.20@sha256:93cebd01b5fe2c2c028e0785b1fe8ec42b3d30d869e7848034bb4b7b5894dc24,3318
+- unliftio-core-0.2.0.1@sha256:f9abcdd3f3d28e4840563efb7b8760d2de9b5707bcd6f53a87f6a0d77bb5a9f7,1082
+- unordered-containers-0.2.16.0@sha256:859ec9a017e51194755cb8a445b767afc5ce0ac991cd50b0f96abd31b3687aab,5217
+- vector-0.12.3.1@sha256:040210919e5ce454dcee3320f77803da3dbda579c8428dc25ff0155732234808,7946
+- async-2.2.4@sha256:b83dec34a53520de84c6dd3dc7aae45d22409b46eb471c478b98108215a370f0,3095
+- mwc-random-0.15.0.2@sha256:109e0fb72ce64bda468fc44d9cb5abbf455d6337140b57eb851a8183baba0597,3372
+- math-functions-0.3.4.2@sha256:5d942f0d6478c2a6b22049c033943538f8dd357c66ff874d328082136433cafb,4791
+- data-default-class-0.1.2.0@sha256:63e62120b7efd733a5a17cf59ceb43268e9a929c748127172d7d42f4a336e327,542
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
@@ -48,7 +75,7 @@ packages:
 # extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
-# system-ghc: true
+system-ghc: true
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
@@ -64,3 +91,8 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+# Force the use of rosetta on M1 mac
+arch: x86_64
+# arch: aarch64
+
+allow-newer: true

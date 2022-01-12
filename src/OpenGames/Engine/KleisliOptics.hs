@@ -3,10 +3,8 @@
 {-# LANGUAGE TypeOperators, PolyKinds, DataKinds#-}
 
 module OpenGames.Engine.KleisliOptics where
-import Data.Singletons
 import Data.Constraint
 import Control.Monad.Trans.Class
-
 
 import OpenGames.Engine.OpticClass
 
