@@ -8,11 +8,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Engine.IOGames
   ( IOOpenGame(..)
   , Agent(..)
-  , DiagnosticInfoIO(..)
+  , DiagnosticsMC(..)
   , dependentDecisionIO
   , fromLens
   , fromFunctions
@@ -51,78 +52,20 @@ type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 type Agent = String
 
 
-
-data DiagnosticInfoIO y = DiagnosticInfoIO
-  { playerIO          :: String
-  , optimalMoveIO     :: y
-  , optimalPayoffIO   :: Double
-  , currentMoveIO     :: y
-  , currentPayoffIO   :: Double}
-
-showDiagnosticInfoInteractive :: (Show y, Ord y) => DiagnosticInfoIO y -> String
-showDiagnosticInfoInteractive info =
-     "\n"    ++ "Player: " ++ playerIO info
-     ++ "\n" ++ "Optimal Move: " ++ (show $ optimalMoveIO info)
-     ++ "\n" ++ "Optimal Payoff: " ++ (show $ optimalPayoffIO info)
-     ++ "\n" ++ "Current Move: " ++ (show $ currentMoveIO info)
-     ++ "\n" ++ "Current Payoff: " ++ (show $ currentPayoffIO info)
-
-
-
--- output string information for a subgame expressions containing information from several players - bayesian
-showDiagnosticInfoLIO :: (Show y, Ord y)  => [DiagnosticInfoIO y] -> String
-showDiagnosticInfoLIO [] = "\n --No more information--"
-showDiagnosticInfoLIO (x:xs)  = showDiagnosticInfoInteractive x ++ "\n --other game-- " ++ showDiagnosticInfoLIO xs
-
-
-data PrintOutput = PrintOutput
-
-instance (Show y, Ord y) => Apply PrintOutput [DiagnosticInfoIO y] String where
-  apply _ x = showDiagnosticInfoLIO x
-
-
-data Concat = Concat
-
-instance Apply Concat String (String -> String) where
-  apply _ x = \y -> x ++ "\n NEWGAME: \n" ++ y
-
-
----------------------
--- main functionality
-
--- all information for all players
-generateOutputIO :: forall xs.
-               ( MapL   PrintOutput xs     (ConstMap String xs)
-               , FoldrL Concat String (ConstMap String xs)
-               ) => List xs -> IO ()
-generateOutputIO hlist = putStrLn $
-  "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
-
-
-
-
-
-deviationsInContext :: (Show a, Ord a)
-                    =>  Agent -> a -> (a -> IO Double) -> [a] -> IO [DiagnosticInfoIO a]
-deviationsInContext name strategy u ys = do
-     ls              <- mapM u ys
-     strategicPayoff <- u strategy
-     let zippedLs    =  zip ys ls
-         (optimalPlay, optimalPayoff) = maximumBy (comparing snd) zippedLs
-     pure [ DiagnosticInfoIO
-            {  playerIO = name
-            , optimalMoveIO = optimalPlay
-            , optimalPayoffIO = optimalPayoff
-            , currentMoveIO   = strategy
-            , currentPayoffIO = strategicPayoff
-            }]
-
+data DiagnosticsMC y = DiagnosticsMC {
+  playerNameMC :: String
+  , averageUtilStrategyMC :: Double
+  , samplePayoffsMC :: [Double]
+  , optimalMoveMC :: y
+  , optimalPayoffMC :: Double
+  }
+  deriving (Show)
 
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (Double,[Double])] x () y Double
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] ->  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
           -- s t  a b
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
-dependentDecisionIO name sampleSize ys = OpenGame {
+dependentDecisionIO name sampleSize ys = OpenGame { play, evaluate} where
   -- ^ ys is the list of possible actions
   play = \(strat ::- Nil) -> let v x = do
                                    g <- newStdGen
@@ -130,9 +73,28 @@ dependentDecisionIO name sampleSize ys = OpenGame {
                                    action <- genFromTable (runKleisli strat x) gS
                                    return ((),action)
                                  u () r = modify (adjustOrAdd (+ r) r name)
-                             in MonadOptic v u,
-  evaluate = \(strat ::- Nil) (MonadContext h k) -> do
-       let action = do
+                             in MonadOptic v u
+
+  evaluate (strat ::- Nil) (MonadContext h k) =
+    output ::- Nil
+
+    where
+
+      output = do
+        zippedLs <- samplePayoffs
+        let samplePayoffs' = map snd zippedLs
+        let (optimalPlay, optimalPayoff0) = maximumBy (comparing snd) zippedLs
+        (currentMove, averageUtilStrategy') <- averageUtilStrategy
+        return  DiagnosticsMC{
+            playerNameMC = name
+          , averageUtilStrategyMC = averageUtilStrategy'
+          , samplePayoffsMC = samplePayoffs'
+          , optimalMoveMC = optimalPlay
+          , optimalPayoffMC = optimalPayoff0
+          }
+
+        where
+           action = do
               (_,x) <- h
               g <- newStdGen
               gS <- newIOGenM g
@@ -146,20 +108,18 @@ dependentDecisionIO name sampleSize ys = OpenGame {
                           HM.empty
            -- Sample the average utility from current strategy
            averageUtilStrategy = do
+             (_,x) <- h
              actionLS' <- replicateM sampleSize action
              utilLS  <- mapM u actionLS'
-             return (sum utilLS / fromIntegral sampleSize)
+             let average = (sum utilLS / fromIntegral sampleSize)
+             return (x,average)
            -- Sample the average utility from a single action
-           sampleY sampleSize y = do
+           sampleY y = do
                   ls1 <- replicateM sampleSize (u y)
-                  pure  (sum ls1 / fromIntegral sampleSize)
+                  let average =  (sum ls1 / fromIntegral sampleSize)
+                  pure (y, average)
            -- Sample the average utility from all actions
-           samplePayoffs sampleSize = mapM (sampleY sampleSize) ys
-           output = do
-             samplePayoffs' <- samplePayoffs sampleSize
-             averageUtilStrategy' <- averageUtilStrategy
-             return $ (averageUtilStrategy', samplePayoffs')
-              in (output ::- Nil) }
+           samplePayoffs  = mapM sampleY ys
 
 
 
