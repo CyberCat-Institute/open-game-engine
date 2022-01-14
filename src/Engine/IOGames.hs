@@ -17,6 +17,7 @@ module Engine.IOGames
   , dependentDecisionIO
   , fromLens
   , fromFunctions
+  , nature
   , discount
   ) where
 
@@ -44,7 +45,6 @@ import           Engine.TLL
 import           Engine.Diagnostics
 
 
--- TODO implement the sampler
 -- TODO implement printout
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
@@ -132,6 +132,20 @@ fromLens v u = OpenGame {
 
 fromFunctions :: (x -> y) -> (r -> s) -> IOOpenGame '[] '[] x s y r
 fromFunctions f g = fromLens f (const g)
+
+nature :: CondensedTableV x -> IOOpenGame  '[] '[] () () x ()
+nature table = OpenGame { play, evaluate} where
+  play _ =
+    MonadOptic v u
+    where
+      v () = do
+        g <- newStdGen
+        gS <- newIOGenM g
+        draw <- genFromTable table gS
+        return ((),draw)
+      u _ _ = return ()
+
+  evaluate = \_ _ -> Nil
 
 
 

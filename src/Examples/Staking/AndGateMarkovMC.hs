@@ -4,6 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GADTs #-}
 
 module Examples.Staking.AndGateMarkovMC where
 
@@ -14,8 +15,11 @@ import           Preprocessor.Preprocessor
 
 import           Control.Monad.State  hiding (state,void)
 import qualified Control.Monad.State  as ST
-import           System.Random.MWC.CondensedTable
 import qualified Data.Vector as V
+import           Numeric.Probability.Distribution hiding (map, lift, filter)
+import           System.Random.MWC.CondensedTable
+import           System.Random
+import           System.Random.Stateful
 
 
 -- TODO change the structure of the continuation iteration
@@ -185,9 +189,9 @@ playingRound :: Int
                         Kleisli CondensedTableV (([Double],Bool), [Double], Double) Bool,
                         Kleisli CondensedTableV (([Double],Bool), [Double], Double) Bool]
                       )
-                    ('[(DiagnosticsMC Bool),
-                       (DiagnosticsMC Bool),
-                       (DiagnosticsMC Bool)])
+                    ('[IO (DiagnosticsMC Bool),
+                       IO (DiagnosticsMC Bool),
+                       IO (DiagnosticsMC Bool)])
                     (([Double],Bool), [Double], Double)
                     ()
                     [Bool]
@@ -255,15 +259,17 @@ andGateGame :: AndGateMarkovParams
                           ('[Kleisli CondensedTableV (([Double], Bool), Double) Double,
                              Kleisli CondensedTableV (([Double], Bool), Double) Double,
                              Kleisli CondensedTableV (([Double], Bool), Double) Double,
+                             Kleisli CondensedTableV ([Double], Double) Double,
                              Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
                              Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
                              Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool])
-                          ('[(DiagnosticsMC Double),
-                             (DiagnosticsMC Double),
-                             (DiagnosticsMC Double),
-                             (DiagnosticsMC Bool),
-                             (DiagnosticsMC Bool),
-                             (DiagnosticsMC Bool)])
+                          ('[IO (DiagnosticsMC Double),
+                             IO (DiagnosticsMC Double),
+                             IO (DiagnosticsMC Double),
+                             IO (DiagnosticsMC Double),
+                             IO (DiagnosticsMC Bool),
+                             IO (DiagnosticsMC Bool),
+                             IO (DiagnosticsMC Bool)])
                           ([Double], Bool)
                           ()
                           ([Double], Bool)
@@ -282,7 +288,7 @@ andGateGame (AndGateMarkovParams {..} ) = [opengame|
   outputs : successfulAttackPayoff ;
 
   inputs : deposits, successfulAttackPayoff ;
-  operation : dependentDecisionIO "Attacker" sampleSizeA ;
+  operation : dependentDecisionIO "Attacker" sampleSizeA [minBribe, minBribe+incrementBribe .. maxBribe];
   outputs : bribe ;
   returns : attackerPayoff bribesAccepted bribe successfulAttackPayoff ;
 
@@ -301,62 +307,54 @@ andGateGame (AndGateMarkovParams {..} ) = [opengame|
 
   outputs : (deposits, obfuscateAndGate moves) ;
 |]
-{-
+
 
 ---------------
 -- continuation
 
 -- extract continuation
-extractContinuation :: StochasticStatefulOptic s () s () -> s -> StateT Vector Stochastic ()
-extractContinuation (StochasticStatefulOptic v u) x = do
+extractContinuation :: MonadOptic s () s () -> s -> StateT Vector IO ()
+extractContinuation (MonadOptic v u) x = do
   (z,a) <- ST.lift (v x)
-  trace ",,2" (pure ())
   u z ()
 
 -- extract next state (action)
-extractNextState :: StochasticStatefulOptic s () s () -> s -> Stochastic s
-extractNextState (StochasticStatefulOptic v _) x = do
+extractNextState :: MonadOptic s () s () -> s -> IO s
+extractNextState (MonadOptic v _) x = do
   (z,a) <- v x
   pure a
 
-extractContinuation2 :: StochasticStatefulOptic Double () ([Double],Bool) () -> Double -> StateT Vector Stochastic ()
-extractContinuation2 (StochasticStatefulOptic v u) x = do
+extractContinuation2 :: MonadOptic Double () ([Double],Bool) () -> Double -> StateT Vector IO ()
+extractContinuation2 (MonadOptic v u) x = do
   (z,a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
-extractNextState2 :: StochasticStatefulOptic Double () ([Double],Bool) () -> Double -> Stochastic ([Double],Bool)
-extractNextState2 (StochasticStatefulOptic v _) x = do
+extractNextState2 :: MonadOptic Double () ([Double],Bool) () -> Double -> IO ([Double],Bool)
+extractNextState2 (MonadOptic v _) x = do
   (z,a) <- v x
   pure a
 
 -- Random prior indpendent of previous moves
 determineContinuationPayoffs parameters 1        strat action = pure ()
 determineContinuationPayoffs parameters iterator strat action = do
-   trace ",,1" (pure ())
    extractContinuation executeStrat action
-   nextInput <- ST.lift $ andGateTestPrior
+   g <- newStdGen
+   gS <- newIOGenM g
+   nextInput <- ST.lift $ genFromTable (transformStochasticToProbTable andGateTestPrior) gS
    determineContinuationPayoffs parameters (pred iterator) strat nextInput
  where executeStrat =  play (andGateGame parameters) strat
 
 -- Actual moves affect next moves
 determineContinuationPayoffs' parameters 1        strat action = pure ()
 determineContinuationPayoffs' parameters iterator strat action = do
-   trace ",,1" (pure ())
    extractContinuation executeStrat action
    nextInput <- ST.lift $ extractNextState executeStrat action
    determineContinuationPayoffs' parameters (pred iterator) strat nextInput
  where executeStrat =  play (andGateGame parameters) strat
 
-determineContinuationPayoffs2 iterator initialAction = do
-  extractContinuation executeStrat initialAction
-  nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
-  determineContinuationPayoffs2 (pred iterator) nextInput
- where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
-
 determineContinuationPayoffs3 1        _             = pure ()
 determineContinuationPayoffs3 iterator initialAction = do
-  trace ",,2" (pure ())
   extractContinuation executeStrat initialAction
   nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
   determineContinuationPayoffs3 (pred iterator) initialAction
@@ -364,13 +362,11 @@ determineContinuationPayoffs3 iterator initialAction = do
  where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
 
 -- fix context used for the evaluation
-contextCont parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
+contextCont parameters iterator strat initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
 
-contextCont' parameters iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
+contextCont' parameters iterator strat initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
 
-contextCont2 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs2 iterator action)
-
-contextCont3 iterator initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
+contextCont3 iterator initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
 
 
 
@@ -378,15 +374,24 @@ contextCont3 iterator initialAction = StochasticStatefulContext (pure ((),initia
 -----------
 -- Strategy
 
-depositStrategy =  Kleisli $ \((_, previousRoundTrue), _) -> playDeterministically $ if previousRoundTrue then 4.6 else 0.0
+transformStrat :: Kleisli Stochastic x y -> Kleisli CondensedTableV x y
+transformStrat strat = Kleisli (\x ->
+  let y = runKleisli strat x
+      ls = decons y
+      v = V.fromList ls
+      in tableFromProbabilities v)
 
-attackerStrategy :: Kleisli
-                              Stochastic
-                              ([Double], Double)
-                              Double
-attackerStrategy = Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then playDeterministically 5.0 else playDeterministically 0.0)
+transformStochasticToProbTable dist =
+  let ls = decons dist
+      v  = V.fromList ls
+      in tableFromProbabilities v
 
-signalStrategy = Kleisli $ \((_, previousRoundTrue), _, bribe) -> playDeterministically $ previousRoundTrue && bribe < 5.0
+
+depositStrategy = transformStrat $  Kleisli $ \((_, previousRoundTrue), _) -> playDeterministically $ if previousRoundTrue then 4.6 else 0.0
+
+attackerStrategy = transformStrat $ Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then playDeterministically 5.0 else playDeterministically 0.0)
+
+signalStrategy = transformStrat $ Kleisli $ \((_, previousRoundTrue), _, bribe) -> playDeterministically $ previousRoundTrue && bribe < 5.0
 
 
 strategyTuple =
@@ -407,24 +412,20 @@ strategyTuple =
 andGateMarkovGameEq parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
   where context  = contextCont parameters iterator strat initialAction
 
-eqOutput parameters iterator strat initialAction = generateIsEq $ andGateMarkovGameEq parameters iterator strat initialAction
+eqOutput parameters iterator strat initialAction = andGateMarkovGameEq parameters iterator strat initialAction
 
 
 
 andGateMarkovGameEq' parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
   where context  = contextCont' parameters iterator strat initialAction
 
-eqOutput' parameters iterator strat initialAction = generateIsEq $ andGateMarkovGameEq' parameters iterator strat initialAction
+eqOutput' parameters iterator strat initialAction =  andGateMarkovGameEq' parameters iterator strat initialAction
 
-andGateMarkovGameEq2 iterator initialAction = evaluate (andGateGame andGateMarkovTestParams) strategyTuple context
-  where context  = contextCont2 iterator initialAction
-
-eqOutput2 iterator initialAction = generateIsEq $ andGateMarkovGameEq2 iterator initialAction
 
 andGateMarkovGameEq3 iterator initialAction = evaluate (andGateGame andGateMarkovTestParams) strategyTuple context
   where context  = contextCont3 iterator initialAction
 
-eqOutput3 iterator initialAction = generateIsEq $ andGateMarkovGameEq3 iterator initialAction
+eqOutput3 iterator initialAction =  andGateMarkovGameEq3 iterator initialAction
 
 
 
@@ -434,8 +435,40 @@ testEq iterator = eqOutput andGateMarkovTestParams iterator strategyTuple testIn
 
 testEq' iterator = eqOutput' andGateMarkovTestParams iterator strategyTuple testInitialAction
 
-
-testEq2 iterator = eqOutput2 iterator testInitialAction
-
 testEq3 iterator = eqOutput3 iterator testInitialAction
--}
+
+printOutput :: List
+                '[IO (DiagnosticsMC Double), IO (DiagnosticsMC Double),
+                  IO (DiagnosticsMC Double), IO (DiagnosticsMC Double),
+                  IO (DiagnosticsMC Bool), IO (DiagnosticsMC Bool),
+                  IO (DiagnosticsMC Bool)]
+             -> IO ()
+printOutput (result1 ::- result2 ::- result3 ::- result4 ::- result5 ::- result6 ::- result7 ::- Nil) = do
+  result1' <- result1
+  result2' <- result2
+  result3' <- result3
+  result4' <- result4
+  result5' <- result5
+  result6' <- result6
+  result7' <- result7
+  putStrLn "Player1"
+  print result1'
+  putStrLn "Player2"
+  print result2'
+  putStrLn "Player3"
+  print result3'
+  putStrLn "Player4"
+  print result4'
+  putStrLn "Player5"
+  print result5'
+  putStrLn "Player6"
+  print result6'
+  putStrLn "Player7"
+  print result7'
+
+
+
+
+
+
+
