@@ -13,6 +13,7 @@ module OpenGames.Preprocessor.CompileBlock
     , compileLine
     , generateGame
     , opengame
+    , parseTree
     )
     where
 

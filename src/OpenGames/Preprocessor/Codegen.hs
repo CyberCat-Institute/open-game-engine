@@ -12,7 +12,7 @@ module OpenGames.Preprocessor.Codegen
     ) where
 
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax hiding (lift)
 import OpenGames.Preprocessor.RuntimeAST
 
 combinePats :: [Pat] -> Pat
@@ -24,7 +24,8 @@ apply fn [] = fn
 apply fn (x : xs) = apply (AppE fn x) xs
 
 mkTup :: [Exp] -> Exp
-mkTup = TupE . map Just
+mkTup [e] = e
+mkTup e = TupE (map Just e)
 
 patToExp :: Pat -> Exp
 patToExp (VarP e) = VarE e
@@ -38,6 +39,12 @@ interpretFunction Identity = [| id |]
 interpretFunction Copy = [| \x -> (x, x) |]
 interpretFunction (Lambda (Variables {vars}) (Expressions {exps})) =
   pure $ LamE (pure $ TupP vars) (mkTup exps)
+interpretFunction (CopyLambda (Variables [vars]) (Expressions [exps])) =
+  pure $ LamE (pure vars) (mkTup [patToExp vars, exps])
+-- interpretFunction (CopyLambda (Variables { vars }) (Expressions [exps])) =
+--   trace "copy n 1" $ pure $ LamE (pure $ TupP vars) (mkTup [mkTup $ map patToExp vars, exps])
+interpretFunction (CopyLambda (Variables [vars]) (Expressions { exps })) =
+  pure $ LamE (pure vars) (mkTup [patToExp vars, mkTup exps])
 interpretFunction (CopyLambda (Variables { vars }) (Expressions { exps })) =
   pure $ LamE (pure $ TupP vars) (mkTup [mkTup $ map patToExp vars, mkTup exps])
 interpretFunction (Multiplex (Variables { vars }) (Variables { vars = vars' })) =
