@@ -39,7 +39,7 @@ prisonersDilemmaCont :: OpenGame
                           MonadContext
                           ('[Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD,
                              Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD])
-                          ('[IO (Double,[Double]), IO (Double, [Double])])
+                          ('[IO (DiagnosticsMC ActionPD), IO (DiagnosticsMC ActionPD)])
                           (ActionPD, ActionPD)
                           ()
                           (ActionPD, ActionPD)
@@ -191,16 +191,12 @@ repeatedPDEq  iterator strat initialAction = evaluate prisonersDilemmaCont strat
 
 printOutput iterator strat initialAction = do
   let (result1 ::- result2 ::- Nil) = repeatedPDEq iterator strat initialAction
-  (stratUtil1,ys1) <- result1
-  (stratUtil2,ys2) <- result2
-  putStrLn "Own util 1"
-  print stratUtil1
-  putStrLn "Other actions"
-  print ys1
-  putStrLn "Own util 2"
-  print stratUtil2
-  putStrLn "Other actions"
-  print ys2
+  result1' <- result1
+  result2' <- result2
+  putStrLn "Player1"
+  print result1'
+  putStrLn "Player2"
+  print result2'
 
 ----------------------------------------------------
 -- This is taken from the other MonteCarloTest setup
