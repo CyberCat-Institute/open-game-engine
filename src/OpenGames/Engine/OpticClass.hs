@@ -4,7 +4,7 @@ module OpenGames.Engine.OpticClass where
 
 class Optic ctx o | o -> ctx where
   adaptor :: (s -> a) -> (b -> t) -> o s t a b
-  continuation :: ctx s => (s -> t) -> o s t () ()
+  lens :: (ctx s) => (s -> a) -> (s -> b -> t) -> o s t a b
   (>>>>) :: o s t a b -> o a b p q -> o s t p q
   (&&&&) :: o s1 t1 a1 b1 -> o s2 t2 a2 b2 -> o (s1, s2) (t1, t2) (a1, a2) (b1, b2)
   (++++) :: o s1 t a1 b -> o s2 t a2 b -> o (Either s1 s2) t (Either a1 a2) b
@@ -12,8 +12,8 @@ class Optic ctx o | o -> ctx where
 identity :: (Optic ctx o) => o s t s t
 identity = adaptor id id
 
-lens :: (Optic ctx o) => (s -> a) -> (s -> b -> t) -> o s t a b
-lens = undefined
+continuation :: (Optic ctx o, ctx s) => (s -> t) -> o s t () ()
+continuation k = lens (const ()) (const . k)
 
 {-
   void ought to be a member of Context, but poor Haskell finds it tricky, so Precontext is a workaround.

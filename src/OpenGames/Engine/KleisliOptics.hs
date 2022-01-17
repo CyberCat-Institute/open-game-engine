@@ -28,9 +28,9 @@ instance (ctx (), Cartesian ctx, Cocartesian ctx, Monad m, Monad (mt m))
   adaptor f g = KleisliOptic v u where
     v s = return ((), f s)
     u () b = return (g b)
-  continuation k = KleisliOptic v u where
-    v s = return (s, ())
-    u s () = return (k s)
+  lens f g = KleisliOptic v u where
+    v s = return (s, f s)
+    u s b = return (g s b)
   (>>>>) (KleisliOptic v1 u1) (KleisliOptic v2 u2) = KleisliOptic v u where
     v s = do {(z1, a) <- v1 s; (z2, p) <- v2 a; return ((z1, z2), p)}
     u (z1, z2) q = do {b <- u2 z2 q; u1 z1 b}
