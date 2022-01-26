@@ -157,3 +157,17 @@ addPayoffs name = OpenGame {
                    u value () = modify (adjustOrAdd (\x -> x + value) value name)
                  in StochasticStatefulOptic v u,
   evaluate = \_ _ -> Nil}
+
+
+--------------------------------------------------------------------------------------
+-- Implement a version which samples the play using the Prob library build in sampling
+-- Ignore the evaluate part
+
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentDecisionIO name _ = OpenGame {
+  play = \(a ::- Nil) -> let v x = do
+                               y <- runKleisli a x
+                               return ((), y)
+                             u () r = modify (adjustOrAdd (+ r) r name)
+                            in StochasticStatefulOptic v u,
+  evaluate = undefined }

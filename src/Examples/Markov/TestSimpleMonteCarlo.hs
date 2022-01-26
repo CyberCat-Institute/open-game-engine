@@ -4,17 +4,28 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.Markov.RepeatedPD where
 
-import           Debug.Trace
+module Examples.Markov.TestSimpleMonteCarlo where
+
 import           Engine.Engine
 import           Preprocessor.Preprocessor
 import           Examples.SimultaneousMoves (ActionPD(..),prisonersDilemmaMatrix)
+import           Examples.Markov.TestSimpleMonteCarlo.Continuation
 
 import           Control.Monad.State  hiding (state,void)
 import qualified Control.Monad.State  as ST
+import qualified Data.Vector as V
+import           Debug.Trace
+import           System.Random.MWC.CondensedTable
+import           System.Random
+import           System.Random.Stateful
+import           Numeric.Probability.Distribution hiding (map, lift, filter)
 
-import Numeric.Probability.Distribution hiding (map, lift, filter)
+
+------------------------------------------------------------
+-- Combines Bayesian game evaluation of the first stage with
+-- a continuation based on Monte Carlo
+
 
 prisonersDilemma  :: OpenGame
                               StochasticStatefulOptic
@@ -27,7 +38,6 @@ prisonersDilemma  :: OpenGame
                               ()
                               (ActionPD, ActionPD)
                               ()
-discountFactor = 0.5
 
 prisonersDilemma = [opengame|
 
@@ -35,6 +45,7 @@ prisonersDilemma = [opengame|
    feedback  :      ;
 
    :----------------------------:
+
    inputs    :  (dec1Old,dec2Old)    ;
    feedback  :      ;
    operation : dependentDecision "player1" (const [Cooperate,Defect]);
@@ -46,6 +57,7 @@ prisonersDilemma = [opengame|
    operation : dependentDecision "player2" (const [Cooperate,Defect]);
    outputs   : decisionPlayer2 ;
    returns   : prisonersDilemmaMatrix decisionPlayer2 decisionPlayer1 ;
+
 
    operation : discount "player1" (\x -> x * discountFactor) ;
 
@@ -76,46 +88,12 @@ strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
 
 
 
--- extract continuation
-extractContinuation :: StochasticStatefulOptic s () a () -> s -> StateT Vector Stochastic ()
-extractContinuation (StochasticStatefulOptic v u) x = do
-  (z,a) <- ST.lift (v x)
-  u z ()
-
--- extract next state (action)
-extractNextState :: StochasticStatefulOptic s () a () -> s -> Stochastic a
-extractNextState (StochasticStatefulOptic v _) x = do
-  (z,a) <- v x
-  pure a
-
-executeStrat strat =  play prisonersDilemma strat
-
-
--- determine continuation for iterator, with the same repeated strategy
-determineContinuationPayoffs :: Integer
-                             -> List
-                                      '[Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
-                                        Kleisli Stochastic (ActionPD, ActionPD) ActionPD]
-                             -> (ActionPD,ActionPD)
-                             -> StateT Vector Stochastic ()
-determineContinuationPayoffs 1        strat action = pure ()
-determineContinuationPayoffs iterator strat action = do
-   extractContinuation executeStrat action
-   nextInput <- ST.lift $ extractNextState executeStrat action
-   determineContinuationPayoffs (pred iterator) strat nextInput
- where executeStrat =  play prisonersDilemma strat
-
-
 -- fix context used for the evaluation
-contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
+contextCont sampleSize iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> trace "cont" (sampleDetermineContinuationPayoffsStoch sampleSize iterator strat action))
 
 
 
-repeatedPDEq iterator strat initialAction = evaluate prisonersDilemma strat context
-  where context  = contextCont iterator strat initialAction
+repeatedPDEq sampleSize iterator strat initialAction = evaluate prisonersDilemma strat context
+  where context  = contextCont sampleSize iterator strat initialAction
 
-
-
-
-
-eqOutput iterator strat initialAction = generateIsEq $ repeatedPDEq iterator strat initialAction
+eqOutput sampleSize iterator strat initialAction = generateIsEq $ repeatedPDEq sampleSize iterator strat initialAction
