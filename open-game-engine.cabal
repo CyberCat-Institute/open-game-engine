@@ -29,6 +29,7 @@ library
       OpenGames.Data.Utils
       OpenGames.Engine.Diagnostics
       OpenGames.Engine.Pure
+      OpenGames.Examples.Consensus.AndGate
       Paths_open_game_engine
   hs-source-dirs:
       src

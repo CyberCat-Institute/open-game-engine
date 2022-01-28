@@ -129,7 +129,6 @@ instance IndexList Z (x ': xs) x where
 instance IndexList n xs a => IndexList (S n) (x ': xs) a where
    fromIndex (Succ n) (_ :- xs) = fromIndex n xs
 
-
 --------------------------------------
 -- List functionality
 

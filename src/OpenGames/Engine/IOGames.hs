@@ -29,30 +29,21 @@ module OpenGames.Engine.IOGames
   ) where
 
 
--- import           System.Directory
 import           GHC.Stack
 import           Control.Monad.Reader
--- import           Data.Bifunctor
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
 import           Data.Functor.Contravariant
 import           Data.IORef
--- import           Debug.Trace
 import qualified RIO
 import           RIO (RIO, glog, GLogFunc, HasGLogFunc(..))
 
 import           Control.Arrow hiding ((+:+))
--- import           Control.Monad.Bayes.Weighted
 import           Control.Monad.State hiding (state)
--- import           Control.Monad.Trans.Class
--- import           Data.Foldable
 import           Data.HashMap as HM hiding (null,map,mapMaybe)
 import           Data.List (maximumBy)
 import           Data.Ord (comparing)
 import           OpenGames.Data.Utils
--- import qualified Data.Vector as V
--- import           GHC.TypeLits
--- import           Numeric.Probability.Distribution hiding (map, lift)
 import           System.Random.MWC.CondensedTable
 import           System.Random
 import           System.Random.Stateful
@@ -61,7 +52,6 @@ import           OpenGames.Engine.OpenGames hiding (lift)
 import           OpenGames.Engine.OpticClass
 import           OpenGames.Engine.TLL hiding ((++))
 import           OpenGames.Engine.KleisliOptics
--- import           Engine.Diagnostics
 
 type Vector = HM.Map String Double
 
