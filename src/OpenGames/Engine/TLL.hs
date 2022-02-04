@@ -9,26 +9,29 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 
 
 -- Parts of this file were written by Sjoerd Visscher
 
-module OpenGames.Engine.TLL
-  ( List(..)
-  , Apply(..)
-  , Unappend(..)
-  , MapL(..)
-  , FoldrL(..)
-  , ConstMap(..)
-  , SequenceList(..)
-  , Natural(..)
-  , IndexList(..)
-  , type (+:+)
-  , (+:+)
-  ) where
+module OpenGames.Engine.TLL where
+--   ( List(..)
+--   , Apply(..)
+--   , Unappend(..)
+--   , MapL(..)
+--   , FoldrL(..)
+--   , ConstMap(..)
+--   , SequenceList(..)
+--   , Natural(..)
+--   , IndexList(..)
+--   , type (+:+)
+--   , (+:+)
+--   ) where
 
 import Control.Applicative
 import Data.Kind
+import OpenGames.Engine.Vec
+import OpenGames.Engine.Nat
 
 infixr 6 :-
 data List ts where
@@ -43,7 +46,7 @@ instance (Show (List as), Show a)
     show (a :- rest) =
         show a ++ " :- " ++ show rest
 
-
+-- type family (+:+) as bs = r | r -> a
 type family (+:+) (as :: [*]) (bs :: [*]) :: [*] where
   '[] +:+ bs = bs
   (a ': as) +:+ bs = a ': (as +:+ bs)
@@ -113,13 +116,6 @@ instance (Applicative m, SequenceList m as bs) => SequenceList m (m a ': as) (a 
 
 -- Indexing on the list
 
-data Nat = Z | S Nat
-
-data Natural a where
-  Zero :: Natural 'Z
-  Succ :: Natural a -> Natural ('S a)
-
-
 class IndexList (n :: Nat) (xs :: [Type]) (i :: Type) | n xs -> i where
    fromIndex :: Natural n -> List xs -> i
 
@@ -145,3 +141,20 @@ type family LastL xs where
 lastL :: List a -> LastL a
 lastL (x :- Nil)          = x
 lastL (x :- xs@(_ :- _)) = lastL xs
+
+
+--------------------------------------
+-- Repeated Lists and vectors
+
+-- :type family Repeat (n :: Nat) (e :: t) :: Vec n t where
+-- :  Repeat Z e = 'Empty
+-- :  Repeat (S n) e = e :> Repeat n e
+
+type family RepeatLs (n :: Nat) (e :: [*]) :: [[*]] where
+  RepeatLs Z ls = '[]
+
+-- Repeats a TLL `n` times, concatenating each instance to the next
+type family CatRepeat (n :: Nat) (ls :: [*]) :: [*]  where
+  CatRepeat Z ls = '[]
+  CatRepeat (S n) ls = ls +:+ CatRepeat n ls
+

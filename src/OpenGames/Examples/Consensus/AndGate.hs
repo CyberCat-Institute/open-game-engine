@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module OpenGames.Examples.Consensus.AndGate where
 
@@ -9,6 +11,9 @@ import OpenGames.Preprocessor.CompileBlock
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.IOGames
 import OpenGames.Engine.OpenGames
+import OpenGames.Engine.TLL
+import OpenGames.Engine.Nat
+-- import OpenGames.Engine.Vec
 
 -- import OpenGames.Engine.OpenGamesClass
 -- import OpenGames.Engine.OpticClass
@@ -33,15 +38,10 @@ payoffAndGate penalty reward deposits False
 
 unit = ()
 
--- population :: Natural n -> Vec n (OpenGame o c '[p] '[q] a b s t)
---           -> OpenGame o c p :- p :- p ... n times
---                           (n copies q)
---                           Vect n a
---                           Vect n b
---                           Vect n s
---                           Vect n t
-population = undefined
 nature = undefined
+
+players numPlayers minDeposit maxDeposit incrementDeposit =
+  [ depositStagePlayerTH ("Player " ++ show n) minDeposit maxDeposit incrementDeposit | n <- [1 .. numPlayers]]
 
 successfulAttackPayoffDistribution :: Double -> Double -> IO Double
 successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff
@@ -53,11 +53,12 @@ andGateGame
   numPlayers reward costOfCapital
   minBribe maxBribe incrementBribe
   maxSuccessfulAttackPayoff attackerProbability penalty
-  minDeposit maxDeposit incrementDeposit epsilon =
+  minDeposit maxDeposit incrementDeposit
+  epsilon depositPlayers playingPlayers =
   [opengame|
-  inputs : replicate numPlayers costOfCapital ;
+  inputs : replicate (numPlayers) costOfCapital ;
   feedback : discard1 ;
-  operation : population [ depositStagePlayerTH ("Player " ++ show n) minDeposit maxDeposit incrementDeposit | n <- [1 .. numPlayers]] ;
+  operation : depositPlayers ;
   outputs : deposits ;
   returns : replicate numPlayers unit ;
 
@@ -71,7 +72,7 @@ andGateGame
 
   inputs : replicate numPlayers (deposits, bribe) ;
   feedback : discard2 ;
-  operation : population (map (\n -> playingStagePlayer ("Player " ++ show n) [True, False]) [1 .. numPlayers]) ;
+  operation : playingPlayers ;
   outputs : moves ;
   returns : zip (payoffAndGate penalty reward deposits (obfuscateAndGate moves)) bribesAccepted ;
 

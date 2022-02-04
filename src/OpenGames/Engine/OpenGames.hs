@@ -6,6 +6,8 @@ import Prelude hiding ((++))
 
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
+import OpenGames.Engine.Nat
+import OpenGames.Engine.Vec
 
 -- type OpenGame :: (o :: * -> * -> * -> * -> *) (c :: * -> * -> * -> * -> *) (a :: [*]) (b :: [*]) (x :: *) (s :: *) (y :: *) (r :: *)
 data OpenGame o c a b x s y r = OpenGame {
@@ -43,3 +45,12 @@ reindex v u g = OpenGame {
   evaluate = \as c -> case unappend as of (a, a') -> evaluate g a (play h a' \\ c)
                                                  +:+ evaluate h a' (play g a // c)
 }
+
+population :: forall o c c1 c2 (a :: [*]) (b :: [*]) (x :: *) s y r n.
+  (Optic c1 o, Context c1 c2 o c, Unappend a, Unappend b) =>
+  Natural n ->
+  (Vec (S n) (OpenGame o c a b x s y r)) ->
+  OpenGame o c (CatRepeat (S n) a)
+               (CatRepeat (S n) b)
+               (Vec (S n) x) (Vec (S n) s) (Vec (S n) y) (Vec (S n) r)
+population = undefined
