@@ -1,11 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 module OpenGames.Examples.Consensus.AndGate where
 
 import Numeric.Probability.Distribution (certainly, uniform, fromFreqs)
+
+import Control.Arrow (Kleisli)
 
 import OpenGames.Preprocessor.CompileBlock
 import OpenGames.Engine.OpticClass
@@ -14,6 +17,7 @@ import OpenGames.Engine.OpenGames
 import OpenGames.Engine.TLL
 import OpenGames.Engine.Nat
 -- import OpenGames.Engine.Vec
+import           System.Random.MWC.CondensedTable
 
 -- import OpenGames.Engine.OpenGamesClass
 -- import OpenGames.Engine.OpticClass
@@ -54,9 +58,21 @@ andGateGame
   minBribe maxBribe incrementBribe
   maxSuccessfulAttackPayoff attackerProbability penalty
   minDeposit maxDeposit incrementDeposit
-  epsilon depositPlayers playingPlayers =
+  epsilon (depositPlayers :: OpenGame
+          (MonadOptic String)
+          (MonadContext String)
+          '[Kleisli CondensedTableV (Double, Double) Double,
+            Kleisli CondensedTableV (Double, Double) Double,
+            Kleisli CondensedTableV (Double, Double) Double]
+          '[IO (DiagnosticsMC Double), IO (DiagnosticsMC Double),
+            IO (DiagnosticsMC Double)]
+          Double
+          ()
+          [Double]
+          ()) playingPlayers =
   [opengame|
-  inputs : replicate (numPlayers) costOfCapital ;
+
+  inputs : replicate numPlayers costOfCapital ;
   feedback : discard1 ;
   operation : depositPlayers ;
   outputs : deposits ;

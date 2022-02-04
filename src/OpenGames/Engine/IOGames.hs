@@ -18,7 +18,11 @@ module OpenGames.Engine.IOGames
   , fromLens
   , fromFunctions
   , discount
+  , nature
   , Msg(..)
+  , MonadOptic
+  , Rdr
+  , MonadContext
   , PlayerMsg(..)
   , SamplePayoffsMsg(..)
   , AverageUtilityMsg(..)
@@ -26,6 +30,7 @@ module OpenGames.Engine.IOGames
   , logFuncSilent
   -- , logFuncTracing
   , logFuncStructured
+  , Vector
   ) where
 
 
@@ -189,6 +194,21 @@ dependentDecisionIO name sampleSize ys = OpenGame play evaluate where
                           HM.empty
              glog UEnd
              pure v
+
+nature :: CondensedTableV x -> IOOpenGame msg '[] '[] () () x ()
+nature table = OpenGame { play, evaluate} where
+  play _ =
+    KleisliOptic v u
+    where
+      v () = do
+        g <- newStdGen
+        gS <- newIOGenM g
+        draw <- genFromTable table gS
+        return ((),draw)
+      u _ _ = return ()
+
+  evaluate = \_ _ -> Nil
+
 
 -- Support functionality for constructing open games
 fromLens :: (x -> y) -> (x -> r -> s) -> IOOpenGame msg '[] '[] x s y r

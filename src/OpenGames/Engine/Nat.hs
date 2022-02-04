@@ -14,3 +14,4 @@ data Natural (n :: Nat) where
 natToInt :: Natural n -> Int
 natToInt Zero = 0
 natToInt (Succ n) = 1 + natToInt n
+
