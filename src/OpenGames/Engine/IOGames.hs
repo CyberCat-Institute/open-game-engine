@@ -10,7 +10,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Engine.IOGames
+module OpenGames.Engine.IOGames
   ( IOOpenGame(..)
   , Agent(..)
   , DiagnosticsMC(..)
@@ -39,10 +39,10 @@ import           System.Random.MWC.CondensedTable
 import           System.Random
 import           System.Random.Stateful
 
-import           Engine.OpenGames hiding (lift)
-import           Engine.OpticClass
-import           Engine.TLL
-import           Engine.Diagnostics
+import           OpenGames.Engine.OpenGames hiding (lift)
+import           OpenGames.Engine.OpticClass
+import           OpenGames.Engine.TLL
+import           OpenGames.Engine.Diagnostics
 
 
 -- TODO implement printout

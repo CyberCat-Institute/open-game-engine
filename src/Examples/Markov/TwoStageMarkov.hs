@@ -4,14 +4,14 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.Markov.TwoStageMarkov where 
+module Examples.Markov.TwoStageMarkov where
 
 import           Data.Tuple.Extra (uncurry3)
-import           Engine.Engine
-import           Preprocessor.Preprocessor
+import           OpenGames
+import           OpenGames.Preprocessor
 import           Examples.SimultaneousMoves (ActionPD(..), Location(..))
 
-import           Control.Monad.State  hiding (state,void)
+import           Control.Monad.State  hiding (state, void, lift)
 import qualified Control.Monad.State  as ST
 
 import Numeric.Probability.Distribution hiding (map, lift, filter)
@@ -62,7 +62,7 @@ transitionEndState :: EndState -> ActionPD -> ActionPD -> Stochastic EndState
 transitionEndState True _ _ = playDeterministically True
 transitionEndState False Defect _ = uniform [True,False]
 transitionEndState False _      Defect = uniform [True,False]
-transitionEndState False Cooperate Cooperate = playDeterministically False 
+transitionEndState False Cooperate Cooperate = playDeterministically False
 
 -- The transition happens deterministically if one of the player does not play _Cooperate_ and then we stay there
 transitionEndStateDeterm :: EndState -> ActionPD -> ActionPD -> Stochastic EndState
@@ -152,7 +152,7 @@ startGame = [opengame|
    returns   :      ;
   |]
 
-  
+
 -- absorbing state
 -- only one action and therefore deterministic payoffGame
 endState = [opengame|

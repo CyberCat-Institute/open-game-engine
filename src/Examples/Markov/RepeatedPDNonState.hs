@@ -4,24 +4,24 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.Markov.RepeatedPDNonState where 
+module Examples.Markov.RepeatedPDNonState where
 
 
-import           Engine.Engine hiding (StochasticStatefulOptic
-                                      , StochasticStatefulBayesianOpenGame(..)
-                                      , Agent(..)
-                                      , dependentDecision
-                                      , dependentEpsilonDecision
-                                      , fromFunctions
-                                      , fromLens
-                                      , uniformDist
-                                      , distFromList
-                                      , pureAction
-                                      , playDeterministically
-                                      , discount
-                                      )
-import           Engine.BayesianGamesNonState
-import           Preprocessor.Preprocessor
+import           OpenGames hiding (StochasticStatefulOptic
+                                  , StochasticStatefulBayesianOpenGame(..)
+                                  , Agent(..)
+                                  , dependentDecision
+                                  , dependentEpsilonDecision
+                                  , fromFunctions
+                                  , fromLens
+                                  , uniformDist
+                                  , distFromList
+                                  , pureAction
+                                  , playDeterministically
+                                  , discount
+                                  )
+import           OpenGames.Engine.BayesianGamesNonState
+import           OpenGames.Preprocessor
 
 
 import Numeric.Probability.Distribution hiding (map, lift, filter)
@@ -66,7 +66,7 @@ prisonersDilemmaCont = [opengame|
 
 
 
--- Add strategy for stage game 
+-- Add strategy for stage game
 stageStrategy1,stageStrategy2 :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
 stageStrategy1 = Kleisli $
    (\case

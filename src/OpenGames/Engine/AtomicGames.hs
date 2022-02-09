@@ -1,8 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module Engine.AtomicGames
+module OpenGames.Engine.AtomicGames
  ( decision
  , decisionNoObs
  , forwardFunction
@@ -13,12 +14,10 @@ module Engine.AtomicGames
 
 import Language.Haskell.TH
 
-import Engine.BayesianGames
-import Engine.OpenGames
-import Engine.OpticClass
-import Preprocessor.THSyntax
-import Preprocessor.AbstractSyntax
-import Preprocessor.Compile
+import OpenGames.Engine.BayesianGames
+import OpenGames.Engine.OpenGames
+import OpenGames.Engine.OpticClass
+import OpenGames.Preprocessor
 
 ---------------------------------------
 -- 0. A single action making a generic -- parameterized -- decision
@@ -137,8 +136,8 @@ liftStochasticForward process =  [opengame|
 |]
 
 
-generateGame "pureDecision2" ["actionSpace","payoffFunction","playerName"] $
-  (Block ["observation"] []
-         [mkLine [[|observation|]] [] [|dependentDecision playerName (\y -> actionSpace)|] ["action"] [[|payoffFunction observation action returns|]]]
-         [[|action|]] ["returns"])
+-- generateGame "pureDecision2" ["actionSpace","payoffFunction","playerName"] $
+--   (Block ["observation"] []
+--          [mkLine [[|observation|]] [] [|dependentDecision playerName (\y -> actionSpace)|] ["action"] [[|payoffFunction observation action returns|]]]
+--          [[|action|]] ["returns"])
 

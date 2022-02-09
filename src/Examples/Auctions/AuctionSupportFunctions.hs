@@ -1,6 +1,6 @@
 module Examples.Auctions.AuctionSupportFunctions where
 
-import Engine.Engine (Stochastic,uniformDist)
+import OpenGames.Engine.Engine (Stochastic,uniformDist)
 import Data.List
 ----------------------
 -- 0. Types

@@ -7,7 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Engine.BayesianGames
+module OpenGames.Engine.BayesianGames
   ( StochasticStatefulBayesianOpenGame(..)
   , Agent(..)
   , Payoff(..)
@@ -40,10 +40,10 @@ import Data.Ord (comparing)
 import           Data.Utils
 import Numeric.Probability.Distribution hiding (map, lift, filter)
 
-import Engine.OpenGames hiding (lift)
-import Engine.OpticClass
-import Engine.TLL
-import Engine.Diagnostics
+import OpenGames.Engine.OpenGames hiding (lift)
+import OpenGames.Engine.OpticClass
+import OpenGames.Engine.TLL
+import OpenGames.Engine.Diagnostics
 
 ---------------------------------------------
 -- Reimplements stateful bayesian from before

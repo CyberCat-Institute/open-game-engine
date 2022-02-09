@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-16.28
+resolver: nightly-2022-02-07
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,6 +39,7 @@ extra-deps:
  - random-1.2.0
  - splitmix-0.1
  - mwc-random-0.15.0.2
+ - monad-bayes-0.1.1.0@sha256:57d96f530a37a1c8efed0830c7f2bcf86da05d0d53324aebdd5b5aa165d72829,5132
 
 allow-newer: true
 
@@ -61,7 +62,7 @@ allow-newer: true
 #
 # Override the architecture used by stack, especially useful on Windows
 # arch: i386
-# arch: x86_64
+arch: x86_64
 #
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]

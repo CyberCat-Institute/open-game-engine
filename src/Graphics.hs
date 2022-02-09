@@ -5,7 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 module Graphics where
 
-import Preprocessor.AbstractSyntax as ABS
+import OpenGames.Preprocessor.BlockSyntax
 
 import Data.GraphViz as GV
 import Data.Graph.Inductive.PatriciaTree

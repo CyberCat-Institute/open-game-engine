@@ -7,13 +7,13 @@
 
 module Examples.Markov.TestSimpleMonteCarlo where
 
-import           Engine.Engine
-import           Preprocessor.Preprocessor
+import           OpenGames
+import           OpenGames.Preprocessor
 import           Examples.SimultaneousMoves (ActionPD(..),prisonersDilemmaMatrix)
 import           Examples.Markov.TestSimpleMonteCarlo.Continuation
 
-import           Control.Monad.State  hiding (state,void)
-import qualified Control.Monad.State  as ST
+import           Control.Monad.State hiding (state, void, lift)
+import qualified Control.Monad.State as ST
 import qualified Data.Vector as V
 import           Debug.Trace
 import           System.Random.MWC.CondensedTable

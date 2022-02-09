@@ -5,9 +5,11 @@
 module Examples.SimultaneousMoves where
 
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Engine.BayesianGames
+import OpenGames.Preprocessor
 
+import Control.Arrow (Kleisli(..))
 
 --------------
 -- 0. Overview

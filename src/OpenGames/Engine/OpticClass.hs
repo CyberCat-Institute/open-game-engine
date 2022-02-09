@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Engine.OpticClass
+module OpenGames.Engine.OpticClass
   ( Stochastic(..)
   , Vector(..)
   , StochasticStatefulOptic(..)

@@ -1,6 +1,6 @@
 {-# LANGUAGE ExplicitNamespaces #-}
 
-module Engine.Engine
+module OpenGames.Engine.Engine
   ( decision
   , decisionNoObs
   , forwardFunction
@@ -56,11 +56,11 @@ module Engine.Engine
   ) where
 
 -- | File organizes the imports of the engine to streamline the import of relevant functionality
-import Engine.AtomicGames
-import Engine.BayesianGames hiding (liftStochastic)
-import Engine.OpenGames
-import Engine.OpticClass
-import Engine.Diagnostics
-import Engine.TLL
+import OpenGames.Engine.AtomicGames
+import OpenGames.Engine.BayesianGames hiding (liftStochastic)
+import OpenGames.Engine.OpenGames
+import OpenGames.Engine.OpticClass
+import OpenGames.Engine.Diagnostics
+import OpenGames.Engine.TLL
 
 import Control.Arrow (Kleisli(..))

@@ -11,8 +11,8 @@ module Examples.Decision
 
 import GHC.Generics
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 
 ---------------------------------------------
 -- 0. A single decision w/o prior information
@@ -176,7 +176,7 @@ singleDecStoch distribution actionSpace payoffFunction = [opengame|
 
 -----------------
 -- 1.4 Parameters
-  
+
 -- | We define a uniform distribution for a peak; check the payoff function above for information
 -- We can use the auxiliary _uniformDist_ which creates a uniform distribution from a list.
 distributionUniformPeak = uniformDist actionSpace

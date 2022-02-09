@@ -1,14 +1,10 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 
-module Preprocessor.AbstractSyntax
-  ( Line(..)
-  , pureLine
-  , mkLine
-  , Block(..)
-  ) where
+module OpenGames.Preprocessor.BlockSyntax where
 
 import Control.Comonad
 import Data.Bifunctor
@@ -22,7 +18,13 @@ import Data.Bifunctor
 -- cvo, ..., cvo' | cno, ..., cno' <- matrix -< cvi, ..., cvi' | cni, ..., cvi'
 
 -- covariant input = X, covariant output = Y, contravariant input = R, contravariant output = S
-
+--
+--           ┌──────┐
+--  covIn/X ─┤      ├─ Y/conIn
+--           │      │
+-- covOut/S ─┤      ├─ R/conOut
+--           └──────┘
+--
 -- There is an important duality that the types can't express: half of these are lists of Haskell variables
 -- (they could probably be patterns) that create new bindings, and half of them are lists of Haskell expressions
 -- Line outputs and block inputs are variables/patterns, line inputs and block outputs are expressions
@@ -33,49 +35,55 @@ import Data.Bifunctor
 -- I decided to keep the record field names verbose, and I expect the user to specify lines in constructor syntax
 -- rather than record syntax
 
-data Line l p e = Line {
-  label :: l,
-  covariantInputs :: [e], contravariantOutputs :: [p],
-  matrix :: e, --
-  covariantOutputs :: [p], contravariantInputs :: [e]} deriving (Eq, Show, Functor)
+data Line lbl p e = Line {
+  label :: lbl,
+  covariantInputs :: [e],
+  contravariantOutputs :: [p],
+  matrix :: e,
+  covariantOutputs :: [p],
+  contravariantInputs :: [e]}
+  deriving (Eq, Show, Functor)
 
-mkLine :: [e] -> [p] -> e -> [p] -> [e] -> Line (Maybe l) p e
+mkLine :: [e] -> [p] -> e -> [p] -> [e] -> Line (Maybe String) p e
 mkLine = Line Nothing
 
-
-instance Comonad (Line (Maybe l) p) where
+instance Semigroup lbl => Comonad (Line (Maybe lbl) p) where
   extract (Line _ _ _ e _ _) = e
   extend f v = pure (f v)
 
-instance Bifunctor (Line l) where
+instance Bifunctor (Line lbl) where
   first f (Line lbl covi cono m covo coni) =
     Line lbl covi (fmap f cono) m (fmap f covo) coni
   second = fmap
 
-pureLine :: forall l p a. a -> Line (Maybe l) p a
+pureLine :: forall p a lbl. a -> Line (Maybe lbl) p a
 pureLine v = Line Nothing [] [] v [] []
 
-instance Applicative (Line (Maybe l) p) where
+instance Semigroup lbl => Applicative (Line (Maybe lbl) p) where
   pure = pureLine
-  (Line _ _ _ f _ _) <*> (Line label covIn conOut m covOut conIn) =
-    Line label (fmap f covIn) conOut (f m) covOut (fmap f conIn)
+  (Line lbl1 _ _ f _ _) <*> (Line lbl2 covIn conOut m covOut conIn) =
+    Line (lbl1 <> lbl2) (fmap f covIn) conOut (f m) covOut (fmap f conIn)
 
-instance Foldable (Line l p) where
+instance Foldable (Line lbl p) where
   foldr f init (Line _ _ _ arg _ _)  = f arg init
 
-instance Traversable (Line l p) where
+instance Traversable (Line lbl p) where
   traverse f (Line lbl covIn conOut m covOut conIn) =
-    pure (Line lbl) <*> traverse f covIn
-                    <*> pure conOut
-                    <*> f m
-                    <*> pure covOut
-                    <*> traverse f conIn
+    pure (Line lbl)
+              <*> traverse f covIn
+              <*> pure conOut
+              <*> f m
+              <*> pure covOut
+              <*> traverse f conIn
 
+-- `p` stands for "pattern", `e` for "expression"
 data Block p e = Block {
-  blockCovariantInputs :: [p], blockContravariantOutputs :: [e],
+  blockCovariantInputs :: [p],
+  blockContravariantOutputs :: [e],
   blockLines :: [Line (Maybe String) p e],
-  blockCovariantOutputs :: [e], blockContravariantInputs :: [p]} deriving (Eq, Show, Functor)
-
+  blockCovariantOutputs :: [e],
+  blockContravariantInputs :: [p]}
+  deriving (Eq, Show, Functor)
 
 instance Applicative (Block p) where
   pure v = Block [] [] (pure (pure v)) [] []
@@ -90,7 +98,6 @@ instance Applicative (Block p) where
       where
         mapLines :: [Line (Maybe String) p (a -> b)] -> [a] -> [b]
         mapLines f as = fmap extract f <*> as
-
 
 instance Foldable (Block p) where
   foldr f init (Block _ _ arg _ _)  =

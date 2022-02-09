@@ -1,35 +1,18 @@
-{-# Language NamedFieldPuns #-}
 {-# Language TemplateHaskell #-}
+{-# Language NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes  #-}
 
-module Preprocessor.Compile
-  ( compileLiteral
-  , compileRange
-  , compileLambda
-  , compilePattern
-  , compLine
-  , convertGame
-  , parseLambdaAsOpenGame
-  , parseLambdaAsExp
-  , game
-  , parseVerboseGame
-  , opengame
-  , parseTree
-  ) where
+module OpenGames.Preprocessor.CompileSyntax where
 
-import Preprocessor.Parser
-import Preprocessor.Lambda
-import Preprocessor.THSyntax
-import Preprocessor.AbstractSyntax
-import Preprocessor.TH
-
+import Prelude hiding (lines)
 import Data.Char
 import Data.Bifunctor
-
+import OpenGames.Preprocessor.Parser
+import OpenGames.Preprocessor.BlockSyntax
+import OpenGames.Preprocessor.RuntimeAST
+-- import OpenGames.Preprocessor.CompileBlock
 import Language.Haskell.TH.Syntax
-import Language.Haskell.TH.Quote
 import Language.Haskell.TH as TH
-import Prelude hiding (lines)
 
 compileLiteral :: Literal -> Exp
 compileLiteral (LInt i) = LitE $ IntegerL i
@@ -50,12 +33,12 @@ compileLambda (Var s) | isUpper (head s)  = ConE (mkName s)
 compileLambda (App f a) = AppE (compileLambda f) (compileLambda a)
 compileLambda (Lam pat body) = LamE [compilePattern pat] (compileLambda body)
 compileLambda (LList ls) = ListE $ map compileLambda ls
-compileLambda (Do sm) = DoE (map toStatement sm)
+compileLambda (Do sm) = DoE Nothing (map toStatement sm)
   where
     toStatement :: (Maybe String, Lambda) -> Stmt
     toStatement (Nothing, lam) = NoBindS (compileLambda lam)
     toStatement (Just pat, lam) = BindS (VarP (mkName pat)) (compileLambda lam)
-compileLambda (Tuple f s r) = TupE (map (compileLambda) (f : s : r))
+compileLambda (Tuple f s r) = TupE (map (Just . compileLambda) (f : s : r))
 compileLambda (Range range) = ArithSeqE (compileRange range)
 compileLambda (IfThenElse prd thn els) = CondE (compileLambda prd) (compileLambda thn) (compileLambda els)
 compileLambda (Ifix op left right) = InfixE (Just $ compileLambda left)
@@ -68,7 +51,12 @@ compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
                                                (NormalB (compileLambda val))
                                                []]
                                          (compileLambda body)
+compileLambda (LComp stmts) = CompE (map compileStmt stmts)
 
+compileStmt :: LStmt -> Stmt
+compileStmt (LBindS pat exp) = BindS (compilePattern pat) (compileLambda exp)
+compileStmt (LNoBindS exp) = NoBindS (compileLambda exp)
+compileStmt (LLetS pat exp) = LetS [ValD (compilePattern pat) (NormalB $ compileLambda exp) []]
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i
@@ -82,49 +70,7 @@ compilePattern (PVar i) = VarP (mkName i)
 compLine :: Line (Maybe String) Pattern Lambda -> Line (Maybe String) Pat Exp
 compLine = bimap compilePattern compileLambda
 
+
 convertGame :: Block Pattern Lambda -> Block Pat Exp
 convertGame = bimap compilePattern compileLambda
-parseLambdaAsOpenGame :: String -> Maybe (FreeOpenGame Pat Exp)
-parseLambdaAsOpenGame input =
-  case parseLambda input of
-    Left _ -> Nothing
-    Right v -> Just $ compileBlock $ convertGame v
 
-parseLambdaAsExp :: String -> Q Exp
-parseLambdaAsExp input = case parseLambda input of
-                           Left err -> error (show err)
-                           Right v ->  (interpretOpenGame $ compileBlock $ convertGame v)
-
-game :: QuasiQuoter
-game = QuasiQuoter
-     { quoteExp  = parseLambdaAsExp . dropWhile isSpace
-     , quotePat  = error "expected expr"
-     , quoteType = error "expected expr"
-     , quoteDec  = error "expected expr"
-     }
-
-parseOrFail :: String -> Block Pattern Lambda
-parseOrFail input = case parseVerbose input of
-                          Left err -> error (show err)
-                          Right parsed -> parsed
-
-getParseTree = convertGame . parseOrFail
-
-parseVerboseGame :: String -> Q Exp
-parseVerboseGame = interpretOpenGame . compileBlock . getParseTree
-
-opengame :: QuasiQuoter
-opengame = QuasiQuoter
-     { quoteExp  = parseVerboseGame . dropWhile isSpace
-     , quotePat  = error "expected expr"
-     , quoteType = error "expected expr"
-     , quoteDec  = error "expected expr"
-     }
-
-parseTree :: QuasiQuoter
-parseTree = QuasiQuoter
-     { quoteExp  = \str -> [|getParseTree . dropWhile isSpace $ str|]
-     , quotePat  = error "expected expr"
-     , quoteType = error "expected expr"
-     , quoteDec  = error "expected expr"
-     }

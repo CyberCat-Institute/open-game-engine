@@ -9,11 +9,13 @@
 module Examples.Staking.AndGateMarkovMC where
 
 import           Debug.Trace
-import           Engine.Engine hiding (fromLens,Agent,fromFunctions,discount,nature)
-import           Engine.IOGames
-import           Preprocessor.Preprocessor
+import           OpenGames hiding (fromLens,Agent,fromFunctions,discount,nature)
+import           OpenGames.Engine.IOGames
+import           OpenGames.Engine.BayesianGames (uniformDist, playDeterministically)
+import           OpenGames.Preprocessor
 
-import           Control.Monad.State  hiding (state,void)
+import           Control.Arrow (Kleisli(..))
+import           Control.Monad.State  hiding (state, void, lift)
 import qualified Control.Monad.State  as ST
 import qualified Data.Vector as V
 import           Numeric.Probability.Distribution hiding (map, lift, filter)
@@ -255,7 +257,7 @@ discountingStage discountFactor = [opengame|
 andGateGame :: AndGateMarkovParams
                      -> OpenGame
                           MonadOptic
-                          MonadContext 
+                          MonadContext
                           ('[Kleisli CondensedTableV (([Double], Bool), Double) Double,
                              Kleisli CondensedTableV (([Double], Bool), Double) Double,
                              Kleisli CondensedTableV (([Double], Bool), Double) Double,

@@ -10,13 +10,13 @@ module Examples.Markov.TestSimpleMonteCarlo.Continuation
   , discountFactor
   ) where
 
-import           Engine.Engine hiding (fromLens,Agent,fromFunctions,discount)
-import           Preprocessor.Preprocessor
+import           OpenGames hiding (fromLens,Agent,fromFunctions,discount)
+import           OpenGames.Preprocessor
 import           Examples.SimultaneousMoves (ActionPD(..),prisonersDilemmaMatrix)
-import           Engine.IOGames
+import           OpenGames.Engine.IOGames
 import           Data.Utils
 
-import           Control.Monad.State  hiding (state,void)
+import           Control.Monad.State  hiding (state, void, lift)
 import qualified Control.Monad.State  as ST
 import qualified Data.Vector as V
 import           Debug.Trace

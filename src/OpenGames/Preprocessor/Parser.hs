@@ -2,9 +2,10 @@
 {-# LANGUAGE TupleSections #-}
 
 -- A parser for Lambda Calculus
-module Preprocessor.Lambda
+module OpenGames.Preprocessor.Parser
   ( Lambda(..)
   , Literal(..)
+  , LStmt(..)
   , LRange(..)
   , Pattern(..)
   , expr
@@ -13,20 +14,21 @@ module Preprocessor.Lambda
   , parsePattern
   , parseVerboseSyntax
   , parseVerboseLine
+  , parseLambda
+  , parseVerbose
   ) where
 
 import           Data.Char
-import           Text.Parsec
+import           Text.Parsec hiding (Line)
 import           Text.Parsec.Prim
 import           Text.Parsec.Error
-import           Text.Parsec.Pos
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Expr     as Ex
 import qualified Text.Parsec.Token    as Tok
 import Text.Parsec.Language
 import Text.ParserCombinators.Parsec.Expr
-import Preprocessor.AbstractSyntax as ABS
+import OpenGames.Preprocessor.BlockSyntax
 
 type Name = String
 
@@ -50,13 +52,21 @@ data Lambda
   | Ifix String Lambda Lambda
   | PFix String Lambda
   | LLet Pattern Lambda Lambda
-  deriving ( Eq, Show )
+  | LComp [LStmt]
+  deriving (Eq, Show)
+
+data LStmt
+  = LBindS Pattern Lambda
+  | LNoBindS Lambda
+  | LLetS Pattern Lambda
+  deriving (Eq, Show)
+
 
 data Literal
   = LInt Integer
   | LBool Bool
   | LString String
-  deriving ( Eq, Show )
+  deriving (Eq, Show)
 
 data Pattern
   = PVar Name           -- Just a variable
@@ -66,10 +76,11 @@ data Pattern
   | PLit Literal        -- Match a literal exactly
   deriving (Eq, Show)
 
-languageKeywords = ["if", "then", "else", "data", "import", "do", "let", "in"
-                   , "inputs", "outputs"
-                   , "feedback", "returns"
-                   , "operation"
+langaugeKeywords = ["if", "then", "else", "data", "import", "do", "let", "in" -- language keywords
+                   , "inputs", "outputs" -- the covariant arguments
+                   , "feedback", "returns" -- the contravariant arguments
+                   , "operation" -- the operation of the line
+                   , "label" -- the label of a line
                    ]
 
 modifiedHaskell :: LanguageDef st
@@ -83,7 +94,7 @@ modifiedHaskell = emptyDef
                 , Tok.opStart        = Tok.opLetter modifiedHaskell
                 , Tok.opLetter       = oneOf ":!#$%&*+./<=>?@\\^-~"
                 , Tok.reservedOpNames= ["::","..","=","\\","|","<-","->","@","~","=>", "$", "-<", ";", "|", "<<=", "||", "=>>"]
-                , Tok.reservedNames  = languageKeywords
+                , Tok.reservedNames  = langaugeKeywords
                 , Tok.caseSensitive  = True
                 }
 
@@ -203,7 +214,6 @@ parseLet = do
   body <- expr
   pure (LLet varName value body)
 
-
 parseTuple :: Parser Lambda
 parseTuple = do
   f <- expr
@@ -252,6 +262,16 @@ bracketed =
       })
   <|> pure (LList [])
 
+comprehension :: Parser Lambda
+comprehension = do
+  e <- expr
+  reservedOp "|"
+  LComp <$> ((++ [LNoBindS e]) <$> (sepBy1 parseStmt comma))
+    where
+      parseStmt :: Parser LStmt
+      parseStmt = LBindS <$> parsePattern <*> (reservedOp "<-" *> expr)
+              <|> LLetS <$> (reserved "let" *> parsePattern) <*> expr
+              <|> LNoBindS <$> expr
 
 term :: Parser Lambda
 term =  parens (try parseTuple <|> expr)
@@ -260,7 +280,7 @@ term =  parens (try parseTuple <|> expr)
     <|> variable
     <|> number
     <|> strLit
-    <|> brackets bracketed
+    <|> brackets (try comprehension <|> bracketed)
     <|> doNotation
     <|> parseLet
 
@@ -272,7 +292,8 @@ appl = do
 expr :: Parser Lambda
 expr =  infixParser appl
 
-parseLine :: Parser p -> Parser e -> Parser (ABS.Line (Maybe String) p e)
+
+parseLine :: Parser p -> Parser e -> Parser (Line (Maybe String) p e)
 parseLine parseP parseE = do
     covo <- (commaSep parseP <* reservedOp "|")
     coni <- (commaSep parseE  <* reservedOp "<-")
@@ -294,7 +315,7 @@ parseTwoLines :: String -> String -> Parser p -> Parser e -> Parser ([p], [e])
 parseTwoLines kw1 kw2 parseP parseE =
     pair (reserved kw1 *> colon *> commaSep parseP <* semi )
          (option [] (reserved kw2 *> colon *> commaSep parseE <* semi ))
-     <|> (([], ) <$> (reserved kw2 *> colon *> commaSep parseE <* semi))
+ <|> (([], ) <$> (reserved kw2 *> colon *> commaSep parseE <* semi))
 
 parseInput = parseTwoLines "inputs" "feedback"
 
@@ -302,13 +323,13 @@ parseOutput = parseTwoLines "outputs" "returns"
 
 parseDelimiter = colon *> many1 (string "-") <* colon
 
-parseVerboseLine :: Parser p -> Parser e -> Parser (ABS.Line (Maybe String) p e)
+parseVerboseLine :: Parser p -> Parser e -> Parser (Line (Maybe String) p e)
 parseVerboseLine parseP parseE = do
   lbl <- optionMaybe (reserved "label" *> colon *> manyTill anyChar semi)
   (input, feedback) <- option ([], []) (parseInput parseE parseP)
   program <- reserved "operation" *> colon *> parseE <* semi
   (outputs,returns) <- option ([], []) (parseOutput parseP parseE)
-  pure $ ABS.Line lbl input feedback program outputs returns
+  pure $ Line lbl input feedback program outputs returns
 
 parseVerboseSyntax :: Parser p -> Parser e -> Parser (Block p e)
 parseVerboseSyntax parseP parseE =
@@ -317,3 +338,25 @@ parseVerboseSyntax parseP parseE =
      (outputs,returns) <- option ([], []) (parseDelimiter *> parseOutput parseE parseP)
      eof
      return $ Block input feedback lines outputs returns
+
+word :: Parser String
+word = many1 alphaNum
+
+quoted :: Parser String
+quoted = char '"' *> manyTill anyChar (char '"')
+
+uncurry5 :: (a -> b -> c -> d -> e -> f) -> (a, b, c, d, e) -> f
+uncurry5 f (x, y, z, w, v) = f x y z w v
+
+lineSep :: String -> Parser ()
+lineSep str = spaces <* string str <* spaces
+
+realParser :: Parser (Block Pattern Lambda)
+realParser =  parseBlock parsePattern expr <* eof
+
+parseLambda :: String -> Either ParseError (Block Pattern Lambda)
+parseLambda = parse realParser "realParser"
+
+parseVerbose :: String -> Either ParseError (Block Pattern Lambda)
+parseVerbose = parse (parseVerboseSyntax parsePattern expr) "verbose parser"
+

@@ -9,8 +9,8 @@
 module Examples.Auctions.ChooseReservePrice where
 
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 import Examples.Auctions.AuctionSupportFunctions
 import Examples.Auctions.SimultaneousBidAuction
 
@@ -20,7 +20,7 @@ import Examples.Auctions.SimultaneousBidAuction
 -- 0. Auxiliary function
 
 revenueAuctioneer :: Num v =>  [(n, v)] -> v
-revenueAuctioneer ls = sum $ fmap snd ls 
+revenueAuctioneer ls = sum $ fmap snd ls
 
 ---------------------
 -- 1 The actual games

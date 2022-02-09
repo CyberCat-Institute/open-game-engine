@@ -2,7 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 
-module Engine.OpenGames
+module OpenGames.Engine.OpenGames
  ( OpenGame(..)
  , lift
  , reindex
@@ -11,8 +11,8 @@ module Engine.OpenGames
  ) where
 
 
-import Engine.OpticClass
-import Engine.TLL
+import OpenGames.Engine.OpticClass
+import OpenGames.Engine.TLL
 
 data OpenGame o c a b x s y r = OpenGame {
   play :: List a -> o x s y r,

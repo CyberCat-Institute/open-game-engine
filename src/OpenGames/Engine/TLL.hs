@@ -13,7 +13,7 @@
 
 -- Parts of this file were written by Sjoerd Visscher
 
-module Engine.TLL
+module OpenGames.Engine.TLL
   ( List(..)
   , Apply(..)
   , Unappend(..)

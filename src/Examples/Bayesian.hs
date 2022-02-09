@@ -5,8 +5,8 @@
 
 module Examples.Bayesian where
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 
 
 --------------
@@ -82,7 +82,7 @@ stochasticEnv probA signalPrecision = [opengame|
   |]
 
 
--- | The complete game 
+-- | The complete game
 coordinateWithNature probA signalPrecision = [opengame|
    inputs    :      ;
    feedback  :      ;
@@ -107,7 +107,7 @@ coordinateWithNature probA signalPrecision = [opengame|
    |]
 
 -- 2.1. Prisoner's dilemma
-bayesianPD  = [opengame| 
+bayesianPD  = [opengame|
 
    inputs    :      ;
    feedback  :      ;

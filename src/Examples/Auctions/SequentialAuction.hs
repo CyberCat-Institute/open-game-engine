@@ -9,8 +9,8 @@
 module Examples.Auctions.SequentialAuction where
 
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 import Examples.Auctions.AuctionSupportFunctions
 
 
@@ -97,7 +97,7 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
 
 
 -- Instantiates a simplified version with three players
-bidding kPrice kSlots noLotteries paymentFunction = [opengame| 
+bidding kPrice kSlots noLotteries paymentFunction = [opengame|
 
    inputs    :      ;
    feedback  :      ;

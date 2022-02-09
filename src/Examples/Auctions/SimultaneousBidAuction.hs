@@ -9,8 +9,8 @@
 module Examples.Auctions.SimultaneousBidAuction where
 
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 import Examples.Auctions.AuctionSupportFunctions
 
 ----------
@@ -20,7 +20,7 @@ import Examples.Auctions.AuctionSupportFunctions
 ---------------
 -- 0 Parameters
 
-type Values = Double 
+type Values = Double
 
 values = [0,20..100]
 
@@ -87,7 +87,7 @@ transformPaymentsReservePrice kPrice kSlots = [opengame|
 
 
 
-bidding2ReservePrice kPrice kSlots = [opengame| 
+bidding2ReservePrice kPrice kSlots = [opengame|
 
    inputs    : reservePrice    ;
    feedback  :      ;
@@ -150,7 +150,7 @@ transformPayments kPrice kSlots reservePrice = [opengame|
 
 
 -- Instantiates a simplified version with two players
-bidding2 kPrice kSlots reservePrice  = [opengame| 
+bidding2 kPrice kSlots reservePrice  = [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -193,7 +193,7 @@ bidding2 kPrice kSlots reservePrice  = [opengame|
 
 
 
-  
+
 -- B Analysis
 -------------
 

@@ -8,10 +8,11 @@
 module Examples.Staking.AndGateMarkov where
 
 import           Debug.Trace
-import           Engine.Engine
-import           Preprocessor.Preprocessor
+import           OpenGames.Engine.Engine
+import           OpenGames.Preprocessor
 
-import           Control.Monad.State  hiding (state,void)
+import           Control.Arrow (Kleisli(..))
+import           Control.Monad.State  hiding (state, void, lift)
 import qualified Control.Monad.State  as ST
 
 

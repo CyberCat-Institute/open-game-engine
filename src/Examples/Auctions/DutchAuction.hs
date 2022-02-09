@@ -9,19 +9,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Examples.Auctions.DutchAuction where 
+module Examples.Auctions.DutchAuction where
 
 
-import Engine.Engine
-import Preprocessor.Preprocessor
+import OpenGames
+import OpenGames.Preprocessor
 import Examples.Auctions.AuctionSupportFunctions
 
 
-import           Control.Monad.State  hiding (state,void)
+import           Control.Monad.State  hiding (state, void, lift)
 import qualified Control.Monad.State  as ST
 
 -- Create super-game including a tick-repeated version
--- 
+--
 
 ----------
 -- A Model
@@ -59,7 +59,7 @@ data Bid = Stop | Wait
 ---------------------
 -- 1 The actual games
 -- 1.1 Initial games
--- Draws a value and creates a _value_ 
+-- Draws a value and creates a _value_
 natureDrawsTypeStage = [opengame|
 
     inputs    :   ;
@@ -123,7 +123,7 @@ nature2 = [opengame|
     returns   :    ;
   |]
 
- 
+
 -- 1.2. actual bidding parts
 -- Have a base game, and iterate that game.
 -- Individual bidding stage
@@ -208,7 +208,7 @@ biddingGameComplete  = [opengame|
   |]
 
 
-  
+
 ------------------------
 -- 2 Auxiliary functions
 determinePayments :: (Integer,Bid,Bid,Bid) -> (Double,Double)

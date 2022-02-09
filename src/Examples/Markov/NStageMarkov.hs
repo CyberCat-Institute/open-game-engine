@@ -4,15 +4,15 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Examples.Markov.NStageMarkov where 
+module Examples.Markov.NStageMarkov where
 
 import           Data.Tuple.Extra (uncurry3)
-import           Engine.Engine
-import           Preprocessor.Preprocessor
+import           OpenGames
+import           OpenGames.Preprocessor
 import           Examples.SimultaneousMoves (ActionPD(..), Location(..))
 
-import           Control.Monad.State  hiding (state,void)
-import qualified Control.Monad.State  as ST
+import           Control.Monad.State hiding (state,void, lift)
+import qualified Control.Monad.State as ST
 
 import Numeric.Probability.Distribution hiding (map, lift, filter)
 
@@ -130,7 +130,7 @@ completeGame = [opengame|
 -- Strategies
 
 -- Add strategy for stage game
--- NOTE the payoffs 
+-- NOTE the payoffs
 strategyEq :: Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
 strategyEq = Kleisli $
    (\case
@@ -205,7 +205,7 @@ repeatedCompleteGameEq iterator strat initialAction = evaluate completeGame stra
   where context  = contextCont iterator strat initialAction
 
 
--- Show output 
+-- Show output
 eqOutput iterator strat initialAction = generateIsEq $ repeatedCompleteGameEq iterator strat initialAction
 
 -- NOTE: check the equilibrium for all possible states!
