@@ -68,7 +68,7 @@ library:
     - OpenGames.Examples.Consensus.DepositGame
     - OpenGames.Examples.Consensus.TestPayoffs
   dependencies:
-    - base >=4.7 && <5
+    - base
     - mtl
     - transformers
     - probability
@@ -77,7 +77,7 @@ library:
     - profunctors
     - template-haskell
     - parsec
-    - QuickCheck
+    - QuickCheck >= 2.14.2
     - comonad
     - hashmap
     - graphviz

@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 
-module OpenGames.Preprocessor.AbstractSyntax where
+module OpenGames.Preprocessor.BlockSyntax where
 
 import Control.Comonad
 import Data.Bifunctor

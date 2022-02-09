@@ -1,14 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module OpenGames.Preprocessor.TH (Variables(..)
-                                 , Expressions(..)
-                                 , FreeOpenGame(..)
-                                 , ReindexingExpression(..)
-                                 , FunctionExpression(..)
-                                 , interpretOpenGame
-                                 , interpretFunction
-                                 ) where
+module OpenGames.Preprocessor.Codegen
+    (Variables(..)
+    , Expressions(..)
+    , FreeOpenGame(..)
+    , ReindexingExpression(..)
+    , FunctionExpression(..)
+    , interpretOpenGame
+    , interpretFunction
+    ) where
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax

@@ -82,7 +82,7 @@ instance Function Wage where
 instance Function DiscreteAuctionType where
 
 instance Arbitrary t => Arbitrary (T Rational t) where
-  arbitrary = certainly <$> arbitrary
+  arbitrary = (certainly :: t -> T Rational t) <$> (arbitrary :: Arbitrary t)
   shrink (Cons v) = Cons <$> (subsequences v)
 
 main :: IO ()

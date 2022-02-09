@@ -84,14 +84,18 @@ library
       Data.Utils
       OpenGames.Engine.Costrategies
       OpenGames.Examples.TheoryTest.Centipede
-      OpenGames.Preprocessor.Types
+      OpenGames.Preprocessor.BlockSyntax
+      OpenGames.Preprocessor.Codegen
+      OpenGames.Preprocessor.CompileBlock
+      OpenGames.Preprocessor.CompileSyntax
+      OpenGames.Preprocessor.RuntimeAST
       Paths_open_games_hs
   hs-source-dirs:
       src
   build-depends:
-      QuickCheck
+      QuickCheck >=2.14.2
     , ad
-    , base >=4.7 && <5
+    , base
     , comonad
     , fgl
     , graphviz

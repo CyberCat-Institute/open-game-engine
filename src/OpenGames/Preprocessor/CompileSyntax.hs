@@ -2,7 +2,7 @@
 {-# Language NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes  #-}
 
-module OpenGames.Preprocessor.Compile where
+module OpenGames.Preprocessor.CompileSyntax where
 
 import Prelude hiding (lines)
 import Data.Char
