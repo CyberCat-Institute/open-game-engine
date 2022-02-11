@@ -398,13 +398,13 @@ signalStrategy = transformStrat $ Kleisli $ \((_, previousRoundTrue), _, bribe) 
 
 strategyTuple =
       depositStrategy
-  ::- depositStrategy
-  ::- depositStrategy
-  ::- attackerStrategy
-  ::- signalStrategy
-  ::- signalStrategy
-  ::- signalStrategy
-  ::- Nil
+  :- depositStrategy
+  :- depositStrategy
+  :- attackerStrategy
+  :- signalStrategy
+  :- signalStrategy
+  :- signalStrategy
+  :- Nil
 
 
 -----------------------
@@ -445,7 +445,7 @@ printOutput :: List
                   IO (DiagnosticsMC Bool), IO (DiagnosticsMC Bool),
                   IO (DiagnosticsMC Bool)]
              -> IO ()
-printOutput (result1 ::- result2 ::- result3 ::- result4 ::- result5 ::- result6 ::- result7 ::- Nil) = do
+printOutput (result1 :- result2 :- result3 :- result4 :- result5 :- result6 :- result7 :- Nil) = do
   result1' <- result1
   result2' <- result2
   result3' <- result3

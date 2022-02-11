@@ -48,7 +48,6 @@ module OpenGames.Engine.Engine
   , FoldrL(..)
   , ConstMap(..)
   , SequenceList(..)
-  , Natural(..)
   , IndexList(..)
   , type (+:+)
   , (+:+)

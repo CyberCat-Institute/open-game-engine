@@ -356,17 +356,17 @@ endStageStrategyMNY :: Kleisli Stochastic () Location
 endStageStrategyMNY = Kleisli $ const $ playDeterministically EmpireState
 
 -- Strategy tuple for complete game
-strategyTuple = stageStrategy ::- stageStrategy ::- endStageStrategy ::- endStageStrategy ::-  Nil
+strategyTuple = stageStrategy :- stageStrategy :- endStageStrategy :- endStageStrategy :-  Nil
 
 -- Strategy tuple for complete state-dependent payoff game
-strategyTupleStateDep = stageStrategyStateDep ::- stageStrategyStateDep ::- endStageStrategy ::- endStageStrategy ::-  Nil
+strategyTupleStateDep = stageStrategyStateDep :- stageStrategyStateDep :- endStageStrategy :- endStageStrategy :-  Nil
 
 -- Strategy tuple for complete game with randomization in first stage
-strategyTupleRandom = stageStrategyRandom ::- stageStrategyRandom ::- endStageStrategy ::- endStageStrategy ::-  Nil
+strategyTupleRandom = stageStrategyRandom :- stageStrategyRandom :- endStageStrategy :- endStageStrategy :-  Nil
 
 
 -- Strategy tuple for complete game with meeting in NY
-strategyTupleMNY = stageStrategy ::- stageStrategy ::- endStageStrategyMNY ::- endStageStrategyMNY ::-  Nil
+strategyTupleMNY = stageStrategy :- stageStrategy :- endStageStrategyMNY :- endStageStrategyMNY :-  Nil
 
 
 -----------------------

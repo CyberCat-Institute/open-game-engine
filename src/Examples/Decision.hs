@@ -80,7 +80,7 @@ isOptimalSingleDecisionVerbose strat = generateIsEq $ evaluate gameSingleDecisio
 -- This is as simples as it gets, the strategy expects an action and will play this
 -- action with certainty
 pureIdentity :: Double -> List '[Kleisli Stochastic () Double]
-pureIdentity action = pureAction action ::- Nil
+pureIdentity action = pureAction action :- Nil
 
 -- | Now, we are ready to actually run this game and the optimality check. Example usages:
 -- isOptimalSingleDecisionVerbose (pureIdentity 4), or
@@ -196,7 +196,7 @@ isOptimalSingleDecisionStoch strat = generateIsEq $ evaluate gameSingleDecisionS
 -- | Next, we define a strategy which makes an observation and uses that observation as the action
 -- again using the helper _pureAction_
 peak :: List '[Kleisli Stochastic Double Double]
-peak  = (Kleisli $ (\x -> playDeterministically x) )  ::- Nil
+peak  = (Kleisli $ (\x -> playDeterministically x) )  :- Nil
 
 
 -- | Example usage

@@ -491,11 +491,11 @@ In order to check an equilibrium, you need to supply a strategy for each player 
 
 For the combined strategies, we are essentially constructing a list. The construction is as such:
 
-    stratTuple = strat1 ::- strat2 ::- ... ::- stratN ::- Nil
+    stratTuple = strat1 :- strat2 :- ... :- stratN :- Nil
 
-The `::-` is a particular list constructor (in other contexts of referred to as `cons`). The constructor takes a single element and adds it to an existing list, i.e.:
+The `:-` is a particular list constructor (in other contexts of referred to as `cons`). The constructor takes a single element and adds it to an existing list, i.e.:
 
-    _element_ ::- _existingList_
+    _element_ :- _existingList_
 
 Note, each list has a `Nil` as a last element.
 

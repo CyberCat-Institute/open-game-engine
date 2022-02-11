@@ -278,7 +278,7 @@ stageStrategy = Kleisli $
        (v,ticker,_) -> if v < fromInteger ticker then playDeterministically Wait else playDeterministically Stop)
 
 -- Aggregate the strategies into a profile
-strategyTuple = stageStrategy ::- stageStrategy ::- Nil
+strategyTuple = stageStrategy :- stageStrategy :- Nil
 
 --------------
 -- Equilibrium

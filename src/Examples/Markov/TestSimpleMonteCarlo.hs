@@ -78,13 +78,13 @@ stageStrategy = Kleisli $
        (Cooperate,Cooperate) -> playDeterministically Cooperate
        (_,_)         -> playDeterministically Defect)
 -- Stage strategy tuple
-strategyTuple = stageStrategy ::- stageStrategy ::- Nil
+strategyTuple = stageStrategy :- stageStrategy :- Nil
 
 -- Testing for stoch behavior and slow down
 stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
 stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.9),(Defect, 0.1)]
 -- Stage strategy tuple
-strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
+strategyTupleTest = stageStrategyTest :- stageStrategyTest :- Nil
 
 
 

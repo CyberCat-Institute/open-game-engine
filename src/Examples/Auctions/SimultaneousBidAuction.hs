@@ -215,14 +215,14 @@ truthfulStrat ::
       Kleisli Stochastic (String, Values) Values]
 truthfulStrat =
   stratBidderTruth
-  ::- stratBidderTruth
-  ::- Nil
+  :- stratBidderTruth
+  :- Nil
 
 -- Complete strategy for const bidding for 2 players
 constBiddingStrat x y =
   constBidding x
-  ::- constBidding y
-  ::- Nil
+  :- constBidding y
+  :- Nil
 
 ---------------
 -- 1 Equilibria

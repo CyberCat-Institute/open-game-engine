@@ -78,7 +78,7 @@ stageStrategy2 = Kleisli $
        (_,_)         -> playDeterministically Defect)
 
 -- Stage strategy tuple
-strategyTuple = stageStrategy1 ::- stageStrategy2 ::- Nil
+strategyTuple = stageStrategy1 :- stageStrategy2 :- Nil
 
 -- For a an optic (derived from a play for a given strategy), and state (which is also the action), derive a new StateT
 extractContinuation :: StochasticOptic s (Double,Double) a (Double,Double) -> s -> (Double,Double) -> Stochastic (Double,Double)

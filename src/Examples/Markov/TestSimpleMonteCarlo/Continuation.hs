@@ -88,10 +88,10 @@ transformStratTuple :: List
                     -> List
                         '[Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD,
                           Kleisli CondensedTableV (ActionPD, ActionPD) ActionPD]
-transformStratTuple (x ::- y ::- Nil) =
+transformStratTuple (x :- y :- Nil) =
   transformStrat x
-  ::- transformStrat y
-  ::- Nil
+  :- transformStrat y
+  :- Nil
 
 
 
@@ -190,7 +190,7 @@ repeatedPDEq  iterator strat initialAction = evaluate prisonersDilemmaCont strat
 
 
 printOutput iterator strat initialAction = do
-  let (result1 ::- result2 ::- Nil) = repeatedPDEq iterator strat initialAction
+  let (result1 :- result2 :- Nil) = repeatedPDEq iterator strat initialAction
   result1' <- result1
   result2' <- result2
   putStrLn "Player1"
@@ -209,13 +209,13 @@ stageStrategy = Kleisli $
        (Cooperate,Cooperate) -> playDeterministically Cooperate
        (_,_)         -> playDeterministically Defect)
 -- Stage strategy tuple
-strategyTuple = stageStrategy ::- stageStrategy ::- Nil
+strategyTuple = stageStrategy :- stageStrategy :- Nil
 
 -- Testing for stoch behavior and slow down
 stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
 stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.5),(Defect, 0.5)]
 -- Stage strategy tuple
-strategyTupleTest = stageStrategyTest ::- stageStrategyTest ::- Nil
+strategyTupleTest = stageStrategyTest :- stageStrategyTest :- Nil
 
 
 -- Example usage:

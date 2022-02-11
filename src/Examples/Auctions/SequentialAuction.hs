@@ -181,9 +181,9 @@ truthfulStrat ::
       Kleisli Stochastic (String, Values) Values]
 truthfulStrat =
   stratBidderTruth
-  ::- stratBidderTruth
-  ::- stratBidderTruth
-  ::- Nil
+  :- stratBidderTruth
+  :- stratBidderTruth
+  :- Nil
 
 -- Complete strategy for threshold bidding 3 players
 thresholdStrat ::
@@ -193,9 +193,9 @@ thresholdStrat ::
       Kleisli Stochastic (String, Values) Values]
 thresholdStrat =
   stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- stratBidderThreshold
-  ::- Nil
+  :- stratBidderThreshold
+  :- stratBidderThreshold
+  :- Nil
 
 -- Complete strategy for threshold' bidding 3 players
 thresholdStrat' ::
@@ -205,9 +205,9 @@ thresholdStrat' ::
       Kleisli Stochastic (String, Values) Values]
 thresholdStrat' =
   stratBidderThreshold'
-  ::- stratBidderThreshold'
-  ::- stratBidderThreshold'
-  ::- Nil
+  :- stratBidderThreshold'
+  :- stratBidderThreshold'
+  :- Nil
 
 ---------------
 -- 1 Equilibria

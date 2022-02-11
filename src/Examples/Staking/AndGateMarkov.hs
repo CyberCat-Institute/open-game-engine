@@ -359,13 +359,13 @@ signalStrategy = Kleisli $ \((_, previousRoundTrue), _, bribe) -> playDeterminis
 
 strategyTuple =
       depositStrategy
-  ::- depositStrategy
-  ::- depositStrategy
-  ::- attackerStrategy
-  ::- signalStrategy
-  ::- signalStrategy
-  ::- signalStrategy
-  ::- Nil
+  :- depositStrategy
+  :- depositStrategy
+  :- attackerStrategy
+  :- signalStrategy
+  :- signalStrategy
+  :- signalStrategy
+  :- Nil
 
 
 -----------------------

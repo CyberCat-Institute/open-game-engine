@@ -54,7 +54,7 @@ setReservePrice kPrice kSlots = [opengame|
 -- 0. Strategies
 stratAuctioneer x = pureAction x
 
-stratTuple x = stratAuctioneer x ::- truthfulStrat
+stratTuple x = stratAuctioneer x :- truthfulStrat
 
 ---------------
 -- 1 Equilibria

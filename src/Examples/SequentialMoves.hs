@@ -174,7 +174,7 @@ responderStrategy' = Kleisli acceptThreshold
 
 
 -- strategy Tuple
-stratTupleUG = proposerSelfishStrategyUG ::- responderStrategyUG ::- Nil
+stratTupleUG = proposerSelfishStrategyUG :- responderStrategyUG :- Nil
 
 -- Example usage
 -- isEquilibriumUltimatumGame 10 stratTupleUG
@@ -192,7 +192,7 @@ responderSelfishStrategyTG = pureAction 0
 
 
 -- strategy Tuple
-stratTupleTG = proposerSelfishStrategyTG ::- responderSelfishStrategyTG ::- Nil
+stratTupleTG = proposerSelfishStrategyTG :- responderSelfishStrategyTG :- Nil
 
 -- Example usage
 -- isEquilibriumTrustGame 10 2 stratTupleTG
@@ -216,7 +216,7 @@ stratPlayer2 :: Kleisli Stochastic ActionRPS ActionRPS
 stratPlayer2 = Kleisli $ optimalReplyPlayer2
 
 -- | Define the strategy tuple for two players
-stratTupleRPSSSeq actionPlayer1 = stratPlayer1 actionPlayer1 ::- stratPlayer2 ::- Nil
+stratTupleRPSSSeq actionPlayer1 = stratPlayer1 actionPlayer1 :- stratPlayer2 :- Nil
 
 -- Example usage
 --  isEquilibriumRPSSSeq (stratTuple Rock)

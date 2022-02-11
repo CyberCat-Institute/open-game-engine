@@ -20,6 +20,7 @@ library:
     - OpenGames.Engine.OpenGames
     - OpenGames.Engine.OpticClass
     - OpenGames.Engine.TLL
+    - OpenGames.Preprocessor
     - OpenGames.Preprocessor.BlockSyntax
     - OpenGames.Preprocessor.Codegen
     - OpenGames.Preprocessor.CompileBlock

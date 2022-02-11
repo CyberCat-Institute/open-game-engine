@@ -149,10 +149,10 @@ strategyAlt = Kleisli $
        -- ^ Randomize
 
 -- Strategy tuple for complete game
-strategyTupleEq = strategyEq ::- strategyEq ::- Nil
+strategyTupleEq = strategyEq :- strategyEq :- Nil
 
 -- Strategy tuple for complete game with randomization in first stage
-strategyTupleAlt = strategyAlt ::- strategyAlt ::- Nil
+strategyTupleAlt = strategyAlt :- strategyAlt :- Nil
 
 
 

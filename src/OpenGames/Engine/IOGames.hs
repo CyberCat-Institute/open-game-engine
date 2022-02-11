@@ -67,16 +67,15 @@ dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] -> 
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
 dependentDecisionIO name sampleSize ys = OpenGame { play, evaluate} where
   -- ^ ys is the list of possible actions
-  play = \(strat ::- Nil) -> let v x = do
-                                   g <- newStdGen
-                                   gS <- newIOGenM g
-                                   action <- genFromTable (runKleisli strat x) gS
-                                   return ((),action)
-                                 u () r = modify (adjustOrAdd (+ r) r name)
-                             in MonadOptic v u
+  play = \(strat :- Nil) -> let v x = do
+                                  g <- newStdGen
+                                  gS <- newIOGenM g
+                                  action <- genFromTable (runKleisli strat x) gS
+                                  return ((),action)
+                                u () r = modify (adjustOrAdd (+ r) r name)
+                            in MonadOptic v u
 
-  evaluate (strat ::- Nil) (MonadContext h k) =
-    output ::- Nil
+  evaluate (strat :- Nil) (MonadContext h k) = output :- Nil
 
     where
 

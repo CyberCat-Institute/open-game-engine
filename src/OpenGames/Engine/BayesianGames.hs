@@ -79,31 +79,31 @@ deviationsInContext epsilon name x theta strategy u ys
 
 dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
 dependentDecision name ys = OpenGame {
-  play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                             u () r = modify (adjustOrAdd (+ r) r name)
-                            in StochasticStatefulOptic v u,
-  evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
+  play = \(a :- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
+                            u () r = modify (adjustOrAdd (+ r) r name)
+                        in StochasticStatefulOptic v u,
+  evaluate = \(a :- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
                                                    r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext 0 name x theta strategy u (ys x)
-              | (theta, x) <- support h]) ::- Nil }
+              | (theta, x) <- support h]) :- Nil }
 
 dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
 dependentEpsilonDecision epsilon name ys = OpenGame {
-  play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                             u () r = modify (adjustOrAdd (+ r) r name)
-                            in StochasticStatefulOptic v u,
-  evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
+  play = \(a :- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
+                            u () r = modify (adjustOrAdd (+ r) r name)
+                        in StochasticStatefulOptic v u,
+  evaluate = \(a :- Nil) (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
                                                    r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext epsilon name x theta strategy u (ys x)
-              | (theta, x) <- support h]) ::- Nil }
+              | (theta, x) <- support h]) :- Nil }
 
 
 
@@ -165,9 +165,9 @@ addPayoffs name = OpenGame {
 
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
 dependentDecisionIO name _ = OpenGame {
-  play = \(a ::- Nil) -> let v x = do
-                               y <- runKleisli a x
-                               return ((), y)
-                             u () r = modify (adjustOrAdd (+ r) r name)
-                            in StochasticStatefulOptic v u,
+  play = \(a :- Nil) -> let v x = do
+                              y <- runKleisli a x
+                              return ((), y)
+                            u () r = modify (adjustOrAdd (+ r) r name)
+                        in StochasticStatefulOptic v u,
   evaluate = undefined }

@@ -5,10 +5,7 @@
 
 module Main where
 
-import Preprocessor.THSyntax
-import Preprocessor.TH
-import Preprocessor.AbstractSyntax
-import Preprocessor.Compile
+import OpenGames.Preprocessor
 import Graphics as Gfx
 
 import Data.GraphViz

@@ -142,9 +142,9 @@ defectStrategy = pureAction Defect
 -- ^ play _Defect_ with certainty
 
 -- | Combine single player's strategies into a tuple
-strategTupleCooperate = cooperateStrategy ::- cooperateStrategy ::- Nil
+strategTupleCooperate = cooperateStrategy :- cooperateStrategy :- Nil
 -- ^ Both players cooperate with certainty
-strategTupleDefect = defectStrategy ::- defectStrategy ::- Nil
+strategTupleDefect = defectStrategy :- defectStrategy :- Nil
 -- ^ Both players defect with certainty
 
 -- isEquilibriumPrisonersDilemma strategTupleCooperate -- NOT an eq
@@ -164,11 +164,11 @@ grandCentralStrategy = pureAction GrandCentral
 -- ^ play _GrandCentral_ with certainty
 
 -- | Combine single player's strategies into a tuple
-strategyTupleEmpireState  = empireStateStrategy ::- empireStateStrategy ::- Nil
+strategyTupleEmpireState  = empireStateStrategy :- empireStateStrategy :- Nil
 -- ^ Both players meet at EmpireState with certainty
-strategyTupleGrandCentral = grandCentralStrategy ::- grandCentralStrategy ::- Nil
+strategyTupleGrandCentral = grandCentralStrategy :- grandCentralStrategy :- Nil
 -- ^ Both players meet at EmpireState with certainty
-strategyTupleGrandAndEmpire = grandCentralStrategy ::- empireStateStrategy ::- Nil
+strategyTupleGrandAndEmpire = grandCentralStrategy :- empireStateStrategy :- Nil
 -- ^ Player 1 meets at grand central and player 2 meets at empire state
 
 -- isEquilibriumMeetingInNY strategyTupleGrandAndEmpire - NOT eq
@@ -197,11 +197,11 @@ mixedStrategy = Kleisli $ const uniformActionDist
 -- ^ Define proper mixed strategy
 
 -- | Combine single player's strategies into a tuple
-strategyTupleHeads  = headsStrategy ::- headsStrategy ::- Nil
+strategyTupleHeads  = headsStrategy :- headsStrategy :- Nil
 -- ^ Both players meet at EmpireState with certainty
-strategyTupleTails = tailsStrategy ::- tailsStrategy ::- Nil
+strategyTupleTails = tailsStrategy :- tailsStrategy :- Nil
 -- ^ Both players meet at EmpireState with certainty
-strategyTupleMixed = mixedStrategy ::- mixedStrategy ::- Nil
+strategyTupleMixed = mixedStrategy :- mixedStrategy :- Nil
 -- ^ Both players choose both action with equal probability
 
 -- isEquilibriumMatchingPennies strategyTupleHeads - NOT an eq

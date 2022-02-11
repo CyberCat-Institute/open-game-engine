@@ -151,8 +151,8 @@ followSignal = Kleisli (\x -> playDeterministically x)
 doOpposite   = Kleisli (\case {A -> playDeterministically B; B -> playDeterministically A})
 
 -- | Putting strategies into the list
-followSignalStrategy = followSignal ::- Nil
-doOppositeStrategy   = doOpposite ::- Nil
+followSignalStrategy = followSignal :- Nil
+doOppositeStrategy   = doOpposite :- Nil
 
 -- Example usage
 -- isEquilibriumCoordinationNature 0.6 0.7 followSignalStrategy
@@ -173,7 +173,7 @@ player2Strategy  = Kleisli (\case { Rat   -> playDeterministically Confess
                                   ; NoRat -> playDeterministically DontConfess})
 
 -- | Complete strategy tuple
-strategyTuplePD = player1Strategy ::- player2Strategy ::- Nil
+strategyTuplePD = player1Strategy :- player2Strategy :- Nil
 
 -- Example usage
 -- isEquilibriumBayesianPDE strategyTuplePD
