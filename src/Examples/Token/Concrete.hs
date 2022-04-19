@@ -1,11 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 module Examples.Token.Concrete where
 
 -- - concrete token
 -- - abstract token
 -- -
 
+import OpenGames.Engine.Diagnostics
 import OpenGames
 import OpenGames.Preprocessor
 import Control.Monad.Identity
@@ -39,21 +41,21 @@ data Action
   = Transfer Address Address Int
   deriving (Show, Eq, Ord)
 
---decisionSymbolic :: [Action] -> OpenGame StochasticStatefulOptic StochasticStatefulContext '[TokenState -> Action] '[] TokenState () Action Int
---decisionSymbolic = undefined
-
-
 performOperation :: (Action, TokenState) -> TokenState
 performOperation (Transfer from to x, st) = transfer from to x st
 
 generateActions :: [Address] -> [Int] -> [Action]
-generateActions actors amounts = fmap (uncurry3 Transfer) (concat $ permutations (zip3 actors actors amounts))
+generateActions actors amounts = do
+  p1 <- actors
+  p2 <- actors
+  a <- amounts
+  pure (Transfer p1 p2 a)
 
 at :: [a] -> Int -> a
 at = (!!)
 
 initialState :: TokenState
-initialState = undefined
+initialState = M.insert "player2" 20 empty
 
 defaultContext :: StochasticStatefulContext TokenState () TokenState ()
 defaultContext = let h = return ((), initialState)
@@ -69,7 +71,7 @@ transferGame playerIndex addresses amounts = [opengame|
   inputs : state ;
   operation : dependentDecision (at addresses playerIndex) (const $ generateActions addresses amounts) ;
   outputs : action ;
-  returns : fromIntegral $ balance (at addresses playerIndex) state ;
+  returns : fromIntegral $ balance (at addresses playerIndex) newState ;
 
   inputs : action, state ;
   operation : fromFunctions performOperation id ;
@@ -82,8 +84,16 @@ transferGame playerIndex addresses amounts = [opengame|
 
 defaultAmounts :: [Int]
 defaultAmounts = [0, 5, 10]
-defaultAddresses = ["player1", "player2"]
+defaultAddresses = ["player1", "player2", "player3"]
 
 player0 = transferGame 0 defaultAddresses defaultAmounts
+player1 = transferGame 1 defaultAddresses defaultAmounts
+player2 = transferGame 2 defaultAddresses defaultAmounts
 
-evaluated = evaluate player0 (pure (Transfer "player2" "player1" 10) :- Nil)
+evaluated = evaluate (player0 >>> player1 >>> player2)
+                     (pure (Transfer "player2" "player1" 10) :-
+                      pure (Transfer "player1" "player2" 10) :-
+                      pure (Transfer "player2" "player3" 10) :- Nil)
+                     defaultContext
+
+
