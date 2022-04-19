@@ -10,6 +10,7 @@ import OpenGames
 import OpenGames.Preprocessor
 import Control.Monad.Identity
 import OpenGames.Engine.Nat
+-- import OpenGames.Engine.BayesianGamesNonState
 import Data.HashMap as M
 import Data.Maybe
 import Data.List
@@ -36,10 +37,10 @@ transfer source target amount st =
 
 data Action
   = Transfer Address Address Int
-  deriving Show
+  deriving (Show, Eq, Ord)
 
-decisionSymbolic :: [Action] -> OpenGame StochasticStatefulOptic StochasticStatefulContext '[TokenState -> Action] '[] TokenState () Action Int
-decisionSymbolic = undefined
+--decisionSymbolic :: [Action] -> OpenGame StochasticStatefulOptic StochasticStatefulContext '[TokenState -> Action] '[] TokenState () Action Int
+--decisionSymbolic = undefined
 
 defaultAmounts :: [Int]
 defaultAmounts = [0, 5, 10]
@@ -60,9 +61,9 @@ transferGame playerIndex addresses amounts = [opengame|
   :---:
 
   inputs : state ;
-  operation : decisionSymbolic (generateActions addresses amounts ) ;
+  operation : dependentDecision "Player" (const $ generateActions addresses amounts) ;
   outputs : action ;
-  returns : balance (at addresses playerIndex) state ;
+  returns : fromIntegral $ balance (at addresses playerIndex) state ;
 
   inputs : action, state ;
   operation : fromFunctions performOperation id ;
@@ -71,5 +72,3 @@ transferGame playerIndex addresses amounts = [opengame|
   :---:
 
   outputs : newState; |]
-
-
