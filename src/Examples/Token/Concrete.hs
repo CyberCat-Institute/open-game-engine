@@ -42,8 +42,6 @@ data Action
 --decisionSymbolic :: [Action] -> OpenGame StochasticStatefulOptic StochasticStatefulContext '[TokenState -> Action] '[] TokenState () Action Int
 --decisionSymbolic = undefined
 
-defaultAmounts :: [Int]
-defaultAmounts = [0, 5, 10]
 
 performOperation :: (Action, TokenState) -> TokenState
 performOperation (Transfer from to x, st) = transfer from to x st
@@ -69,7 +67,7 @@ transferGame playerIndex addresses amounts = [opengame|
   :---:
 
   inputs : state ;
-  operation : dependentDecision "Player" (const $ generateActions addresses amounts) ;
+  operation : dependentDecision (at addresses playerIndex) (const $ generateActions addresses amounts) ;
   outputs : action ;
   returns : fromIntegral $ balance (at addresses playerIndex) state ;
 
@@ -80,3 +78,12 @@ transferGame playerIndex addresses amounts = [opengame|
   :---:
 
   outputs : newState; |]
+
+
+defaultAmounts :: [Int]
+defaultAmounts = [0, 5, 10]
+defaultAddresses = ["player1", "player2"]
+
+player0 = transferGame 0 defaultAddresses defaultAmounts
+
+evaluated = evaluate player0 (pure (Transfer "player2" "player1" 10) :- Nil)
