@@ -54,6 +54,14 @@ generateActions actors amounts = fmap (uncurry3 Transfer) (concat $ permutations
 at :: [a] -> Int -> a
 at = (!!)
 
+initialState :: TokenState
+initialState = undefined
+
+defaultContext :: StochasticStatefulContext TokenState () TokenState ()
+defaultContext = let h = return ((), initialState)
+                     k () = const $ return ()
+                  in StochasticStatefulContext h k
+
 transferGame playerIndex addresses amounts = [opengame|
 
   inputs : state ;
