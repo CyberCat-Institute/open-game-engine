@@ -23,7 +23,7 @@ balance :: Address -> TokenState -> Int
 balance add st = fromMaybe 0 (M.lookup add (st))
 
 set :: Address -> Int -> TokenState -> TokenState
-set = undefined
+set = M.insert
 
 transfer :: Address -> Address -> Int -> TokenState -> TokenState
 transfer source target amount st =
@@ -53,7 +53,7 @@ generateActions actors amounts = fmap (uncurry3 Transfer) (concat $ permutations
 at :: [a] -> Int -> a
 at = (!!)
 
-transferGame program playerIndex addresses amounts = [opengame|
+transferGame playerIndex addresses amounts = [opengame|
 
   inputs : state ;
 
