@@ -17,6 +17,7 @@ import Data.HashMap as M
 import Data.Maybe
 import Data.List
 import GHC.Utils.Misc
+import Syntax.Annotated
 
 type Address = String
 

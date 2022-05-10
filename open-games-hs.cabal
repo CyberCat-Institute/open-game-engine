@@ -64,6 +64,7 @@ library
       src
   build-depends:
       QuickCheck
+    , act
     , ad
     , base >=4.7 && <5
     , comonad
@@ -98,6 +99,7 @@ executable graphics
       graphics
   build-depends:
       QuickCheck
+    , act
     , ad
     , base >=4.7 && <5
     , comonad
@@ -134,6 +136,7 @@ executable open-games-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
+    , act
     , ad
     , base >=4.7 && <5
     , comonad
