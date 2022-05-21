@@ -43,15 +43,15 @@ packages:
     subdir: src/hevm
     name: hevm
     version: 0.49.0
-    git: https://github.com/arcz/dapptools.git
+    git: https://github.com/dapphub/dapptools.git
     pantry-tree:
       size: 3376
-      sha256: 27d33e0d23a37b64a414235af6b74990dc505ff1e8b0b27316126a387b5493ab
-    commit: 7bb24564b0890129fe7b8cb4e396518a073a345a
+      sha256: 5c31d93b9a388a46d72c191c8cabdd9633d70193d0bac54aa3874f367328bf29
+    commit: f84fb768721418c1ac9f5c910ac2cb1962af982a
   original:
     subdir: src/hevm
-    git: https://github.com/arcz/dapptools.git
-    commit: 7bb24564b0890129fe7b8cb4e396518a073a345a
+    git: https://github.com/dapphub/dapptools.git
+    commit: f84fb768721418c1ac9f5c910ac2cb1962af982a
 - completed:
     hackage: random-1.2.0@sha256:195506fedaa7c31c1fa2a747e9b49b4a5d1f0b09dd8f1291f23a771656faeec3,6097
     pantry-tree:
@@ -83,17 +83,17 @@ packages:
 - completed:
     name: act
     version: 0.1.0.0
-    git: https://github.com/ethereum/act
+    git: https://github.com/ethereum/act.git
     pantry-tree:
-      size: 13269
-      sha256: 2237da22ca608667ed8a9102d0da1e537c3c83efa0e6d0e92ee821ba67ebd859
-    commit: 0fc687446e2838435df40f3b7348ba7b581408b8
+      size: 13264
+      sha256: 9603e42f5a524a9158af54e88e82b56e06e0e64a8a4fd788d7198dd4a2e37240
+    commit: 1532bceca96267a2448289f86d22a2a1ec2a2b60
   original:
-    git: https://github.com/ethereum/act
-    commit: 0fc687446e2838435df40f3b7348ba7b581408b8
+    git: https://github.com/ethereum/act.git
+    commit: 1532bceca96267a2448289f86d22a2a1ec2a2b60
 snapshots:
 - completed:
-    size: 618683
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/4.yaml
-    sha256: d4ee004c46ba878d2f304f5d748d493057be579192a8d148527f3ba55c9df57f
-  original: lts-19.4
+    size: 618876
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/6.yaml
+    sha256: fb634b19f31da06684bb07ce02a20c75a3162138f279b388905b03ebd57bb50f
+  original: lts-19.6
