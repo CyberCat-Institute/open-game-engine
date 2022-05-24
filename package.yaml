@@ -13,7 +13,7 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
-    - OpenGames.Engine.AtomicGames
+    # - OpenGames.Engine.AtomicGames
     - OpenGames.Engine.BayesianGames
     - OpenGames.Engine.Diagnostics
     - OpenGames.Engine.Engine
@@ -45,7 +45,7 @@ library:
 
 dependencies:
     - base >=4.7 && <5
-    - act
+    - act # -internal
     - mtl
     - ghc
     - transformers

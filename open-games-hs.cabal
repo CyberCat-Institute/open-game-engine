@@ -19,7 +19,6 @@ extra-source-files:
 
 library
   exposed-modules:
-      OpenGames.Engine.AtomicGames
       OpenGames.Engine.BayesianGames
       OpenGames.Engine.Diagnostics
       OpenGames.Engine.Engine
@@ -55,6 +54,7 @@ library
       Examples.Staking.AndGateMarkovMC
       Examples.Token.Concrete
       OpenGames
+      OpenGames.Engine.AtomicGames
       OpenGames.Engine.BayesianGamesNonState
       OpenGames.Engine.IOGames
       OpenGames.Engine.Nat

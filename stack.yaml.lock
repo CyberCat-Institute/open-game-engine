@@ -86,11 +86,11 @@ packages:
     git: https://github.com/ethereum/act.git
     pantry-tree:
       size: 13264
-      sha256: 9603e42f5a524a9158af54e88e82b56e06e0e64a8a4fd788d7198dd4a2e37240
-    commit: 1532bceca96267a2448289f86d22a2a1ec2a2b60
+      sha256: fb7615952ee0768ffbbe38e6db3f691dbe958728b6a138467e39b65ad1d53eb7
+    commit: 0197a1930c17ccce79f01542886401e275647c39
   original:
     git: https://github.com/ethereum/act.git
-    commit: 1532bceca96267a2448289f86d22a2a1ec2a2b60
+    commit: 0197a1930c17ccce79f01542886401e275647c39
 snapshots:
 - completed:
     size: 618876
