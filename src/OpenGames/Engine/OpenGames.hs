@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OpenGames.Engine.OpenGames
  ( OpenGame(..)
@@ -48,4 +50,34 @@ reindex v u g = OpenGame {
   play = \as -> case unappend as of (a, a') -> play g a &&&& play h a',
   evaluate = \as c -> case unappend as of (a, a') -> evaluate g a (play h a' \\ c)
                                                   +:+ evaluate h a' (play g a // c)
+}
+
+interleave2 :: forall a a' b b' x y s r. (Unappend a, Unappend b)
+            => OpenGame StochasticStatefulOptic StochasticStatefulContext a b (x, Maybe y) s y r
+            -> OpenGame StochasticStatefulOptic StochasticStatefulContext a' b' (x, Maybe y) s y r
+            -> OpenGame StochasticStatefulOptic StochasticStatefulContext (a +:+ a') (b +:+ b') (x, Bool) (s, s) (y, y) (r, r)
+interleave2 g g' = OpenGame {
+  play = \as -> case unappend as of
+                     (a :: List a, a' :: List a') ->
+                       case (play g a, play g' a') of
+                         (StochasticStatefulOptic v1 u1, StochasticStatefulOptic v2 u2) ->
+                           StochasticStatefulOptic (\(x, b) -> if b then do (z, y) <- v1 (x, Nothing)
+                                                                            (z', y') <- v2 (x, Just y)
+                                                                            return ((z, z', True), (y, y'))
+                                                                    else do (z', y') <- v2 (x, Nothing)
+                                                                            (z, y) <- v1 (x, Just y')
+                                                                            return ((z, z', False), (y, y')))
+                                                   (\(z, z', b) (r, r') -> if b then do s2 <- u2 z' r'
+                                                                                        s1 <- u1 z r
+                                                                                        return (s1, s2)
+                                                                                else do s1 <- u1 z r
+                                                                                        s2 <- u2 z' r'
+                                                                                        return (s1, s2)),
+  evaluate = \as c -> case unappend as of
+                           (a :: List a, a' :: List a') ->
+                             case (play g a, play g' a', c) of
+                               (StochasticStatefulOptic v1 u1, StochasticStatefulOptic v2 u2, StochasticStatefulContext h k) ->
+                                     evaluate g a (StochasticStatefulContext (do )
+                                                                             undefined)
+                                 +:+ evaluate g' a' undefined
 }
