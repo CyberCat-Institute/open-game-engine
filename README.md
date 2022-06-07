@@ -33,7 +33,7 @@ This [tutorial](https://github.com/philipp-zahn/open-games-hs/blob/master/Tutori
 Open-games-hs requires stack and a text editor, for the text editor, it is very likely
 that your existing one already supports haskell. If you do not have one I recommend starting with [VSCode][VSCODE].
 
-You can install stack following the instructions here: (https://docs.haskellstack.org/en/stable/install_and_upgrade/)[https://docs.haskellstack.org/en/stable/install_and_upgrade/]
+You can install stack following the instructions here: https://docs.haskellstack.org/en/stable/install_and_upgrade/
 
 Stack will be responsible for installing haskell, the Open-games-hs framework and its dependencies.
 
