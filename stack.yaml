@@ -73,3 +73,7 @@ arch: x86_64
 #
 ghc-options:
   "$locals": -fwarn-incomplete-patterns
+
+nix:
+  enable: true
+  packages: [zlib, glpk, pcre]
