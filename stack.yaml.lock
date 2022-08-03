@@ -83,14 +83,14 @@ packages:
 - completed:
     name: act
     version: 0.1.0.0
-    git: https://github.com/ethereum/act.git
+    git: https://github.com/andrevidela/act.git
     pantry-tree:
       size: 13264
-      sha256: fb7615952ee0768ffbbe38e6db3f691dbe958728b6a138467e39b65ad1d53eb7
-    commit: 0197a1930c17ccce79f01542886401e275647c39
+      sha256: 95ec787ce3787801e009e3424cea436c4d59dee2a8d47487b3a7f6a75950c422
+    commit: f05cf360d3412c1dd01b8497bbf54b547683c92f
   original:
-    git: https://github.com/ethereum/act.git
-    commit: 0197a1930c17ccce79f01542886401e275647c39
+    git: https://github.com/andrevidela/act.git
+    commit: f05cf360d3412c1dd01b8497bbf54b547683c92f
 snapshots:
 - completed:
     size: 618876

@@ -45,7 +45,7 @@ library:
 
 dependencies:
     - base >=4.7 && <5
-    - act # -internal
+    - act
     - mtl
     - ghc
     - transformers
@@ -72,7 +72,6 @@ dependencies:
     - criterion
 
 
-
 executables:
   open-games-exe:
     main:                Main.hs
@@ -83,6 +82,12 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - open-games-hs
+  act-exec:
+    main:                Main.hs
+    source-dirs:         act
+    dependencies:
+      - act >= 0.1 && < 1
+      - open-games-hs
   graphics:
     main:                Main.hs
     source-dirs:         graphics
