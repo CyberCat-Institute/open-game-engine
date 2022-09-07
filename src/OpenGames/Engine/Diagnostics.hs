@@ -79,10 +79,16 @@ instance (Show y, Ord y, Show x) => Apply PrintIsEq [DiagnosticInfoBayesian x y]
   apply _ x = checkEqL x
 
 
+instance (Show y, Ord y, Show x) => Apply PrintIsEq (Maybe [DiagnosticInfoBayesian x y]) String where
+    apply _ x = checkEqL (maybe [] id x)
+
 data PrintOutput = PrintOutput
 
 instance (Show y, Ord y, Show x) => Apply PrintOutput [DiagnosticInfoBayesian x y] String where
   apply _ x = showDiagnosticInfoL x
+
+instance (Show y, Ord y, Show x) => Apply PrintOutput (Maybe [DiagnosticInfoBayesian x y]) String where
+  apply _ x = showDiagnosticInfoL (maybe [] id x)
 
 
 data Concat = Concat
@@ -109,4 +115,3 @@ generateIsEq :: forall xs.
                ) => List xs -> IO ()
 generateIsEq hlist = putStrLn $
   "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
-

@@ -11,7 +11,8 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
-
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- Parts of this file were written by Sjoerd Visscher
 
@@ -65,14 +66,14 @@ instance Unappend '[] where
 instance Unappend as => Unappend (a ': as) where
   unappend (a :- abs) = case unappend abs of (as, bs) -> (a :- as, bs)
 
-class Length as where
-  len :: List as -> Int
+class RepNothing (as :: [*]) where
+  rep :: List (TMap Maybe as)
 
-instance Length '[] where
-  len _ = 0
+instance RepNothing '[] where
+  rep = Nil
 
-instance Length xs => Length (x ': xs) where
-  len (x :- xs) = 1 + len xs
+instance RepNothing xs => RepNothing (x ': xs) where
+  rep = Nothing :- rep @xs
 
 ---------------------------------
 -- Operations to transform output
@@ -175,4 +176,3 @@ type family RepeatLs (n :: Nat) (e :: [*]) :: [[*]] where
 type family CatRepeat (n :: Nat) (ls :: [*]) :: [*]  where
   CatRepeat Z ls = '[]
   CatRepeat (S n) ls = ls +:+ CatRepeat n ls
-

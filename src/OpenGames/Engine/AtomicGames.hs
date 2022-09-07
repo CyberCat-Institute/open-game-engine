@@ -140,4 +140,3 @@ liftStochasticForward process =  [opengame|
 --   (Block ["observation"] []
 --          [mkLine [[|observation|]] [] [|dependentDecision playerName (\y -> actionSpace)|] ["action"] [[|payoffFunction observation action returns|]]]
 --          [[|action|]] ["returns"])
-
