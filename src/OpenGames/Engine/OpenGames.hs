@@ -1,51 +1,62 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 
-module OpenGames.Engine.OpenGames
- ( OpenGame(..)
- , lift
- , reindex
- , (>>>)
- , (&&&)
- ) where
+module OpenGames.Engine.OpenGames where
+--  ( OpenGame(..)
+--  , lift
+--  , reindex
+--  , (>>>)
+--  , (&&&)
+--  ) where
 
 
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
+import OpenGames.Engine.Nat
 
-data OpenGame o c a b x s y r = OpenGame {
-  play :: List a -> o x s y r,
-  evaluate :: List a -> c x s y r -> List b
+data OpenGame o c (n :: Nat) a b x s y r = OpenGame {
+  play :: a -> o x s y r,
+  evaluate :: a -> c x s y r -> b
 }
 
-lift :: o x s y r -> OpenGame o c '[] '[] x s y r
+lift :: o x s y r -> OpenGame o c 'Z () () x s y r
 lift o = OpenGame {
-  play = \Nil -> o,
-  evaluate = \Nil _ -> Nil
+  play = \() -> o,
+  evaluate = \() _ -> ()
 }
 
-reindex :: (List a -> List a') -> (List a -> List b' -> List b)
-        -> OpenGame o c a' b' x s y r -> OpenGame o c a b x s y r
-reindex v u g = OpenGame {
-  play = \a -> play g (v a),
-  evaluate = \a c -> u a (evaluate g (v a) c)
-}
+-- reindex :: (List a -> List a') -> (List a -> List b' -> List b)
+--         -> OpenGame o c n a' b' x s y r -> OpenGame o c n a b x s y r
+-- reindex v u g = OpenGame {
+--   play = \a -> play g (v a),
+--   evaluate = \a c -> u a (evaluate g (v a) c)
+-- }
 
-(>>>) :: (Optic o, Context c o, Unappend a, Unappend b)
-      => OpenGame o c a b x s y r -> OpenGame o c a' b' y r z q
-      -> OpenGame o c (a +:+ a') (b +:+ b') x s z q
+flatten :: (a, b) -> Flatten a b
+flatten = undefined
+
+unflatten :: Flatten a b -> (a, b)
+unflatten = undefined
+
+(>>>) :: forall o c n1 a b x s y r n2 a' b' z q. (Optic o, Context c o)
+      => OpenGame o c n1 a b x s y r -> OpenGame o c n2 a' b' y r z q
+      -> OpenGame o c (Add n1 n2) (Flatten a a') (Flatten b b') x s z q
 (>>>) g h = OpenGame {
-  play = \as -> case unappend as of (a, a') -> play g a >>>> play h a',
-  evaluate = \as c -> case unappend as of (a, a') -> evaluate g a (cmap identity (play h a') c)
-                                                  +:+ evaluate h a' (cmap (play g a) identity c)
+  play = \as -> case unflatten @a @a' as of (a, a') -> play g a >>>> play h a',
+  evaluate = \as c -> case unflatten @a @a' as of (a, a') -> flatten @b @b' ( evaluate g a (cmap identity (play h a') c)
+                                                                            , evaluate h a' (cmap (play g a) identity c))
 }
 
-(&&&) :: (Optic o, Context c o, Unappend a, Unappend b, Show x, Show x')
-      => OpenGame o c a b x s y r -> OpenGame o c a' b' x' s' y' r'
-      -> OpenGame o c (a +:+ a') (b +:+ b') (x, x') (s, s') (y, y') (r, r')
-(&&&) g h = OpenGame {
-  play = \as -> case unappend as of (a, a') -> play g a &&&& play h a',
-  evaluate = \as c -> case unappend as of (a, a') -> evaluate g a (play h a' \\ c)
-                                                  +:+ evaluate h a' (play g a // c)
-}
+
+-- (&&&) :: (Optic o, Context c o, Show x, Show x')
+--       => OpenGame o c n1 a b x s y r -> OpenGame o c n2 a' b' x' s' y' r'
+--       -> OpenGame o c (Add n1 n2) (Flatten a a') (Flatten b b') (x, x') (s, s') (y, y') (r, r')
+-- (&&&) g h = OpenGame {
+--   play = \as -> case unappend as of (a, a') -> play g a &&&& play h a',
+--   evaluate = \as c -> case unappend as of (a, a') -> evaluate g a (play h a' \\ c)
+--                                                   +:+ evaluate h a' (play g a // c)
+-- }
