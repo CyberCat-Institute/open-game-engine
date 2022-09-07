@@ -56,7 +56,6 @@ type family (+:+) (as :: [*]) (bs :: [*]) :: [*] where
 (+:+) Nil bs = bs
 (+:+) (a :- as) bs = a :- as +:+ bs
 
-
 class Unappend as where
   unappend :: List (as +:+ bs) -> (List as, List bs)
 
@@ -65,6 +64,15 @@ instance Unappend '[] where
 
 instance Unappend as => Unappend (a ': as) where
   unappend (a :- abs) = case unappend abs of (as, bs) -> (a :- as, bs)
+
+class Length as where
+  len :: List as -> Int
+
+instance Length '[] where
+  len _ = 0
+
+instance Length xs => Length (x ': xs) where
+  len (x :- xs) = 1 + len xs
 
 ---------------------------------
 -- Operations to transform output
