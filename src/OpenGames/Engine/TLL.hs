@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -80,6 +81,15 @@ class MapL f xs ys where
 instance MapL f '[] '[] where
   mapL _ _ = Nil
 
+type family TMap (f :: * -> *) (ls :: [*]) :: [*] where
+  TMap f '[] = '[]
+  TMap f (x ': xs) = f x : TMap f xs
+
+vmap :: -- forall (f :: * -> *) (xs :: [*]) .
+  (forall ty. ty -> f ty) ->
+  List xs -> List (TMap f xs)
+vmap f Nil = Nil
+vmap f (x :- xs) = f x :- vmap f xs
 
 instance (Apply f x y, MapL f xs ys)
   => MapL f (x ': xs) (y ': ys) where
