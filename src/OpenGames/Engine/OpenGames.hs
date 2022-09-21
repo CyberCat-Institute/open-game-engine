@@ -33,12 +33,12 @@ lift o = OpenGame {
 fromFunctions :: Optic o => (s -> a) -> (b -> t) -> OpenGame o c Z () () s t a b
 fromFunctions f = lift . lens f . const
 
--- reindex :: (List a -> List a') -> (List a -> List b' -> List b)
---         -> OpenGame o c n a' b' x s y r -> OpenGame o c n a b x s y r
--- reindex v u g = OpenGame {
---   play = \a -> play g (v a),
---   evaluate = \a c -> u a (evaluate g (v a) c)
--- }
+reindex :: (a -> a') -> (a -> b' -> b) -> (Natural n -> Natural m)
+        -> OpenGame o c n a' b' x s y r -> OpenGame o c m a b x s y r
+reindex v u f g = OpenGame {
+  play = \a -> play g (v a),
+  evaluate = \a c -> u a (evaluate g (v a) c)
+}
 
 flatten :: (a, b) -> Flatten a b
 flatten = undefined

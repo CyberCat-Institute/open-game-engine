@@ -17,7 +17,6 @@ natToInt :: Natural n -> Int
 natToInt Zero = 0
 natToInt (Succ n) = 1 + natToInt n
 
-
 type family Add (n :: Nat) (m :: Nat) :: Nat where
   Add Z m = m
   Add m Z = m
