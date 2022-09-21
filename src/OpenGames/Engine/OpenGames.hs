@@ -30,6 +30,9 @@ lift o = OpenGame {
   evaluate = \() _ -> ()
 }
 
+fromFunctions :: Optic o => (s -> a) -> (b -> t) -> OpenGame o c Z () () s t a b
+fromFunctions f = lift . lens f . const
+
 -- reindex :: (List a -> List a') -> (List a -> List b' -> List b)
 --         -> OpenGame o c n a' b' x s y r -> OpenGame o c n a b x s y r
 -- reindex v u g = OpenGame {

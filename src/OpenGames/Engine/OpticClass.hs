@@ -36,6 +36,7 @@ class Optic o where
   (&&&&) :: o s1 t1 a1 b1 -> o s2 t2 a2 b2 -> o (s1, s2) (t1, t2) (a1, a2) (b1, b2)
   (++++) :: o s1 t a1 b -> o s2 t a2 b -> o (Either s1 s2) t (Either a1 a2) b
 
+
 identity :: (Optic o) => o s t s t
 identity = lens id (flip const)
 

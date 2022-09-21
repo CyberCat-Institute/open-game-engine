@@ -20,6 +20,7 @@ natToInt (Succ n) = 1 + natToInt n
 
 type family Add (n :: Nat) (m :: Nat) :: Nat where
   Add Z m = m
+  Add m Z = m
   Add (S n) m = S (Add n m)
 
 type family Mult (n :: Nat) (m :: Nat) :: Nat where
@@ -28,4 +29,7 @@ type family Mult (n :: Nat) (m :: Nat) :: Nat where
 
 type family Flatten (a :: Type) (b :: Type) :: Type where
   Flatten () b = b
+  Flatten b () = b
   Flatten (a, b) c = (a, Flatten b c)
+  Flatten a (b, c) = (a, Flatten b c)
+  Flatten (a :: Type) (c :: Type) = (a, c)
