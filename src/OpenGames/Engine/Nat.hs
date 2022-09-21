@@ -1,4 +1,4 @@
-{-# LANGUAGE KindSignatures, DataKinds, GADTs, TypeFamilies #-}
+{-# LANGUAGE KindSignatures, DataKinds, GADTs, TypeFamilies, UndecidableInstances #-}
 
 module OpenGames.Engine.Nat where
 
@@ -19,6 +19,12 @@ natToInt (Succ n) = 1 + natToInt n
 
 
 type family Add (n :: Nat) (m :: Nat) :: Nat where
+  Add Z m = m
+  Add (S n) m = S (Add n m)
+
+type family Mult (n :: Nat) (m :: Nat) :: Nat where
+  Mult Z _ = Z
+  Mult (S n) m = Add (Mult n m) m
 
 type family Flatten (a :: Type) (b :: Type) :: Type where
   Flatten () b = b

@@ -25,7 +25,7 @@ import           Control.Monad.State                hiding (state)
 import           Data.HashMap                       as HM hiding (null,map,mapMaybe)
 import           Data.Maybe
 import qualified Data.Vector as V
-import           Numeric.Probability.Distribution   hiding (lift)
+import           Numeric.Probability.Distribution   hiding (map, lift)
 import           System.Random.MWC.CondensedTable
 import           System.Random.Stateful
 
@@ -208,3 +208,17 @@ instance Context MonadContext MonadOptic where
             = let h' = do {(z, (s1, s2)) <- h; return ((z, s2), s1)}
                   k' (z, s2) a1 = do {(_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1}
                in MonadContext h' k'
+
+
+-- temporary
+-- todo next : iterated sequential composition on monomorphic optics
+parallel' :: (Optic o) => [o x s y r] -> o [x] [s] [y] [r]
+parallel' = foldl (\a b -> (lens (\(x:xs) -> (xs,x)) (\_ (xs,x) -> x:xs) >>>> (a &&&& b)) >>>> lens (\(ys,y) -> y:ys) (\_ (r:rs) -> (rs,r)))
+                  (lens (\[] -> []) (\_ [] -> []))
+
+{-}
+parallel :: [StochasticStatefulOptic x s y r] -> StochasticStatefulOptic [x] [s] [y] [r]
+parallel os = StochasticStatefulOptic
+  (\xs -> let zys = zipWith (\(StochasticStatefulOptic v _) x -> v x) os xs in ((), map (fmap snd) zys))
+  (undefined)
+-}

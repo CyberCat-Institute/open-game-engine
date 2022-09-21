@@ -69,6 +69,7 @@ library
     , criterion
     , extra
     , fgl
+    , ghc-prim
     , graphviz
     , hashable
     , hashmap
@@ -102,6 +103,7 @@ executable graphics
     , criterion
     , extra
     , fgl
+    , ghc-prim
     , graphviz
     , hashable
     , hashmap
@@ -137,6 +139,7 @@ executable open-games-exe
     , criterion
     , extra
     , fgl
+    , ghc-prim
     , graphviz
     , hashable
     , hashmap

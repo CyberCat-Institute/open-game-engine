@@ -44,6 +44,8 @@ import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
 import OpenGames.Engine.Diagnostics
+import OpenGames.Engine.Nat
+import OpenGames.Engine.Vec hiding (map)
 
 ---------------------------------------------
 -- Reimplements stateful bayesian from before
@@ -77,55 +79,58 @@ deviationsInContext epsilon name x theta strategy u ys
         (optimalPlay, optimalPayoff) = maximumBy (comparing snd) [(y, u y) | y <- ys]
 
 
-dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
+dependentDecision :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame ('S 'Z) (Kleisli Stochastic x y) [DiagnosticInfoBayesian x y] x () y Payoff
 dependentDecision name ys = OpenGame {
-  play = \(a :- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                            u () r = modify (adjustOrAdd (+ r) r name)
-                        in StochasticStatefulOptic v u,
-  evaluate = \(a :- Nil) (StochasticStatefulContext h k) ->
+  play = \a -> let v x = do {y <- runKleisli a x; return ((), y)}
+                   u () r = modify (adjustOrAdd (+ r) r name)
+                in StochasticStatefulOptic v u,
+  evaluate = \a (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
                                                    r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext 0 name x theta strategy u (ys x)
-              | (theta, x) <- support h]) :- Nil }
+              | (theta, x) <- support h])
+}
 
-dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
+dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame ('S 'Z) (Kleisli Stochastic x y) [DiagnosticInfoBayesian x y] x () y Payoff
 dependentEpsilonDecision epsilon name ys = OpenGame {
-  play = \(a :- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
-                            u () r = modify (adjustOrAdd (+ r) r name)
-                        in StochasticStatefulOptic v u,
-  evaluate = \(a :- Nil) (StochasticStatefulContext h k) ->
+  play = \a -> let v x = do {y <- runKleisli a x; return ((), y)}
+                   u () r = modify (adjustOrAdd (+ r) r name)
+                in StochasticStatefulOptic v u,
+  evaluate = \a (StochasticStatefulContext h k) ->
      (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h x);
                                                    r <- k t y;
                                                    gets ((+ r) . HM.findWithDefault 0.0 name)})
                                     HM.empty)
                    strategy = runKleisli a x
                   in deviationsInContext epsilon name x theta strategy u (ys x)
-              | (theta, x) <- support h]) :- Nil }
+              | (theta, x) <- support h])
+}
 
 
 
 -- Support functionality for constructing open games
-fromLens :: (x -> y) -> (x -> r -> s) -> StochasticStatefulBayesianOpenGame '[] '[] x s y r
+fromLens :: (x -> y) -> (x -> r -> s) -> StochasticStatefulBayesianOpenGame 'Z () () x s y r
 fromLens v u = OpenGame {
-  play = \Nil -> StochasticStatefulOptic (\x -> return (x, v x)) (\x r -> return (u x r)),
-  evaluate = \Nil _ -> Nil}
+  play = \() -> StochasticStatefulOptic (\x -> return (x, v x)) (\x r -> return (u x r)),
+  evaluate = \() _ -> ()
+}
 
 
-fromFunctions :: (x -> y) -> (r -> s) -> StochasticStatefulBayesianOpenGame '[] '[] x s y r
+fromFunctions :: (x -> y) -> (r -> s) -> StochasticStatefulBayesianOpenGame 'Z () () x s y r
 fromFunctions f g = fromLens f (const g)
 
-nature :: Stochastic x -> StochasticStatefulBayesianOpenGame '[] '[] () () x ()
+nature :: Stochastic x -> StochasticStatefulBayesianOpenGame 'Z () () () () x ()
 nature a = OpenGame {
-  play = \Nil -> StochasticStatefulOptic (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),
-  evaluate = \Nil _ -> Nil}
+  play = \() -> StochasticStatefulOptic (\() -> do {x <- a; return ((), x)}) (\() () -> return ()),
+  evaluate = \() _ -> ()}
 
-liftStochastic :: (x -> Stochastic y) -> StochasticStatefulBayesianOpenGame '[] '[] x () y ()
+liftStochastic :: (x -> Stochastic y) -> StochasticStatefulBayesianOpenGame 'Z () () x () y ()
 liftStochastic f = OpenGame {
-  play = \Nil -> StochasticStatefulOptic (\x -> do {y <- f x; return ((), y)}) (\() () -> return ()),
-  evaluate = \_ _ -> Nil}
+  play = \() -> StochasticStatefulOptic (\x -> do {y <- f x; return ((), y)}) (\() () -> return ()),
+  evaluate = \_ _ -> ()}
 
 -- Support functionality for stochastic processes (also interface to the probability module in use)
 
@@ -143,31 +148,59 @@ playDeterministically = certainly
 
 
 -- discount Operation for repeated structures
-discount :: String -> (Payoff -> Payoff) -> StochasticStatefulBayesianOpenGame '[] '[] () () () ()
+discount :: String -> (Payoff -> Payoff) -> StochasticStatefulBayesianOpenGame 'Z () () () () () ()
 discount name f = OpenGame {
   play = \_ -> let v () = return ((), ())
                    u () () = modify (adjustOrAdd f (f 0) name)
                  in StochasticStatefulOptic v u,
-  evaluate = \_ _ -> Nil}
+  evaluate = \_ _ -> ()}
 
 -- add payoffs
-addPayoffs :: String -> StochasticStatefulBayesianOpenGame '[] '[] Payoff () () ()
+addPayoffs :: String -> StochasticStatefulBayesianOpenGame 'Z () () Payoff () () ()
 addPayoffs name = OpenGame {
   play = \_ -> let v x = return (x, ())
                    u value () = modify (adjustOrAdd (\x -> x + value) value name)
                  in StochasticStatefulOptic v u,
-  evaluate = \_ _ -> Nil}
+  evaluate = \_ _ -> ()}
 
 
 --------------------------------------------------------------------------------------
 -- Implement a version which samples the play using the Prob library build in sampling
 -- Ignore the evaluate part
 
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Double
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> (x -> [y]) -> StochasticStatefulBayesianOpenGame ('S 'Z) (Kleisli Stochastic x y) (DiagnosticInfoBayesian x y) x () y Double
 dependentDecisionIO name _ = OpenGame {
-  play = \(a :- Nil) -> let v x = do
-                              y <- runKleisli a x
-                              return ((), y)
-                            u () r = modify (adjustOrAdd (+ r) r name)
-                        in StochasticStatefulOptic v u,
+  play = \a -> let v x = do { y <- runKleisli a x; return ((), y) }
+                   u () r = modify (adjustOrAdd (+ r) r name)
+               in StochasticStatefulOptic v u,
   evaluate = undefined }
+
+{-}
+interleave :: forall a a' b b' x y s r n m.
+               Natural n
+            -> Vec n (OpenGame StochasticStatefulOptic StochasticStatefulContext m a b (x, [y]) s y r)
+            -> OpenGame StochasticStatefulOptic StochasticStatefulContext
+                        (Mult n m)
+                        (Replicate n a) (Replicate n b) ([x], [Int]) [s] [y] [r]
+interleave Zero v = undefined
+interleave (Succ Zero) v = _
+interleave (Succ n) v = undefined
+-}
+
+interleave :: [StochasticStatefulBayesianOpenGame a b (x, [y]) s y r]
+           -> StochasticStatefulBayesianOpenGame [a] [b] ([x], [Int]) [s] [y] [r]
+interleave gs = StochasticStatefulBayesianOpenGame {
+  play = \as -> StochasticStatefulOptic
+    (\(xs, ns) -> let fwds = permute ns $ zipWith play gs as
+                  in scanish (zip () xs))
+    (),
+  evaluate = undefined
+}
+
+permute :: [Int] -> [a] -> [a]
+permute = undefined
+
+scanish :: [(x -> [y] -> y, x)] -> [y]
+scanish [] = []
+scanish ((f, x) : fxs) = let ys = foo fxs
+                          in f x ys : ys

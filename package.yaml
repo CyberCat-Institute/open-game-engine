@@ -55,6 +55,7 @@ dependencies:
     - parsec
     - QuickCheck
     - comonad
+    - ghc-prim
     - haskeline
     - hashmap
     - hashable

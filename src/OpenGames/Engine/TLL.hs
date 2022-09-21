@@ -158,3 +158,7 @@ type family CatRepeat (n :: Nat) (ls :: [*]) :: [*]  where
   CatRepeat Z ls = '[]
   CatRepeat (S n) ls = ls +:+ CatRepeat n ls
 
+type family Replicate (n :: Nat) (ty :: *) :: * where
+  Replicate Z _ = ()
+  Replicate (S Z) ty = ty
+  Replicate (S n) ty = (ty, Replicate n ty)
