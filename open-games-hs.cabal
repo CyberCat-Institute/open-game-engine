@@ -55,6 +55,7 @@ library
       Examples.Staking.AndGateMarkovMC
       OpenGames
       OpenGames.Engine.BayesianGamesNonState
+      OpenGames.Engine.Interleaving
       OpenGames.Engine.IOGames
       OpenGames.Engine.Nat
       OpenGames.Engine.Vec
