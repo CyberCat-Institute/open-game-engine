@@ -50,7 +50,7 @@ import           Data.Utils
 import Numeric.Probability.Distribution hiding (map, lift, filter)
 
 import OpenGames.Engine.OpenGames hiding (lift)
-import OpenGames.Engine.OpticClass
+import OpenGames.Engine.OpticClass hiding (fromFunctions)
 import OpenGames.Engine.TLL
 import OpenGames.Engine.Diagnostics
 

@@ -2,14 +2,18 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 
 module OpenGames.Engine.Interleaving where
 
 -- import OpenGames
 import OpenGames.Preprocessor
 import OpenGames.Engine.TLL
+import OpenGames.Engine.Nat
+import OpenGames.Engine.Vec (Vec(..))
 import OpenGames.Engine.OpenGames
 import OpenGames.Engine.OpticClass
+import OpenGames.Engine.BayesianGames hiding (fromFunctions)
 
 foldseq :: [StochasticStatefulOptic (s, [a]) t a b] -> StochasticStatefulOptic [s] [t] [a] [b]
 foldseq = foldr foldseqcons foldseqnil
@@ -28,35 +32,23 @@ foldseqnil = lens (\[] -> []) (\[] [] -> [])
 
 test1 :: StochasticStatefulOptic (Int, [String]) () String ()
 test1 = StochasticStatefulOptic (\(n, ss) -> return ((), (if null ss then "" else head ss) ++ show n)) (\() () -> return ())
-test2 :: StochasticStatefulOptic (Int, [String]) () String ()
-test2 = StochasticStatefulOptic (\(n, ss) -> return ((),show (length ss))) (\() () -> return ())
+--
+-- > case (foldseq $ replicate 5 test1) of StochasticStatefulOptic v u -> fmap snd (v $ reverse [1,2,3,4,5])
+-- fromFreqs [(["12345","1234","123","12","1"],1.0)]
+-- > fmap reverse it
+-- fromFreqs [(["1","12","123","1234","12345"],1.0)]
 
-{-}
-interleave2 :: (Optic o, Context c o, Unappend a, Unappend a')
-           => OpenGame o c a b (x, Maybe y') s y r
-           -> OpenGame o c a' b' (x', Maybe y) s' y' r'
-           -> OpenGame o c  (a +:+ a') (b +:+ b') (x, x') (s, s') (y, y') (r, r')
-interleave2 g h = [opengame|
-  inputs: x, x' ;
-  feedback: s, s' ;
+permuteList :: [(Int, a)] -> [a]
+permuteList as = map ((map snd as) !!) (map fst as)
 
-  :---:
+permuteListLens :: StochasticStatefulOptic [(Int, s)] [t] [s] [t]
+permuteListLens = lens permuteList (\s -> permuteList . zip (map fst s))
 
-  inputs: x, Nothing ;
-  feedback : s ;
-  operation: g ;
-  outputs : y ;
-  returns : r ;
-
-  inputs : x', Just y ;
-  feedback : s' ;
-  operation : h ;
-  outputs : y' ;
-  returns : r' ;
-
-  :---:
-
-  outputs : y, y' ;
-  returns : r, r' ;
-|]
--}
+controlledInterleave :: Vec n (StochasticStatefulBayesianOpenGame a b (x, [y]) s y r) -> Natural n
+                     -> StochasticStatefulBayesianOpenGame (CatRepeat n a) (CatRepeat n '[[Int] -> List b]) [(Int, x)] [s] [y] [r]
+controlledInterleave Empty Zero = OpenGame {
+  play = \Nil -> foldseqnil,
+  evaluate = \Nil _ -> Nil
+}
+controlledInterleave (v :> vs) (Succ n) =
+  undefined

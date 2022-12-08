@@ -37,6 +37,7 @@ data DiagnosticInfoBayesian x y = DiagnosticInfoBayesian
   , unobservedState :: String}
 
 
+
 -- prepare string information for Bayesian game
 showDiagnosticInfo :: (Show y, Ord y, Show x) => DiagnosticInfoBayesian x y -> String
 showDiagnosticInfo info =
