@@ -31,7 +31,7 @@ patToExp (VarP e) = VarE e
 patToExp (TupP e) = mkTup (map (patToExp) e)
 patToExp (LitP e) = LitE e
 patToExp (ListP e) = ListE (fmap patToExp e)
-patToExp (ConP n e) = apply (VarE n) (fmap patToExp e)
+patToExp (ConP n t e) = apply (VarE n) (fmap patToExp e)
 
 interpretFunction :: FunctionExpression Pat Exp -> Q Exp
 interpretFunction Identity = [| id |]

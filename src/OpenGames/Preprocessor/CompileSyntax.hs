@@ -60,8 +60,8 @@ compileStmt (LLetS pat exp) = LetS [ValD (compilePattern pat) (NormalB $ compile
 
 compilePattern :: Pattern -> Pat
 compilePattern (PLit (LInt i)) = LitP $ IntegerL i
-compilePattern (PLit (LBool True)) = ConP (mkName "True") []
-compilePattern (PLit (LBool False)) = ConP (mkName "False") []
+compilePattern (PLit (LBool True)) = ConP (mkName "True") [] []
+compilePattern (PLit (LBool False)) = ConP (mkName "False") [] []
 compilePattern (PLit (LString str)) = LitP $ StringL str
 compilePattern (PList ls) = ListP $ fmap compilePattern ls
 compilePattern (PTuple ts) = TupP $ fmap compilePattern ts
