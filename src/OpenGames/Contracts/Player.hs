@@ -1,45 +1,48 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
-module OpenGames.Contracts.Players where
+module OpenGames.Contracts.Player where
 
 import OpenGames.Contracts.Amm
 import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
 import OpenGames.Engine.Engine
 
--- amm1 = (initAmm 10 5 &&& id) >>> amm
---
--- amm2 = initAmm 20 20 >>> amm
+import Numeric.Probability.Distribution (uniform)
 
 swapStrategy :: Double -> [Double]
 swapStrategy n = [0, 1 .. n]
 
-bigPayoff usd1 usd2 inv = usd1 + usd2 - inv
+bigPayoff finalUSD initialUSD swappedUSD
+  = finalUSD + initialUSD - swappedUSD
 
-player usd = [opengame|
-  inputs   : r1, r2, r1', r2', usd ;
-  feedback : ;
-  :-------:
+ammPlayer initialUSD = [opengame|
+  inputs    : r1, r2, r1', r2' ;
+  feedback  : ;
+  :---------:
 
-  operation : dependentDecision "Marx" (const (swapStrategy usd)) ;
-  outputs   : d ;
-  returns   : bigPayoff realDollars usd d ;
+  operation : dependentDecision "Marx" (const (swapStrategy initialUSD)) ;
+  outputs   : swappableUSD ;
+  returns   : bigPayoff (proj finalUSD) initialUSD swappableUSD ;
 
-  inputs  : (r1, r2), Swap0 d;
-  feedback : ;
+  inputs    : (r1, r2), Swap0 swappableUSD;
+  feedback  : ;
   operation : amm ;
-  outputs : st', eur ;
-  returns : ;
+  outputs   : eur, st' ;
+  returns   : ;
 
   inputs    : (r1', r2'), Swap1 (proj eur) ;
   feedback  : ;
   operation : amm ;
-  outputs : realDollars ;
-  returns : ;
+  outputs   : finalUSD, st'';
+  returns   : ;
 
-  :-------:
-  outputs: ;
-  returns : ;
+  :---------:
+  outputs   : ;
+  returns   : ;
 |]
 
+
+ctx = StochasticStatefulContext @() (pure ((), (800,1000,1000,800))) (\_ _ -> return ())
+
+ev = evaluate (ammPlayer 10) (pure 1 :- Nil) ctx

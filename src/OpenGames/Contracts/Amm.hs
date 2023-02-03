@@ -82,3 +82,5 @@ amm = [opengame|
   returns : ;
 |]
 
+-- questions for david:
+-- - how does act deal with BC state? for example blockchain number

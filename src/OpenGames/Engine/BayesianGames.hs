@@ -57,7 +57,8 @@ import OpenGames.Engine.Diagnostics
 ---------------------------------------------
 -- Reimplements stateful bayesian from before
 
-type StochasticStatefulBayesianOpenGame a b x s y r = OpenGame StochasticStatefulOptic StochasticStatefulContext a b x s y r
+type StochasticStatefulBayesianOpenGame a b x s y r =
+  OpenGame StochasticStatefulOptic StochasticStatefulContext a b x s y r
 
 type Agent = String
 
