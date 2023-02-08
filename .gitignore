@@ -160,4 +160,8 @@ TSWLatexianTemp*
 
 # DS Store
 .DS_Store
+
 .stack-work/
+
+dist-newstyle/
+
