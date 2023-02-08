@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -94,6 +94,7 @@ library
 executable act-exec
   main-is: Main.hs
   other-modules:
+      Example
       Paths_open_games_hs
   hs-source-dirs:
       act
@@ -106,6 +107,7 @@ executable act-exec
     , criterion
     , extra
     , fgl
+    , file-embed
     , ghc
     , graphviz
     , hashable

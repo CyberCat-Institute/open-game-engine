@@ -88,6 +88,8 @@ executables:
     dependencies:
       - act >= 0.1 && < 1
       - open-games-hs
+      - file-embed
+      - bytestring
   graphics:
     main:                Main.hs
     source-dirs:         graphics
