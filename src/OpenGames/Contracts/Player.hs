@@ -20,7 +20,7 @@ ammPlayer initialUSD = [opengame|
   inputs    : r1, r2, r1', r2' ;
   feedback  : ;
   :---------:
-
+  inputs    : r1, r2 ;
   operation : dependentDecision "Marx" (const (swapStrategy initialUSD)) ;
   outputs   : swappableUSD ;
   returns   : bigPayoff (proj finalUSD) initialUSD swappableUSD ;
@@ -42,7 +42,25 @@ ammPlayer initialUSD = [opengame|
   returns   : ;
 |]
 
+-- questions:
+-- - What do we improve in this model next?
+--   - sandwich? (different example)
+--   - another "from act" example
+--   - betting contract from act?
+--     - betting on the exchange rate of an AMM
+--     - clockwork finance example
+--     - move on to token swap
+-- - What do we automate from Act ?
+--   - extract name state fields
+--   - what about rollback?
+--   - strategy stealing?
+--   - failing transactions added to the global state?
+--   - generate players ?
+--   - gas fees + mem pool + Bribable coordinator
+--
+--   next week:
+--   - work on another act example, maybe draw from clockwork finance
 
 ctx = StochasticStatefulContext @() (pure ((), (800,1000,1000,800))) (\_ _ -> return ())
 
-ev = evaluate (ammPlayer 10) (pure 1 :- Nil) ctx
+ev = evaluate (ammPlayer 10) ((pureAction 1) :- Nil) ctx

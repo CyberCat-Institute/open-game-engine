@@ -10,10 +10,10 @@ import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
 
 -- transaction { gas :: Int, Function :: String, Arg :: Int }
-data Transaction = Swap0 Double | Swap1 Double
+data Transaction = Swap0 Double | Swap1 Double -- derived from act API
   deriving (Show)
 
-data Result = Swap0Out {g :: Double} | Swap1Out {g' :: Double}
+data Result = Swap0Out {g :: Double} | Swap1Out {g' :: Double} -- derived from act API
   deriving (Show)
 
 data Strategy = Strategy Transaction
@@ -28,15 +28,18 @@ proj (Swap0Out n) = n
 --   - add gas?
 --   - translate functions from act to OG and add gas to them
 
-type ContractState = (Double, Double)
+type ContractState = (Double, Double) -- derived from act Store
+type MemPool = [Transaction] -- ????
+type GlobalState = (Mempool, ContractState) -- ??????????????????
 
 inRange :: Double -> Double -> Bool
 inRange _ _ = True
 
 swapWithAmount :: ContractState -> Transaction  -> (Result, ContractState)
 swapWithAmount st@(reserve0, reserve1) (Swap0 amt)  =
-    if inRange amt reserve0
+    if inRange amt reserve0 -- derived from preconditions
       then
+        -- derived from implementation
         ( Swap1Out (reserve1 - ((reserve0 * reserve1) / (reserve0 + amt) + 1))
         , ( reserve0 + amt
           , (reserve0 * reserve1) / (reserve0 + amt) + 1
@@ -75,10 +78,10 @@ amm = [opengame|
 
   inputs : state, transaction ;
   operation : forwardFunction $ uncurry swapWithAmount ;
-  outputs : state', output  ;
+  outputs : output, state' ;
 
   :------:
-  outputs : state', output ;
+  outputs : output, state' ;
   returns : ;
 |]
 
