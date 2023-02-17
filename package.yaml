@@ -90,6 +90,7 @@ executables:
       - open-games-hs
       - file-embed
       - bytestring
+      - validation
   graphics:
     main:                Main.hs
     source-dirs:         graphics

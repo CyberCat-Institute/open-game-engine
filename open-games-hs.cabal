@@ -103,6 +103,7 @@ executable act-exec
     , act >=0.1 && <1
     , ad
     , base >=4.7 && <5
+    , bytestring
     , comonad
     , criterion
     , extra
@@ -126,6 +127,7 @@ executable act-exec
     , template-haskell
     , transformers
     , typed-process
+    , validation
     , vector
   default-language: Haskell2010
 
