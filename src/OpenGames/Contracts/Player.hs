@@ -58,8 +58,17 @@ ammPlayer initialUSD = [opengame|
 --   - generate players ?
 --   - gas fees + mem pool + Bribable coordinator
 --
---   next week:
---   - work on another act example, maybe draw from clockwork finance
+--   To do in general:
+--   - Work on the common infrastructure around modelling situations
+--     - coordinator
+--     - calling subcontract
+--     - bribes
+--
+--   Next week:
+--   - Work on another act example, maybe draw from clockwork finance
+--     - Create an act program for a full AMM with setup
+--     - Create an act program for betting
+--
 
 ctx = StochasticStatefulContext @() (pure ((), (800,1000,1000,800))) (\_ _ -> return ())
 
