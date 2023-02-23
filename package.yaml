@@ -91,6 +91,8 @@ executables:
       - file-embed
       - bytestring
       - validation
+      - hevm
+      - containers
   graphics:
     main:                Main.hs
     source-dirs:         graphics

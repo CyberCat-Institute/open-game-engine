@@ -114,6 +114,7 @@ executable act-exec
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
