@@ -41,3 +41,5 @@ dec4Methods (tyName, constructors) = DataD
   Nothing -- no kind signature, not a GADT
   (fmap (flip NormalC [] . mkName . capitalise) constructors)
   [] -- no derived clauses, for now. Might be useful to have Eq etc defined
+
+

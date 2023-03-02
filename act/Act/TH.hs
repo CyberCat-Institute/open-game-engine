@@ -2,23 +2,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Act.TH where
 
-import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.FileEmbed
-import Data.List (nub)
-import qualified Data.Map as M
 import Data.Validation
 import Error
-import EVM.Solidity
 
-import Parse
-import Lex
 import Syntax.Annotated
 import CLI
 
-import Act.Utils
 import Act.TH.Dispatch
+import Act.TH.State
 
 import Language.Haskell.TH.Syntax
 
@@ -46,15 +40,12 @@ act2OG filename = do
   extractError :: NonEmpty (Pn, String) -> String
   extractError err = ""
 
--- Generate a type for the global state of the contract
-stateDec4Claim :: [Claim] -> [Dec]
-stateDec4Claim = concatMap convertStorage
-    where
-        convertStorage :: Claim -> [Dec]
-        convertStorage (C c) = []
-        convertStorage (B b) = []
-        convertStorage (I i) = []
-        convertStorage (S s) = fmap (createDataDeclaration . second M.toList) (M.toList s)
+-- generate a top-level function that will define the contract
+-- it's type will always be the same:
+-- (ContractState, ContractMethod) -> ContractState
+-- This is then going to be instanciated as an open game using `fromFunctions`
+generateFunction :: [Behaviour] -> Dec
+generateFunction behaviors = undefined
 
 actSource :: Data.ByteString.ByteString
 actSource = $(embedFile "amm.act")
@@ -69,6 +60,7 @@ display = case compiled of
 printBehaviour :: Behaviour -> String
 printBehaviour b =
    "name: " ++ _name b ++ "\n" ++
+   "mode: " ++ show (_mode b) ++ "\n" ++
    "preconditions:\n" ++
    unlines (fmap (("  - " ++) . show) (_preconditions b)) ++
    "\nstate updates:\n" ++
@@ -80,33 +72,6 @@ printClaim (B b) = "behaviour:\n" ++ printBehaviour b
 printClaim (I i) = "invariant: " ++ show i
 printClaim (S s) = "Storage: " ++ show s
 
-mapEVMTypes2HS :: SlotType -> Type
-mapEVMTypes2HS (StorageMapping _ _) = undefined
-mapEVMTypes2HS (StorageValue (AbiUIntType n)) = ConT ''Int
-mapEVMTypes2HS (StorageValue (AbiIntType n)) = ConT ''Int
-mapEVMTypes2HS (StorageValue AbiAddressType) = undefined
-mapEVMTypes2HS (StorageValue AbiBoolType) = ConT ''Bool
-mapEVMTypes2HS (StorageValue (AbiBytesType n)) = undefined
-mapEVMTypes2HS (StorageValue AbiBytesDynamicType) = undefined
-mapEVMTypes2HS (StorageValue AbiStringType) = undefined
-mapEVMTypes2HS (StorageValue (AbiArrayDynamicType ty)) = undefined
-mapEVMTypes2HS (StorageValue (AbiArrayType n ty)) = undefined
-mapEVMTypes2HS (StorageValue (AbiTupleType _)) = undefined
-
-createDataDeclaration :: (Id, [(Id, SlotType)]) -> Dec
-createDataDeclaration (storeName, types) = DataD
-  [] -- no constraints
-  (storeTypeName) -- the name is the name from the store
-  [] -- no type variables
-  Nothing -- no kind signature, not a GADT
-  [RecC storeTypeName (fmap (\(nm, ty) -> (mkName nm, defaultBang, mapEVMTypes2HS ty)) types)]
-  [] -- no derived clauses, for now. Might be useful to have Eq etc defined
-  where
-    defaultBang :: Bang
-    defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
-
-    storeTypeName :: Name
-    storeTypeName = mkName (capitalise (storeName ++ "State"))
 
 printConstructor :: Constructor -> String
 printConstructor (Constructor

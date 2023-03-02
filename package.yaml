@@ -85,6 +85,8 @@ executables:
   act-exec:
     main:                Main.hs
     source-dirs:         act
+    ghc-options:
+      - -fwarn-unused-imports
     dependencies:
       - act >= 0.1 && < 1
       - open-games-hs

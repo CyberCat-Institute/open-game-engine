@@ -95,10 +95,14 @@ executable act-exec
   main-is: Main.hs
   other-modules:
       Act.TH
+      Act.TH.Dispatch
+      Act.TH.State
+      Act.Utils
       Example
       Paths_open_games_hs
   hs-source-dirs:
       act
+  ghc-options: -fwarn-unused-imports
   build-depends:
       QuickCheck
     , act >=0.1 && <1
