@@ -3,10 +3,10 @@
 module Act.TH where
 
 import Data.Bifunctor
-import Data.Char (toUpper)
-import Data.FileEmbed
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
+import Data.FileEmbed
+import Data.List (nub)
 import qualified Data.Map as M
 import Data.Validation
 import Error
@@ -17,10 +17,21 @@ import Lex
 import Syntax.Annotated
 import CLI
 
+import Act.Utils
+import Act.TH.Dispatch
+
 import Language.Haskell.TH.Syntax
 
 
-act2OG :: String -> Q [Dec]
+-- Convert from a an act filepath to a list of top-level declaration
+-- state is converted into a record
+-- invariants are converted into if-statements
+-- We make one data declaration with one constructor for each method
+-- which we then use for dispatching the correct functionality in the
+-- contract.
+-- a single top-level function is created taking in argument
+-- the method dispatcher
+act2OG :: String ->  Q [Dec]
 act2OG filename = do
   file <- embedFile filename
   let compiled :: Error String [Claim]
@@ -28,17 +39,22 @@ act2OG filename = do
   case compiled of
     Failure err -> reportError (extractError err)
                 >> pure []
-    Success val -> pure (concatMap dec4Claim val)
+    -- A parsed Act file is a list of claims
+    Success val -> pure (stateDec4Claim val ++ [dispatchDec4Claims val])
 
   where
   extractError :: NonEmpty (Pn, String) -> String
   extractError err = ""
 
-dec4Claim :: Claim -> [Dec]
-dec4Claim (C c) = []
-dec4Claim (B b) = []
-dec4Claim (I i) = []
-dec4Claim (S s) = fmap (createDataDeclaration . second M.toList) (M.toList s)
+-- Generate a type for the global state of the contract
+stateDec4Claim :: [Claim] -> [Dec]
+stateDec4Claim = concatMap convertStorage
+    where
+        convertStorage :: Claim -> [Dec]
+        convertStorage (C c) = []
+        convertStorage (B b) = []
+        convertStorage (I i) = []
+        convertStorage (S s) = fmap (createDataDeclaration . second M.toList) (M.toList s)
 
 actSource :: Data.ByteString.ByteString
 actSource = $(embedFile "amm.act")
@@ -48,11 +64,19 @@ compiled =  compile (unpack actSource)
 
 display ::  String
 display = case compiled of
-  Success s -> unlines (fmap printClaim s)
+  Success s -> unlines (fmap ((++ "\n") . printClaim) s)
+
+printBehaviour :: Behaviour -> String
+printBehaviour b =
+   "name: " ++ _name b ++ "\n" ++
+   "preconditions:\n" ++
+   unlines (fmap (("  - " ++) . show) (_preconditions b)) ++
+   "\nstate updates:\n" ++
+   unlines (fmap (("  - " ++) . show) (_stateUpdates b))
 
 printClaim :: Claim -> String
-printClaim (C constructor) = "constructor"
-printClaim (B b) = "behaviour: " ++ unlines (fmap show (_preconditions b))
+printClaim (C constructor) = "constructor: " ++ show constructor
+printClaim (B b) = "behaviour:\n" ++ printBehaviour b
 printClaim (I i) = "invariant: " ++ show i
 printClaim (S s) = "Storage: " ++ show s
 
@@ -81,12 +105,8 @@ createDataDeclaration (storeName, types) = DataD
     defaultBang :: Bang
     defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
 
-    capitalise :: String -> String
-    capitalise [] = []
-    capitalise (x : xs) = toUpper x : xs
-
     storeTypeName :: Name
-    storeTypeName = mkName (capitalise storeName)
+    storeTypeName = mkName (capitalise (storeName ++ "State"))
 
 printConstructor :: Constructor -> String
 printConstructor (Constructor

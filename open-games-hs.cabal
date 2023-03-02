@@ -94,6 +94,7 @@ library
 executable act-exec
   main-is: Main.hs
   other-modules:
+      Act.TH
       Example
       Paths_open_games_hs
   hs-source-dirs:
@@ -105,6 +106,7 @@ executable act-exec
     , base >=4.7 && <5
     , bytestring
     , comonad
+    , containers
     , criterion
     , extra
     , fgl
