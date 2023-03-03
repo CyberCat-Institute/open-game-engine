@@ -185,6 +185,21 @@ dependentDecisionIO name _ = OpenGame {
 unsafeConcat :: forall b1 b2. List (TMap Maybe b1) -> List (TMap Maybe b2) -> List (TMap Maybe (b1 +:+ b2))
 unsafeConcat = unsafeCoerce (+:+)
 
+data Transaction = T { name :: String , args :: [Int] }
+
+type ActContract s r = (String, (s, Transaction) -> (r, s))
+
+combine :: [ActContract s r] -> [Transaction] -> s -> ([r], s)
+combine contracts [transaction] globalState =
+  let Just trans = Prelude.lookup (name transaction) contracts
+  in first pure (trans (globalState, transaction))
+combine contracts (t : ts) globalState =
+  let Just trans = Prelude.lookup (name t) contracts
+      (result, newState) = trans (globalState, t)
+  in first (result :) (combine contracts ts newState)
+
+
+
 (+++) :: forall a1 a2 b1 b2 x1 x2 s r y1 y2. (Unappend a1, Unappend a2, RepNothing b1, RepNothing b2)
       => StochasticStatefulBayesianOpenGame a1 b1 x1 s y1 r
       -> StochasticStatefulBayesianOpenGame a2 b2 x2 s y2 r

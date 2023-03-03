@@ -16,6 +16,54 @@ swapStrategy n = [0, 1 .. n]
 bigPayoff finalUSD initialUSD swappedUSD
   = finalUSD + initialUSD - swappedUSD
 
+actionSpaceTXs :: Bounds -> [Transaction]
+actionSpaceTXs = undefined
+
+$(act2OG "amm.act")
+
+actGame = amm (AmmConfig { intRange = [0 .. 100]
+                         , feeRange = [0..10]})
+
+chooseTransactionAndFee name upperBound bounds =
+  [opengame|
+  inputs: state ;
+  feedback: ;
+
+  :------:
+
+  inputs :  state ;
+  operation : dependentDecision name $ const $ actionSpaceTXs bounds;
+  outputs : tx;
+  returns : 0 ;
+
+  inputs : state, tx ;
+  operation : dependentDecision name $ const $ actionSpaceFee upperBound ;
+  outputs : fee;
+  returns : 0 ;
+
+  inputs : tx,fee ;
+  operation : forwardFunction $ uncurry combineTXAndFee ;
+  outputs : txWithFee ;
+
+  :------:
+  outputs : txWithFee ;
+  returns : ;
+
+|]
+
+-- generate n amm (with n tokens) | OK
+--
+-- generate m transactions with those n amms | <---
+--
+-- have a coordinator picks 1 arrangement of m | OK
+--
+-- Transactions = Transaction Address [ARgs]
+--
+-- [ T "Loan" [100,200]
+-- , T "Token1Swap1" [100]
+-- , T "Token1Swap2" [3000]
+-- ]
+
 ammPlayer initialUSD = [opengame|
   inputs    : r1, r2, r1', r2' ;
   feedback  : ;
@@ -31,10 +79,10 @@ ammPlayer initialUSD = [opengame|
   outputs   : eur, st' ;
   returns   : ;
 
-  inputs    : (r1', r2'), Swap1 (proj eur) ;
+  inputs    : transactions ;
   feedback  : ;
-  operation : amm ;
-  outputs   : finalUSD, st'';
+  operation : and (amm "token1") (amm "token2");
+  outputs   : finalState;
   returns   : ;
 
   :---------:

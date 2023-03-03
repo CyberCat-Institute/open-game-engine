@@ -9,8 +9,11 @@ import OpenGames.Engine.OpticClass
 import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
 
+arity :: Address -> EVMType
+arity = undefined
+
 -- transaction { gas :: Int, Function :: String, Arg :: Int }
-data Transaction = Swap0 Double | Swap1 Double -- derived from act API
+data Transaction = Transaction Address [EVMType]
   deriving (Show)
 
 data Result = Swap0Out {g :: Double} | Swap1Out {g' :: Double} -- derived from act API
