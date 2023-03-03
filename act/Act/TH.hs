@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Act.TH where
 
+import Data.Char
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.FileEmbed
@@ -13,6 +14,7 @@ import CLI
 
 import Act.TH.Dispatch
 import Act.TH.State
+import Act.Utils
 
 import Language.Haskell.TH.Syntax
 
@@ -34,7 +36,9 @@ act2OG filename = do
     Failure err -> reportError (extractError err)
                 >> pure []
     -- A parsed Act file is a list of claims
-    Success val -> pure (stateDec4Claim val ++ [dispatchDec4Claims val])
+    Success val -> pure (stateDec4Claim val
+                     ++ [dispatchDec4Claims val]
+                     ++ generateContractFunction val)
 
   where
   extractError :: NonEmpty (Pn, String) -> String
@@ -44,8 +48,21 @@ act2OG filename = do
 -- it's type will always be the same:
 -- (ContractState, ContractMethod) -> ContractState
 -- This is then going to be instanciated as an open game using `fromFunctions`
-generateFunction :: [Behaviour] -> Dec
-generateFunction behaviors = undefined
+generateContractFunction :: [Claim] -> [Dec]
+generateContractFunction claims =
+  let (fnName, behaviors) = extractBehaviors claims
+      fnName' = (mkName (uncapitalise fnName ++ "Contract"))
+  in [ SigD
+         fnName'
+         (AppT (AppT ArrowT (ConT (mkName "AmmState"))) (ConT (mkName "AmmState")))
+     , FunD
+         fnName'
+       [Clause [] (NormalB (VarE (mkName "undefined"))) []]
+     ]
+
+getUpdates4Method :: [Behaviour] -> [(String, [Rewrite])]
+getUpdates4Method behaviors =
+  fmap (\x -> (_name x, _stateUpdates x)) $ filter (\b -> _mode b == Pass) behaviors
 
 actSource :: Data.ByteString.ByteString
 actSource = $(embedFile "amm.act")
@@ -61,8 +78,12 @@ printBehaviour :: Behaviour -> String
 printBehaviour b =
    "name: " ++ _name b ++ "\n" ++
    "mode: " ++ show (_mode b) ++ "\n" ++
+   "contract: " ++ show (_contract b) ++ "\n" ++
+   "interface: " ++ show (_interface b) ++"\n" ++
    "preconditions:\n" ++
    unlines (fmap (("  - " ++) . show) (_preconditions b)) ++
+   "postConditions:\n" ++
+   unlines (fmap (("  - " ++) . show) (_postconditions b)) ++
    "\nstate updates:\n" ++
    unlines (fmap (("  - " ++) . show) (_stateUpdates b))
 

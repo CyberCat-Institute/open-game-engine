@@ -95,6 +95,7 @@ executables:
       - validation
       - hevm
       - containers
+      - text
   graphics:
     main:                Main.hs
     source-dirs:         graphics
