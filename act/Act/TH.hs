@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Act.TH where
 
+import Data.List
 import Data.Char
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
@@ -15,8 +16,9 @@ import CLI
 import Act.TH.Dispatch
 import Act.TH.State
 import Act.Utils
+import Act.Prelude
 
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax as TH
 
 
 -- Convert from a an act filepath to a list of top-level declaration
@@ -36,29 +38,78 @@ act2OG filename = do
     Failure err -> reportError (extractError err)
                 >> pure []
     -- A parsed Act file is a list of claims
-    Success val -> pure (stateDec4Claim val
+    Success val -> do
+      contractFunction <- generateContractFunction val
+      pure (stateDec4Claim val
                      ++ [dispatchDec4Claims val]
-                     ++ generateContractFunction val)
+                     ++ contractFunction)
 
   where
   extractError :: NonEmpty (Pn, String) -> String
   extractError err = ""
 
+arr x y = AppT (AppT ArrowT x) y
+
 -- generate a top-level function that will define the contract
 -- it's type will always be the same:
 -- (ContractState, ContractMethod) -> ContractState
 -- This is then going to be instanciated as an open game using `fromFunctions`
-generateContractFunction :: [Claim] -> [Dec]
+generateContractFunction :: [Claim] -> Q [Dec]
 generateContractFunction claims =
   let (fnName, behaviors) = extractBehaviors claims
       fnName' = (mkName (uncapitalise fnName ++ "Contract"))
-  in [ SigD
-         fnName'
-         (AppT (AppT ArrowT (ConT (mkName "AmmState"))) (ConT (mkName "AmmState")))
-     , FunD
-         fnName'
-       [Clause [] (NormalB (VarE (mkName "undefined"))) []]
-     ]
+  in generateContractDecl fnName' [("swap0", undefinedE), ("swap1", undefinedE)]
+  where
+    undefinedE = VarE (mkName "undefined")
+
+-- this build the function signature for the contract, each contract generates one function
+-- that recieves transactions, each contract function has it's own internal "method dispatched"
+-- which matches on the method of the transaction, extracts the arguments and calls the body with
+-- the arguments in scope
+-- Each contract is of this shape:
+-- ```
+-- contractName :: ContractState -> Transaction -> ContractState
+-- contractName st transaction = case method transaction of
+--     "m1" -> let (arg1, arg2) <- extractm1 (args transaction) in b1
+--     "m2" -> let (arg1, arg2, arg3) <- extractm2 (args transaction) in b2
+--     "m3" -> let (arg1) <- extractm3 (args transaction) in b3
+-- ```
+generateContractDecl :: Name -> [(String, TH.Exp)] -> Q [Dec]
+generateContractDecl fnName clauses = do
+     let method = mkName "method"
+     crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\nexpected one of : " ++ $(return clauseLit))|]
+     transactionPattern <- [p|Act.Prelude.Transaction contract $(return (VarP method)) args|]
+     pure
+       [ SigD
+           fnName
+           ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState"))))
+       , FunD
+           fnName
+           [Clause
+               [VarP (mkName "st"), transactionPattern]
+               (NormalB (CaseE
+                   (VarE method)
+                   (matchClauses ++ [matchE WildP crashMessage])
+                   ))
+               []
+           ]
+       ]
+  where
+  clauseLit :: TH.Exp
+  clauseLit = LitE (StringL (intercalate ", " (fmap fst clauses)))
+
+
+  -- This is the list of pattern to dispatch the transaction to the correct function body for the contract
+  -- ```
+  -- case (method transaction) of
+  --   "call1" -> body1 \
+  --   "call2" -> body2  |-> This bit
+  --   "call3" -> body3 /
+  -- ```
+  matchClauses :: [Match]
+  matchClauses = fmap (\(pat, exp) -> matchE (LitP (StringL pat)) exp) clauses
+  matchE p b = Match p (NormalB b) []
+  undefinedE = VarE (mkName "undefined")
 
 getUpdates4Method :: [Behaviour] -> [(String, [Rewrite])]
 getUpdates4Method behaviors =
