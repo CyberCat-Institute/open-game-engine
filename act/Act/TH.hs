@@ -1,12 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Act.TH where
 
-import Data.List
-import Data.Char
+import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
+import Data.Char
 import Data.FileEmbed
+import Data.List
 import Data.Validation
 import Error
 
@@ -41,7 +43,6 @@ act2OG filename = do
     Success val -> do
       contractFunction <- generateContractFunction val
       pure (stateDec4Claim val
-                     ++ [dispatchDec4Claims val]
                      ++ contractFunction)
 
   where
@@ -55,14 +56,16 @@ arr x y = AppT (AppT ArrowT x) y
 -- (ContractState, ContractMethod) -> ContractState
 -- This is then going to be instanciated as an open game using `fromFunctions`
 generateContractFunction :: [Claim] -> Q [Dec]
-generateContractFunction claims =
+generateContractFunction claims = do
   let (fnName, behaviors) = extractBehaviors claims
-      fnName' = (mkName (uncapitalise fnName ++ "Contract"))
-  in generateContractDecl fnName' [("swap0", undefinedE), ("swap1", undefinedE)]
-  where
-    undefinedE = VarE (mkName "undefined")
+  let fnName' = (mkName (uncapitalise fnName ++ "Contract"))
+  methods <- traverse (\(a, b) ->  (a, ) <$> mapMethod2TH b) (getUpdates4Method behaviors)
+  generateContractDecl fnName' methods
 
--- this build the function signature for the contract, each contract generates one function
+contractState :: TH.Name
+contractState = mkName "contractState"
+
+-- This builds the function signature for the contract, each contract generates one function
 -- that recieves transactions, each contract function has it's own internal "method dispatched"
 -- which matches on the method of the transaction, extracts the arguments and calls the body with
 -- the arguments in scope
@@ -76,44 +79,63 @@ generateContractFunction claims =
 -- ```
 generateContractDecl :: Name -> [(String, TH.Exp)] -> Q [Dec]
 generateContractDecl fnName clauses = do
-     let method = mkName "method"
-     crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\nexpected one of : " ++ $(return clauseLit))|]
-     transactionPattern <- [p|Act.Prelude.Transaction contract $(return (VarP method)) args|]
-     pure
-       [ SigD
-           fnName
-           ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState"))))
-       , FunD
-           fnName
-           [Clause
-               [VarP (mkName "st"), transactionPattern]
-               (NormalB (CaseE
-                   (VarE method)
-                   (matchClauses ++ [matchE WildP crashMessage])
-                   ))
-               []
-           ]
-       ]
+    let method = mkName "method"
+    crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
+    transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) args|]
+    pure
+      [ SigD
+          fnName
+          ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState"))))
+      , FunD
+          fnName
+          [Clause
+              [VarP contractState, transactionPattern]
+              (NormalB (CaseE
+                  (VarE method)
+                  (matchClauses ++ [matchE WildP crashMessage])
+                  ))
+              []
+          ]
+      ]
   where
-  clauseLit :: TH.Exp
-  clauseLit = LitE (StringL (intercalate ", " (fmap fst clauses)))
+    -- A string of all the methods, comma-separated. Used for printing errors.
+    clauseLit :: TH.Exp
+    clauseLit = LitE (StringL (intercalate ", " (fmap fst clauses)))
 
+    -- This is the list of pattern to dispatch the transaction to the correct function body for the contract
+    -- ```
+    -- case (method transaction) of
+    --   "call1" -> body1 \
+    --   "call2" -> body2  |-> This bit
+    --   "call3" -> body3 /
+    -- ```
+    matchClauses :: [Match]
+    matchClauses = fmap (\(pat, exp) -> matchE (LitP (StringL pat)) exp) clauses
+    matchE p b = Match p (NormalB b) []
+    undefinedE = VarE (mkName "undefined")
 
-  -- This is the list of pattern to dispatch the transaction to the correct function body for the contract
-  -- ```
-  -- case (method transaction) of
-  --   "call1" -> body1 \
-  --   "call2" -> body2  |-> This bit
-  --   "call3" -> body3 /
-  -- ```
-  matchClauses :: [Match]
-  matchClauses = fmap (\(pat, exp) -> matchE (LitP (StringL pat)) exp) clauses
-  matchE p b = Match p (NormalB b) []
-  undefinedE = VarE (mkName "undefined")
-
+-- Extract the program associated with each method
+-- Each program is a list of rewrite, the method is kept around as a string
+-- The act compiler has two version of each method one for the "reverting"
+-- behaviour of the method and one for the non-reverting behaviour (we know which
+-- mode we're in if we check the `_mode` field and see if its `Pass`, the reverting
+-- behavious is called `Fail`).
+-- For Open Games we are only interested in the non-revering behaviour.
+-- Transaction reversion will be handled at a later date if necessary. For now,
+-- we don't have any obvious use-case for it.
 getUpdates4Method :: [Behaviour] -> [(String, [Rewrite])]
 getUpdates4Method behaviors =
-  fmap (\x -> (_name x, _stateUpdates x)) $ filter (\b -> _mode b == Pass) behaviors
+    fmap (\x -> (_name x, _stateUpdates x)) $ filter (\b -> _mode b == Pass) behaviors
+
+-- A series of rewrites of the state is translated as the composition of the rewrites applied to the state
+-- each rewrite is written as a single `State -> State` update function as per the implementation of `rewriteOne`
+-- each constant is also written as a single `State -> State` update function
+mapMethod2TH :: [Rewrite] -> Q TH.Exp
+mapMethod2TH actExp = [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
+    where
+        rewriteOne :: Rewrite -> Q TH.Exp
+        rewriteOne (Constant loc) = pure $ VarE (mkName "undefined")
+        rewriteOne (Rewrite (Update ty loc newValue)) = pure $ VarE (mkName "undefined")
 
 actSource :: Data.ByteString.ByteString
 actSource = $(embedFile "amm.act")
