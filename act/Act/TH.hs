@@ -1,12 +1,15 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module Act.TH where
 
 import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
 import Data.Char
+import Data.Data (Data, toConstr)
 import Data.FileEmbed
 import Data.List
 import Data.Validation
@@ -22,6 +25,13 @@ import Act.Prelude
 
 import Language.Haskell.TH.Syntax as TH
 
+getDeclId :: Decl -> String
+getDeclId (Decl _ name) = name
+
+getDeclType :: Decl -> AbiType
+getDeclType (Decl ty _) = ty
+
+deriving instance Data AbiType
 
 -- Convert from a an act filepath to a list of top-level declaration
 -- state is converted into a record
@@ -60,7 +70,7 @@ generateContractFunction claims = do
   let (fnName, behaviors) = extractBehaviors claims
   let fnName' = (mkName (uncapitalise fnName ++ "Contract"))
   let methodInfo = getUpdates4Method behaviors
-  methods <- traverse (\(a, b, c) ->  (a, ) <$> mapMethod2TH a b) methodInfo
+  methods <- traverse (\(a, b, c) ->  (a, ) <$> mapMethod2TH c b) methodInfo
   extractMethods <- generateExtractMethods (fmap (\(a, b, c) -> (a, c)) methodInfo)
   contractFn <- generateContractDecl fnName' methods
   pure (extractMethods ++ contractFn)
@@ -151,17 +161,8 @@ generateExtractMethods = fmap concat . traverse generateExtract
     templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
     templateCons a b = [p| $a : $b |]
 
-    constructorNameForType :: AbiType -> Name
-    constructorNameForType _ = mkName "AbiUIntType"
-
-    patternForDecl :: Decl -> Q TH.Pat
-    patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [VarP (mkName name)])
-
     patterns4Interface :: Interface -> Q TH.Pat
     patterns4Interface (Interface _ types) = foldr templateCons [p| [] |] $ fmap patternForDecl types
-
-    expression4Interface :: Interface -> TH.Exp
-    expression4Interface (Interface _ [Decl _ name]) = VarE (mkName name)
 
     generateExtract :: (String, Interface) -> Q [TH.Dec]
     generateExtract (name, signature) = do
@@ -181,8 +182,49 @@ generateExtractMethods = fmap concat . traverse generateExtract
                 []
             , Clause [WildP] (NormalB (incorrectPatternError)) []]
         ]
+
+    -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT
+    -- variable and therefore the constructor to use for out `AbiType` the name will be used as
+    -- binding variable and used in the body to return the value of that type
+    patternForDecl :: Decl -> Q TH.Pat
+    patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [VarP (mkName name)])
+
+
+    constructorNameForType :: AbiType -> Name
+    constructorNameForType = mkName . show . toConstr
+
+
+    -- Convert an ACT Interface into the tuple of values extracted from the list of arguments
+    -- This implement the extractor function which signature is given by `extractorTypeForSignature`
+    -- if the method takes no argument we return a unit value
+    -- if the method takes one argument, we extract that single value from the list
+    -- If the method takes multiple arguments we bundle each
+    expression4Interface :: Interface -> TH.Exp
+    expression4Interface (Interface _ []) = ConE '()
+    expression4Interface (Interface _ [Decl _ name]) = VarE (mkName name)
+    expression4Interface (Interface _ decls) = TupE (fmap (Just . VarE . mkName . getDeclId) decls)
+
+
+    -- Convert a list of declarations name-type into a single tuple. If there
+    -- is only one declaration then the result is the type of that declaration
+    -- If there are no declarations the argument is a unit
+    convertDecls :: [Decl] -> TH.Type
+    convertDecls [] = ConT ''()
+    convertDecls [Decl ty _] = mapAbiTypes ty
+    convertDecls (Decl ty _ : decls) =
+      foldl (\x y -> AppT x y) (TupleT (length decls + 1) `AppT` mapAbiTypes ty) (fmap (mapAbiTypes . getDeclType) decls)
+
+    -- Convert an ACT interface into a haskell type
+    -- This is purely for extractors so the type will always be of the shape
+    --
+    -- ```
+    -- [AbiType] -> *argument tuple*
+    -- ```
+    --
+    -- The argument tuple is defined by `convertDecls` the implementation of the
+    -- function is handled by `expression4Interface`
     extractorTypeForSignature :: Interface -> Q Type
-    extractorTypeForSignature _ = [t|[AbiType] -> Int|]
+    extractorTypeForSignature (Interface _ decls) = [t|[AbiType] -> $(pure (convertDecls decls)) |]
 
 
 extractArgument4Method :: String -> Interface -> [TH.Dec]
@@ -191,14 +233,19 @@ extractArgument4Method methodName interface = []
 argumentExtractorName :: String -> TH.Name
 argumentExtractorName methodName = mkName ("extract" ++ capitalise methodName)
 
+bindVariables :: [Decl] -> TH.Pat
+bindVariables [] = VarP '()
+bindVariables [Decl _ name] = VarP (mkName name)
+bindVariables xs = TupP (fmap (VarP . mkName . getDeclId) xs)
+
 -- A series of rewrites of the state is translated as the composition of the rewrites applied to the state
 -- each rewrite is written as a single `State -> State` update function as per the implementation of `rewriteOne`
 -- each constant is also written as a single `State -> State` update function
-mapMethod2TH :: String -> [Rewrite] -> Q TH.Exp
-mapMethod2TH methodName actExp = do
+mapMethod2TH :: Interface -> [Rewrite] -> Q TH.Exp
+mapMethod2TH (Interface methodName args) actExp = do
     body <- [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
     let extractor = AppE (VarE (argumentExtractorName methodName)) (VarE contractArgs)
-    pure $ LetE [ValD (VarP (mkName "a1")) (NormalB extractor) []] body
+    pure $ LetE [ValD (bindVariables args) (NormalB extractor) []] body
     where
         rewriteOne :: Rewrite -> Q TH.Exp
         rewriteOne (Constant loc) = pure $ VarE (mkName "undefined")

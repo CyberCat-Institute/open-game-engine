@@ -72,7 +72,7 @@ allow-newer: true
 # require-stack-version: ">=2.1"
 #
 # Override the architecture used by stack, especially useful on Windows
-# arch: i386
+# Change to x86_64 for Intel and aarch64 for ARM/apple silicon
 arch: x86_64
 #
 # Extra directories used by stack for building

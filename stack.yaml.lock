@@ -7,93 +7,93 @@ packages:
 - completed:
     hackage: HSH-2.1.3@sha256:71ded11b224f5066373ce985ec63b10c87129850b33916736dd64fa2bea9ea0a,1705
     pantry-tree:
-      size: 473
       sha256: 95f49f9dad6e4976d1b53c59fd4405a978ca8baecc721d508a030615241d69be
+      size: 473
   original:
     hackage: HSH-2.1.3@sha256:71ded11b224f5066373ce985ec63b10c87129850b33916736dd64fa2bea9ea0a,1705
 - completed:
     hackage: restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
     pantry-tree:
-      size: 269
       sha256: 26b37a66c08215e18a914600aae8a61a6ba4611243a0b31ea27437d6c83701cb
+      size: 269
   original:
     hackage: restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
 - completed:
     hackage: s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
     pantry-tree:
-      size: 1467
       sha256: 280c1899ea1a905f01785e175ff029748e9913388d25e02a8e4cdceb9a92b722
+      size: 1467
   original:
     hackage: s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
 - completed:
     hackage: semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
     pantry-tree:
-      size: 401
       sha256: fd72964da8246cc09d477b4c6e6f20971de058917d08d9f8183f5c0e2116f9c6
+      size: 401
   original:
     hackage: semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
 - completed:
     hackage: probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
     pantry-tree:
-      size: 2711
       sha256: ee8953628fe301a29be9ef64ebd96f8c704969fec2b4e0b39243e6499911b767
+      size: 2711
   original:
     hackage: probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
 - completed:
-    subdir: src/hevm
+    commit: f84fb768721418c1ac9f5c910ac2cb1962af982a
+    git: https://github.com/dapphub/dapptools.git
     name: hevm
-    version: 0.49.0
-    git: https://github.com/dapphub/dapptools.git
     pantry-tree:
-      size: 3376
       sha256: 5c31d93b9a388a46d72c191c8cabdd9633d70193d0bac54aa3874f367328bf29
-    commit: f84fb768721418c1ac9f5c910ac2cb1962af982a
-  original:
+      size: 3376
     subdir: src/hevm
-    git: https://github.com/dapphub/dapptools.git
+    version: 0.49.0
+  original:
     commit: f84fb768721418c1ac9f5c910ac2cb1962af982a
+    git: https://github.com/dapphub/dapptools.git
+    subdir: src/hevm
 - completed:
     hackage: random-1.2.0@sha256:195506fedaa7c31c1fa2a747e9b49b4a5d1f0b09dd8f1291f23a771656faeec3,6097
     pantry-tree:
-      size: 1259
       sha256: 77505a2919b4d1d84abc36c995046f661741251e58a592ed826b7c1aee1c044c
+      size: 1259
   original:
     hackage: random-1.2.0
 - completed:
     hackage: splitmix-0.1@sha256:d50c4d0801a35be7875a040470c09863342514930c82a7d25780a6c2efc4fda9,5249
     pantry-tree:
-      size: 1148
       sha256: 2c884d06818f79030551aab192eee23734fd499361f4f4dcb4c51d1b1b2d786e
+      size: 1148
   original:
     hackage: splitmix-0.1
 - completed:
     hackage: mwc-random-0.15.0.2@sha256:50082409799461f5cc468f62131f7e50d270156c6b285c072e699140630c4cc7,3246
     pantry-tree:
-      size: 721
       sha256: e1dda87b78f86857cb00a5dbd179738d200711a46200d62cc595e76ea077ddc9
+      size: 721
   original:
     hackage: mwc-random-0.15.0.2
 - completed:
     hackage: monad-bayes-0.1.1.0@sha256:57d96f530a37a1c8efed0830c7f2bcf86da05d0d53324aebdd5b5aa165d72829,5132
     pantry-tree:
-      size: 2419
       sha256: 39c3c264da0b75b717909693f5ecaf8342761e4da62d6c273ae4fdc5d2011afb
+      size: 2419
   original:
     hackage: monad-bayes-0.1.1.0@sha256:57d96f530a37a1c8efed0830c7f2bcf86da05d0d53324aebdd5b5aa165d72829,5132
 - completed:
+    commit: f05cf360d3412c1dd01b8497bbf54b547683c92f
+    git: https://github.com/andrevidela/act.git
     name: act
-    version: 0.1.0.0
-    git: https://github.com/andrevidela/act.git
     pantry-tree:
-      size: 13264
       sha256: 95ec787ce3787801e009e3424cea436c4d59dee2a8d47487b3a7f6a75950c422
-    commit: f05cf360d3412c1dd01b8497bbf54b547683c92f
+      size: 13264
+    version: 0.1.0.0
   original:
-    git: https://github.com/andrevidela/act.git
     commit: f05cf360d3412c1dd01b8497bbf54b547683c92f
+    git: https://github.com/andrevidela/act.git
 snapshots:
 - completed:
+    sha256: fb634b19f31da06684bb07ce02a20c75a3162138f279b388905b03ebd57bb50f
     size: 618876
     url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/6.yaml
-    sha256: fb634b19f31da06684bb07ce02a20c75a3162138f279b388905b03ebd57bb50f
   original: lts-19.6
