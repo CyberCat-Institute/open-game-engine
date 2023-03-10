@@ -94,6 +94,7 @@ library
 executable act-exec
   main-is: Main.hs
   other-modules:
+      Act.Prelude
       Act.TH
       Act.TH.Dispatch
       Act.TH.State

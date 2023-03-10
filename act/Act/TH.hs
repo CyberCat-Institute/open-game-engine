@@ -59,11 +59,17 @@ generateContractFunction :: [Claim] -> Q [Dec]
 generateContractFunction claims = do
   let (fnName, behaviors) = extractBehaviors claims
   let fnName' = (mkName (uncapitalise fnName ++ "Contract"))
-  methods <- traverse (\(a, b) ->  (a, ) <$> mapMethod2TH b) (getUpdates4Method behaviors)
-  generateContractDecl fnName' methods
+  let methodInfo = getUpdates4Method behaviors
+  methods <- traverse (\(a, b, c) ->  (a, ) <$> mapMethod2TH a b) methodInfo
+  extractMethods <- generateExtractMethods (fmap (\(a, b, c) -> (a, c)) methodInfo)
+  contractFn <- generateContractDecl fnName' methods
+  pure (extractMethods ++ contractFn)
 
 contractState :: TH.Name
 contractState = mkName "contractState"
+
+contractArgs :: TH.Name
+contractArgs = mkName "args"
 
 -- This builds the function signature for the contract, each contract generates one function
 -- that recieves transactions, each contract function has it's own internal "method dispatched"
@@ -81,7 +87,7 @@ generateContractDecl :: Name -> [(String, TH.Exp)] -> Q [Dec]
 generateContractDecl fnName clauses = do
     let method = mkName "method"
     crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
-    transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) args|]
+    transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) $(return (VarP contractArgs))|]
     pure
       [ SigD
           fnName
@@ -112,7 +118,8 @@ generateContractDecl fnName clauses = do
     matchClauses :: [Match]
     matchClauses = fmap (\(pat, exp) -> matchE (LitP (StringL pat)) exp) clauses
     matchE p b = Match p (NormalB b) []
-    undefinedE = VarE (mkName "undefined")
+
+undefinedE = VarE (mkName "undefined")
 
 -- Extract the program associated with each method
 -- Each program is a list of rewrite, the method is kept around as a string
@@ -123,15 +130,75 @@ generateContractDecl fnName clauses = do
 -- For Open Games we are only interested in the non-revering behaviour.
 -- Transaction reversion will be handled at a later date if necessary. For now,
 -- we don't have any obvious use-case for it.
-getUpdates4Method :: [Behaviour] -> [(String, [Rewrite])]
+getUpdates4Method :: [Behaviour] -> [(String, [Rewrite], Interface)]
 getUpdates4Method behaviors =
-    fmap (\x -> (_name x, _stateUpdates x)) $ filter (\b -> _mode b == Pass) behaviors
+    fmap (\x -> (_name x, _stateUpdates x, _interface x)) $ filter (\b -> _mode b == Pass) behaviors
+
+-- Given each method in the contract we need to know how to extract the arguments from the
+-- arguments' array. for this we create a partial top-level function which matches
+-- on the argument array and return the correct number of argument in its expected type
+-- as a tuple. The function is then called with the expected tuple match in order to
+-- retrieve all the argument in the order expected by the body of the function
+-- if a method has interface m1(a int, b uint)
+-- then the extract function will look like so:
+-- ```
+-- extractM1 :: [AbiType] -> (Int, UInt)
+-- extractM1 [AbiInt i, AbiUInt j] = (i, j)
+-- extractM1 x = error ("expected arguments of type (Int, UInt) but got " ++ show x)
+generateExtractMethods :: [(String, Interface)] -> Q [TH.Dec]
+generateExtractMethods = fmap concat . traverse generateExtract
+  where
+    templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
+    templateCons a b = [p| $a : $b |]
+
+    constructorNameForType :: AbiType -> Name
+    constructorNameForType _ = mkName "AbiUIntType"
+
+    patternForDecl :: Decl -> Q TH.Pat
+    patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [VarP (mkName name)])
+
+    patterns4Interface :: Interface -> Q TH.Pat
+    patterns4Interface (Interface _ types) = foldr templateCons [p| [] |] $ fmap patternForDecl types
+
+    expression4Interface :: Interface -> TH.Exp
+    expression4Interface (Interface _ [Decl _ name]) = VarE (mkName name)
+
+    generateExtract :: (String, Interface) -> Q [TH.Dec]
+    generateExtract (name, signature) = do
+      let fnName = "extract" ++ capitalise name
+      sig <- extractorTypeForSignature signature
+      incorrectPatternError <- [|error "unexpected arguments"|]
+      patterns <- patterns4Interface signature
+      pure
+        [ SigD
+            (mkName fnName)
+            sig
+        , FunD
+            (mkName fnName)
+            [Clause
+                [patterns]
+                (NormalB (expression4Interface signature))
+                []
+            , Clause [WildP] (NormalB (incorrectPatternError)) []]
+        ]
+    extractorTypeForSignature :: Interface -> Q Type
+    extractorTypeForSignature _ = [t|[AbiType] -> Int|]
+
+
+extractArgument4Method :: String -> Interface -> [TH.Dec]
+extractArgument4Method methodName interface = []
+
+argumentExtractorName :: String -> TH.Name
+argumentExtractorName methodName = mkName ("extract" ++ capitalise methodName)
 
 -- A series of rewrites of the state is translated as the composition of the rewrites applied to the state
 -- each rewrite is written as a single `State -> State` update function as per the implementation of `rewriteOne`
 -- each constant is also written as a single `State -> State` update function
-mapMethod2TH :: [Rewrite] -> Q TH.Exp
-mapMethod2TH actExp = [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
+mapMethod2TH :: String -> [Rewrite] -> Q TH.Exp
+mapMethod2TH methodName actExp = do
+    body <- [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
+    let extractor = AppE (VarE (argumentExtractorName methodName)) (VarE contractArgs)
+    pure $ LetE [ValD (VarP (mkName "a1")) (NormalB extractor) []] body
     where
         rewriteOne :: Rewrite -> Q TH.Exp
         rewriteOne (Constant loc) = pure $ VarE (mkName "undefined")
