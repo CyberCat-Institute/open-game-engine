@@ -117,6 +117,14 @@ ammPlayer initialUSD = [opengame|
 --     - Create an act program for a full AMM with setup
 --     - Create an act program for betting
 --
+--  ## 10.03
+--  - We have a game with multiple AMM and a way to dispatch transactions
+--  todo:
+--  - send multiple transactions and check they are executed correctly
+--  - game to find which transaction order would optimise the payoff
+--      - run this for 1 amm
+--  - Work toward having common state between AMMs
+--  - same operations but now find how to
 
 ctx = StochasticStatefulContext @() (pure ((), (800,1000,1000,800))) (\_ _ -> return ())
 

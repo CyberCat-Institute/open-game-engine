@@ -55,6 +55,7 @@ library
       Examples.Staking.AndGateMarkovMC
       OpenGames
       OpenGames.Contracts.Amm
+      OpenGames.Contracts.Execution
       OpenGames.Contracts.Player
       OpenGames.Engine.BayesianGamesNonState
       OpenGames.Engine.IOGames
