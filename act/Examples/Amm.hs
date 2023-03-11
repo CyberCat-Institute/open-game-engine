@@ -3,13 +3,15 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module OpenGames.Contracts.Amm where
+module Examples.Amm where
+
+import Act.Execution
+import Act.Prelude
 
 import OpenGames
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
-import OpenGames.Contracts.Execution
 
 arity :: Address -> EVMType
 arity = undefined
@@ -85,7 +87,7 @@ initAmm :: Double
 initAmm r1 r2 = forwardFunction (const (r1, r2))
 
 combined :: [Transaction] -> (ContractState, ContractState) -> (ContractState, ContractState)
-combined = combine (unionContracts ("amm1", uncurry ammFunction) ("amm2", uncurry ammFunction))
+combined = combine (unionContracts ("amm1", ammFunction) ("amm2", ammFunction))
 
 amm = [opengame|
   inputs: state, transaction ;

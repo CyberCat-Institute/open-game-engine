@@ -13,7 +13,8 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
-    - OpenGames.Engine.AtomicGames
+    # - OpenGames.Engine.AtomicGames
+    - OpenGames
     - OpenGames.Engine.BayesianGames
     - OpenGames.Engine.Diagnostics
     - OpenGames.Engine.Engine
@@ -45,7 +46,9 @@ library:
 
 dependencies:
     - base >=4.7 && <5
+    - act
     - mtl
+    - ghc
     - transformers
     - probability
     - ad
@@ -70,7 +73,6 @@ dependencies:
     - criterion
 
 
-
 executables:
   open-games-exe:
     main:                Main.hs
@@ -81,6 +83,20 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - open-games-hs
+  act-exec:
+    main:                Example.hs
+    source-dirs:         act
+    ghc-options:
+      - -fwarn-unused-imports
+    dependencies:
+      - act >= 0.1 && < 1
+      - open-games-hs
+      - file-embed
+      - bytestring
+      - validation
+      - hevm
+      - containers
+      - text
   graphics:
     main:                Main.hs
     source-dirs:         graphics
