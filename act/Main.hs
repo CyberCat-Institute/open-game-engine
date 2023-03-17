@@ -1,15 +1,75 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
-import Syntax.Annotated
-import CLI
-import Lex
-import System.Environment
+import Act.Execution
+import Act.TH
+import Act.Prelude
+
+-- import Examples.Amm
+import OpenGames.Engine.OpenGames
+import OpenGames.Preprocessor
+import OpenGames.Engine.Engine
+
+import EVM.ABI
+
+import Numeric.Probability.Distribution
+
+import Player
+import AmmGenerated
+
+
+
+
+-- questions:
+-- - What do we improve in this model next?
+--   - sandwich? (different example)
+--   - another "from act" example
+--   - betting contract from act?
+--     - betting on the exchange rate of an AMM
+--     - clockwork finance example
+--     - move on to token swap
+-- - What do we automate from Act ?
+--   - extract name state fields
+--   - what about rollback?
+--   - strategy stealing?
+--   - failing transactions added to the global state?
+--   - generate players ?
+--   - gas fees + mem pool + Bribable coordinator
+--
+--   To do in general:
+--   - Work on the common infrastructure around modelling situations
+--     - coordinator
+--     - calling subcontract
+--     - bribes
+--
+--   Next week:
+--   - Work on another act example, maybe draw from clockwork finance
+--     - Create an act program for a full AMM with setup
+--     - Create an act program for betting
+--
+--  ## 10.03
+--  - We have a game with multiple AMM and a way to dispatch transactions
+--  todo:
+--  - send multiple transactions and check they are executed correctly
+--  - game to find which transaction order would optimise the payoff
+--      - run this for 1 amm
+--  - Work toward having common state between AMMs
+--  - same operations but now find how to
+
+ctx = StochasticStatefulContext @()
+          (pure ((), (AmmState 8 10,AmmState 10 8)))
+          (\_ _ -> return ())
+
+ev = evaluate (playerAutomatic 10) ((pureAction 1) :- Nil) ctx
+
+ctx1 = StochasticStatefulContext @()
+          (pure ((), (AmmState 10 10)))
+          (\_ _ -> return ())
+
+ev1 = evaluate (swapSequence) ((pureAction (reverse allTransaction)) :- Nil) ctx1
 
 main :: IO ()
-main = do
-  --[_, f] <- getArgs
-  contents <- readFile "simple.act"
-  let v = lexer contents
-  print v
-  -- validation (prettyErrs contents) print (parse $ lexer contents)
-  -- pure ()
+main = putStrLn "hello Act"

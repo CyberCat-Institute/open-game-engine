@@ -8,4 +8,4 @@ data Transaction = Transaction
   , method :: String
   , arguments :: [AbiType]
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Ord)

@@ -83,8 +83,9 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - open-games-hs
+
   act-exec:
-    main:                Example.hs
+    main:                Main.hs
     source-dirs:         act
     ghc-options:
       - -fwarn-unused-imports

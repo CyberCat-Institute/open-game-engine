@@ -92,7 +92,7 @@ library
   default-language: Haskell2010
 
 executable act-exec
-  main-is: Example.hs
+  main-is: Main.hs
   other-modules:
       Act.Execution
       Act.Prelude
@@ -101,8 +101,9 @@ executable act-exec
       Act.TH.Extractor
       Act.TH.State
       Act.Utils
+      AmmGenerated
       Examples.Amm
-      Main
+      Player
       Paths_open_games_hs
   hs-source-dirs:
       act

@@ -42,7 +42,7 @@ generateExtract :: (String, Interface) -> Q [TH.Dec]
 generateExtract (name, signature) = do
   let fnName = argumentExtractorName name
   sig <- extractorTypeForSignature signature
-  incorrectPatternError <- [|error "unexpected arguments"|]
+  incorrectPatternError <- [|error ("unexpected arguments: " ++ show x)|]
   patterns <- patterns4Interface signature
   pure
     [ SigD
@@ -50,11 +50,11 @@ generateExtract (name, signature) = do
         sig
     , FunD
         fnName
-        [Clause
+        [ Clause
             [patterns]
             (NormalB (expression4Interface signature))
             []
-        , Clause [WildP] (NormalB (incorrectPatternError)) []]
+        , Clause [VarP (mkName "x")] (NormalB (incorrectPatternError)) []]
     ]
 
 -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT

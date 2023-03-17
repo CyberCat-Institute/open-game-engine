@@ -19,7 +19,6 @@ getDeclId (Decl _ name) = name
 getDeclType :: Decl -> AbiType
 getDeclType (Decl ty _) = ty
 
-
 mapEVMTypes :: SlotType -> Type
 mapEVMTypes (StorageMapping _ _) = undefined
 mapEVMTypes (StorageValue (AbiUIntType n)) = ConT ''Int
@@ -58,17 +57,17 @@ defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
 
 mapExp :: ACT.Exp t -> Q TH.Exp
 -- mapExp _ = VarE (mkName "undefined")
-mapExp (And _ x y) = [| $(mapExp x) + $(mapExp y)|]
-mapExp (Or _ x y) = [| $(mapExp x) || $(mapExp y)|]
-mapExp (Impl _ x y) = [| not $(mapExp x) || $(mapExp y)|]
-mapExp (Neg _ x) = [| not $(mapExp x) |]
-mapExp (LE _ x y) = [| $(mapExp x) < $(mapExp y) |]
-mapExp (LEQ _ x y) = [| $(mapExp x) <= $(mapExp y) |]
-mapExp (GEQ _ x y) = [| $(mapExp x) >= $(mapExp y) |]
-mapExp (GE _ x y) = [| $(mapExp x) > $(mapExp y) |]
+mapExp (And _ x y)   = [| $(mapExp x) && $(mapExp y)|]
+mapExp (Or _ x y)    = [| $(mapExp x) || $(mapExp y)|]
+mapExp (Impl _ x y)  = [| not $(mapExp x) || $(mapExp y)|]
+mapExp (Neg _ x)     = [| not $(mapExp x) |]
+mapExp (LE _ x y)    = [| $(mapExp x) < $(mapExp y) |]
+mapExp (LEQ _ x y)   = [| $(mapExp x) <= $(mapExp y) |]
+mapExp (GEQ _ x y)   = [| $(mapExp x) >= $(mapExp y) |]
+mapExp (GE _ x y)    = [| $(mapExp x) > $(mapExp y) |]
 mapExp (LitBool _ x) = [| x |]
 
--- integers
+-- integers, double check all this!
 mapExp (Add _ x y) = [| $(mapExp x) +     $(mapExp y) |]
 mapExp (Sub _ x y) = [| $(mapExp x) -     $(mapExp y) |]
 mapExp (Mul _ x y) = [| $(mapExp x) *     $(mapExp y) |]
@@ -95,7 +94,7 @@ mapExp (ByEnv _ eth) = error "unimplemented"
 mapExp (NewAddr _ x y) = error "unimplemented"
 
 -- polymorphic
-mapExp (Eq _ x y) = [| $(mapExp x) == $(mapExp y) |]
+mapExp (Eq _ x y)  = [| $(mapExp x) == $(mapExp y) |]
 mapExp (NEq _ x y) = [| $(mapExp x) /= $(mapExp y) |]
 mapExp (ITE _ condition _then _else) = [| if $(mapExp condition) then $(mapExp _then) else $(mapExp _else) |]
 mapExp (Var _ _ id) = pure (VarE $ mkName id)

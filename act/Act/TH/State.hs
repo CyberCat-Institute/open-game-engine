@@ -30,7 +30,7 @@ createDataDeclaration (storeName, types) = DataD
   [] -- no type variables
   Nothing -- no kind signature, not a GADT
   [RecC storeTypeName (fmap (\(nm, ty) -> (mkName nm, defaultBang, mapEVMTypes ty)) types)]
-  [] -- no derived clauses, for now. Might be useful to have Eq etc defined
+  [DerivClause Nothing [ConT ''Show, ConT ''Eq]]
   where
     storeTypeName :: Name
     storeTypeName = mkName (capitalise (storeName ++ "State"))

@@ -43,34 +43,29 @@ proj (Swap0Out n) = n
 newtype Token = Token { getToken :: (String, Double) }
   deriving Show via (String, Double)
 
-type ContractState = (Token, Token) -- derived from act Store
+type ContractState = (Int, Int) -- derived from act Store
 type MemPool = [Transaction] -- ????
 -- type GlobalState = (Mempool, ContractState) -- ??????????????????
 
-inRange :: Double -> Double -> Bool
+inRange :: a -> a -> Bool
 inRange _ _ = True
 
-ammFunction :: ContractState -> Transaction  -> ContractState
-ammFunction = undefined
--- swapWithAmount st@(reserve0, reserve1) (Swap0 amt)  =
---     if inRange amt reserve0 -- derived from preconditions
---       then
---         -- derived from implementation
---         ( Swap1Out (reserve1 - ((reserve0 * reserve1) / (reserve0 + amt) + 1))
---         , ( reserve0 + amt
---           , (reserve0 * reserve1) / (reserve0 + amt) + 1
---           )
---         )
---       else (Swap1Out 0, st)
--- swapWithAmount st@(reserve0, reserve1) (Swap1 amt)  =
---     if inRange amt reserve1
---       then
---         ( Swap0Out (reserve0 - ((reserve0 * reserve1) / (reserve1 + amt) + 1))
---         , ( (reserve0 * reserve1) / (reserve1 + amt) + 1
---           , reserve1 + amt
---           )
---         )
---       else (Swap0Out 0, st)
+ammManual :: ContractState -> Transaction  -> ContractState
+ammManual st@(reserve0, reserve1) (Transaction _ "swap0" [AbiIntType amt])  =
+    if inRange amt reserve0 -- derived from preconditions
+      then
+        -- derived from implementation
+        ( reserve0 + amt
+        , (reserve0 * reserve1) `div` (reserve0 + amt) + 1
+        )
+      else st
+ammManual st@(reserve0, reserve1) (Transaction _ "swap1" [AbiIntType amt])  =
+    if inRange amt reserve1
+      then
+        ( (reserve0 * reserve1) `div` (reserve1 + amt) + 1
+        , reserve1 + amt
+        )
+      else st
 
 initAmm :: Double
      -> Double
@@ -89,20 +84,20 @@ initAmm r1 r2 = forwardFunction (const (r1, r2))
 combined :: [Transaction] -> (ContractState, ContractState) -> (ContractState, ContractState)
 combined = combine (unionContracts ("amm1", ammFunction) ("amm2", ammFunction))
 
-amm = [opengame|
-  inputs: state, transaction ;
-  feedback: ;
-
-  :------:
-
-  inputs : state, transaction ;
-  operation : forwardFunction $ uncurry combined ;
-  outputs : output, state' ;
-
-  :------:
-  outputs : output, state' ;
-  returns : ;
-|]
+-- ammManual = [opengame|
+--   inputs: state, transaction ;
+--   feedback: ;
+--
+--   :------:
+--
+--   inputs : state, transaction ;
+--   operation : forwardFunction $ uncurry ammFunction ;
+--   outputs : output, state' ;
+--
+--   :------:
+--   outputs : output, state' ;
+--   returns : ;
+-- |]
 
 -- questions for david:
 -- - how does act deal with BC state? for example blockchain number
