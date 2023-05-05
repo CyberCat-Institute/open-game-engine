@@ -165,13 +165,12 @@ mapMethod2TH (Interface methodName args) actExp = do
         rewriteOne (Rewrite (Update ty (Item _ nm varName _) newValue)) =
           (mkName varName, ) <$> mapExp newValue
 
-actSource :: Data.ByteString.ByteString
-actSource = $(embedFile "amm.act")
-
 compiled :: Error String [Claim]
 compiled =  compile (unpack actSource)
 
-display ::  String
+-- The rest of this file is for debugging purposes
+
+display :: String
 display = case compiled of
   Success s -> unlines (fmap ((++ "\n") . printClaim) s)
 

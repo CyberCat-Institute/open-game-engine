@@ -3,6 +3,8 @@ module Act.Execution where
 import Data.Bifunctor
 import Act.Prelude
 
+-- An ACT contract is a pair of a _name_ and a function that updates
+-- a state `s` given a transaction
 type ActContract s = (String, s -> Transaction -> s)
 
 unionContracts :: ActContract s1
@@ -15,6 +17,8 @@ unionContracts (n1, f1) (n2, f2) =
     focus view update fn st trans = update st (fn (view st) trans)
 
 
+-- Given an arbitrary number of contracts we can generate a state-updating function that
+-- performs a list of transaction on the given set of contracts.
 combine :: [ActContract s] -> [Transaction] -> s -> s
 combine contracts [transaction] globalState =
   let Just trans = Prelude.lookup (contract transaction) contracts

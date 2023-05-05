@@ -101,9 +101,9 @@ executable act-exec
       Act.TH.Extractor
       Act.TH.State
       Act.Utils
-      AmmGenerated
       Examples.Amm
-      Player
+      Examples.AmmGenerated
+      Examples.Player
       Paths_open_games_hs
   hs-source-dirs:
       act

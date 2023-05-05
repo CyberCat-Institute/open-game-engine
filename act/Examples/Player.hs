@@ -2,9 +2,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
-module Player where
+module Examples.Player where
 
-import AmmGenerated
+import Examples.AmmGenerated
 
 import Data.List
 

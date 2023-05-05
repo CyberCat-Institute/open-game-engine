@@ -17,10 +17,8 @@ import EVM.ABI
 
 import Numeric.Probability.Distribution
 
-import Player
-import AmmGenerated
-
-
+import Examples.AmmGenerated
+import Examples.Player
 
 
 -- questions:

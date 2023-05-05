@@ -18,10 +18,6 @@ arity = undefined
 
 type Address = String
 type EVMType = String
---
--- transaction { gas :: Int, Function :: String, Arg :: Int }
--- data Transaction = Transaction Address [EVMType]
---   deriving (Show)
 
 data Result = Swap0Out {g :: Double} | Swap1Out {g' :: Double} -- derived from act API
   deriving (Show)
@@ -82,22 +78,4 @@ initAmm :: Double
 initAmm r1 r2 = forwardFunction (const (r1, r2))
 
 combined :: [Transaction] -> (ContractState, ContractState) -> (ContractState, ContractState)
-combined = combine (unionContracts ("amm1", ammFunction) ("amm2", ammFunction))
-
--- ammManual = [opengame|
---   inputs: state, transaction ;
---   feedback: ;
---
---   :------:
---
---   inputs : state, transaction ;
---   operation : forwardFunction $ uncurry ammFunction ;
---   outputs : output, state' ;
---
---   :------:
---   outputs : output, state' ;
---   returns : ;
--- |]
-
--- questions for david:
--- - how does act deal with BC state? for example blockchain number
+combined = combine (unionContracts ("amm1", ammManual) ("amm2", ammManual))
