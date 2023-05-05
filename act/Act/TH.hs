@@ -26,6 +26,8 @@ import Act.Prelude
 
 import Language.Haskell.TH.Syntax as TH
 
+import GHC.IO.Unsafe
+
 -- Convert from a an act filepath to a list of top-level declaration
 -- state is converted into a record
 -- invariants are converted into if-statements
@@ -36,9 +38,9 @@ import Language.Haskell.TH.Syntax as TH
 -- the method dispatcher
 act2OG :: String -> Q [Dec]
 act2OG filename = do
-  file <- embedFile filename
+  let file :: String = unsafePerformIO $ readFile filename
   let compiled :: Error String [Claim]
-                = (compile $ unpack actSource)
+                = (compile $ file)
   case compiled of
     Failure err -> reportError (extractError err)
                 >> pure []
@@ -165,14 +167,12 @@ mapMethod2TH (Interface methodName args) actExp = do
         rewriteOne (Rewrite (Update ty (Item _ nm varName _) newValue)) =
           (mkName varName, ) <$> mapExp newValue
 
-compiled :: Error String [Claim]
-compiled =  compile (unpack actSource)
 
 -- The rest of this file is for debugging purposes
 
-display :: String
-display = case compiled of
-  Success s -> unlines (fmap ((++ "\n") . printClaim) s)
+-- display :: String
+-- display = case compiled of
+--   Success s -> unlines (fmap ((++ "\n") . printClaim) s)
 
 printBehaviour :: Behaviour -> String
 printBehaviour b =
