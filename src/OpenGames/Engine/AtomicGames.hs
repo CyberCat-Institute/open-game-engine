@@ -1,19 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module OpenGames.Engine.AtomicGames
- ( decision
- , decisionNoObs
- , forwardFunction
- , backwardFunction
- , natureDraw
- , liftStochasticForward
- ) where
+  ( decision,
+    decisionNoObs,
+    forwardFunction,
+    backwardFunction,
+    natureDraw,
+    liftStochasticForward,
+  )
+where
 
 import Language.Haskell.TH
-
 import OpenGames.Engine.BayesianGames
 import OpenGames.Engine.OpenGames
 import OpenGames.Engine.OpticClass
@@ -21,7 +21,8 @@ import OpenGames.Preprocessor
 
 ---------------------------------------
 -- 0. A single action making a generic -- parameterized -- decision
-decision actionSpace payoffFunction playerName = [opengame|
+decision actionSpace payoffFunction playerName =
+  [opengame|
 
     inputs    : x ;
     feedback  :   ;
@@ -40,7 +41,8 @@ decision actionSpace payoffFunction playerName = [opengame|
 |]
 
 -- 1. A single action making a decision without prior observations
-decisionNoObs actionSpace payoffFunction playerName = [opengame|
+decisionNoObs actionSpace payoffFunction playerName =
+  [opengame|
 
     inputs    :   ;
     feedback  :   ;
@@ -58,9 +60,9 @@ decisionNoObs actionSpace payoffFunction playerName = [opengame|
 
 |]
 
-
 -- 2. "Forward" (covariant) function: from past to future
-forwardFunction function = [opengame|
+forwardFunction function =
+  [opengame|
 
     inputs    : x ;
     feedback  :   ;
@@ -78,8 +80,9 @@ forwardFunction function = [opengame|
 
 |]
 
- -- 3. "Backward" (contravariant) function: from future to past
-backwardFunction function = [opengame|
+-- 3. "Backward" (contravariant) function: from future to past
+backwardFunction function =
+  [opengame|
 
     inputs    :   ;
     feedback  : s ;
@@ -98,7 +101,8 @@ backwardFunction function = [opengame|
 |]
 
 -- 4. Drawing from a probability distribution
-natureDraw distribution =  [opengame|
+natureDraw distribution =
+  [opengame|
 
     inputs    :   ;
     feedback  :   ;
@@ -117,7 +121,8 @@ natureDraw distribution =  [opengame|
 |]
 
 -- 5. lift a stochasticProcess forward
-liftStochasticForward process =  [opengame|
+liftStochasticForward process =
+  [opengame|
 
     inputs    : x ;
     feedback  :   ;
@@ -134,7 +139,6 @@ liftStochasticForward process =  [opengame|
     returns   :    ;
 
 |]
-
 
 -- generateGame "pureDecision2" ["actionSpace","payoffFunction","playerName"] $
 --   (Block ["observation"] []

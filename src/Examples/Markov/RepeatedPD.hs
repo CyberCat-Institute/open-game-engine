@@ -1,35 +1,40 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Examples.Markov.RepeatedPD where
 
-import           Debug.Trace
-import           OpenGames
-import           OpenGames.Preprocessor
-import           Examples.SimultaneousMoves (ActionPD(..),prisonersDilemmaMatrix)
-
-import           Control.Monad.State hiding (state,void, lift)
+import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
+import Debug.Trace
+import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
+import Numeric.Probability.Distribution hiding (filter, lift, map)
+import OpenGames
+import OpenGames.Preprocessor
 
-import Numeric.Probability.Distribution hiding (map, lift, filter)
+prisonersDilemma ::
+  OpenGame
+    StochasticStatefulOptic
+    StochasticStatefulContext
+    ( '[ Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
+         Kleisli Stochastic (ActionPD, ActionPD) ActionPD
+       ]
+    )
+    ( '[ [DiagnosticInfoBayesian (ActionPD, ActionPD) ActionPD],
+         [DiagnosticInfoBayesian (ActionPD, ActionPD) ActionPD]
+       ]
+    )
+    (ActionPD, ActionPD)
+    ()
+    (ActionPD, ActionPD)
+    ()
 
-prisonersDilemma  :: OpenGame
-                              StochasticStatefulOptic
-                              StochasticStatefulContext
-                              ('[Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
-                                 Kleisli Stochastic (ActionPD, ActionPD) ActionPD])
-                              ('[[DiagnosticInfoBayesian (ActionPD, ActionPD) ActionPD],
-                                 [DiagnosticInfoBayesian (ActionPD, ActionPD) ActionPD]])
-                              (ActionPD, ActionPD)
-                              ()
-                              (ActionPD, ActionPD)
-                              ()
 discountFactor = 0.5
 
-prisonersDilemma = [opengame|
+prisonersDilemma =
+  [opengame|
 
    inputs    : (dec1Old,dec2Old) ;
    feedback  :      ;
@@ -57,65 +62,61 @@ prisonersDilemma = [opengame|
    returns   :      ;
   |]
 
-
-
 -- Add strategy for stage game
 stageStrategy :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
-stageStrategy = Kleisli $
-   (\case
-       (Cooperate,Cooperate) -> playDeterministically Cooperate
-       (_,_)         -> playDeterministically Defect)
+stageStrategy =
+  Kleisli $
+    ( \case
+        (Cooperate, Cooperate) -> playDeterministically Cooperate
+        (_, _) -> playDeterministically Defect
+    )
+
 -- Stage strategy tuple
 strategyTuple = stageStrategy :- stageStrategy :- Nil
 
 -- Testing for stoch behavior and slow down
 stageStrategyTest :: Kleisli Stochastic (ActionPD, ActionPD) ActionPD
-stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.9),(Defect, 0.1)]
+stageStrategyTest = Kleisli $ const $ distFromList [(Cooperate, 0.9), (Defect, 0.1)]
+
 -- Stage strategy tuple
 strategyTupleTest = stageStrategyTest :- stageStrategyTest :- Nil
-
-
 
 -- extract continuation
 extractContinuation :: StochasticStatefulOptic s () a () -> s -> StateT Vector Stochastic ()
 extractContinuation (StochasticStatefulOptic v u) x = do
-  (z,a) <- ST.lift (v x)
+  (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
 extractNextState :: StochasticStatefulOptic s () a () -> s -> Stochastic a
 extractNextState (StochasticStatefulOptic v _) x = do
-  (z,a) <- v x
+  (z, a) <- v x
   pure a
 
-executeStrat strat =  play prisonersDilemma strat
-
+executeStrat strat = play prisonersDilemma strat
 
 -- determine continuation for iterator, with the same repeated strategy
-determineContinuationPayoffs :: Integer
-                             -> List
-                                      '[Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
-                                        Kleisli Stochastic (ActionPD, ActionPD) ActionPD]
-                             -> (ActionPD,ActionPD)
-                             -> StateT Vector Stochastic ()
-determineContinuationPayoffs 1        strat action = pure ()
+determineContinuationPayoffs ::
+  Integer ->
+  List
+    '[ Kleisli Stochastic (ActionPD, ActionPD) ActionPD,
+       Kleisli Stochastic (ActionPD, ActionPD) ActionPD
+     ] ->
+  (ActionPD, ActionPD) ->
+  StateT Vector Stochastic ()
+determineContinuationPayoffs 1 strat action = pure ()
 determineContinuationPayoffs iterator strat action = do
-   extractContinuation executeStrat action
-   nextInput <- ST.lift $ extractNextState executeStrat action
-   determineContinuationPayoffs (pred iterator) strat nextInput
- where executeStrat =  play prisonersDilemma strat
-
+  extractContinuation executeStrat action
+  nextInput <- ST.lift $ extractNextState executeStrat action
+  determineContinuationPayoffs (pred iterator) strat nextInput
+  where
+    executeStrat = play prisonersDilemma strat
 
 -- fix context used for the evaluation
-contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
-
-
+contextCont iterator strat initialAction = StochasticStatefulContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
 
 repeatedPDEq iterator strat initialAction = evaluate prisonersDilemma strat context
-  where context  = contextCont iterator strat initialAction
-
-
-
-
+  where
+    context = contextCont iterator strat initialAction
 
 eqOutput iterator strat initialAction = generateIsEq $ repeatedPDEq iterator strat initialAction

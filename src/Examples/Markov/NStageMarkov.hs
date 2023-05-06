@@ -1,22 +1,18 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Examples.Markov.NStageMarkov where
 
-import           Data.Tuple.Extra (uncurry3)
-import           OpenGames
-import           OpenGames.Preprocessor
-import           Examples.SimultaneousMoves (ActionPD(..), Location(..))
-
-import           Control.Monad.State hiding (state,void, lift)
+import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
-
-import Numeric.Probability.Distribution hiding (map, lift, filter)
-
-
+import Data.Tuple.Extra (uncurry3)
+import Examples.SimultaneousMoves (ActionPD (..), Location (..))
+import Numeric.Probability.Distribution hiding (filter, lift, map)
+import OpenGames
+import OpenGames.Preprocessor
 
 -- Here we consider an even simpler version how to implement an N stage markov game where solely the payoffs depend on a stage; actions are identical
 
@@ -26,6 +22,7 @@ import Numeric.Probability.Distribution hiding (map, lift, filter)
 type EndState = Bool
 
 type EndStateN = Int
+
 ----------
 -- Payoffs
 
@@ -43,32 +40,36 @@ payoffGameN _ = 0
 
 -- The transition happens deterministically if one of the players does not play _Cooperate_
 transitionEndStateDetermN :: EndStateN -> ActionPD -> ActionPD -> Stochastic EndStateN
-transitionEndStateDetermN 3  _         _         = playDeterministically 3
-transitionEndStateDetermN 0 Cooperate Cooperate  = playDeterministically 0
-transitionEndStateDetermN 0 _         _          = playDeterministically 1
-transitionEndStateDetermN 1 Cooperate Cooperate  = playDeterministically 1
-transitionEndStateDetermN 1 _         _          = playDeterministically 2
-transitionEndStateDetermN 2 Cooperate Cooperate  = playDeterministically 2
-transitionEndStateDetermN 2 _         _          = playDeterministically 3
-
-
+transitionEndStateDetermN 3 _ _ = playDeterministically 3
+transitionEndStateDetermN 0 Cooperate Cooperate = playDeterministically 0
+transitionEndStateDetermN 0 _ _ = playDeterministically 1
+transitionEndStateDetermN 1 Cooperate Cooperate = playDeterministically 1
+transitionEndStateDetermN 1 _ _ = playDeterministically 2
+transitionEndStateDetermN 2 Cooperate Cooperate = playDeterministically 2
+transitionEndStateDetermN 2 _ _ = playDeterministically 3
 
 -------------
 -- Open games
 
 -- The baseline stage game: prisoner's dilemma
-basicGame  :: OpenGame
-                              StochasticStatefulOptic
-                              StochasticStatefulContext
-                              ('[Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD,
-                                 Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD])
-                              ('[[DiagnosticInfoBayesian (ActionPD, ActionPD, EndStateN) ActionPD],
-                                 [DiagnosticInfoBayesian (ActionPD, ActionPD, EndStateN) ActionPD]])
-                              (ActionPD, ActionPD, EndStateN)
-                              ()
-                              (ActionPD, ActionPD)
-                              ()
-basicGame = [opengame|
+basicGame ::
+  OpenGame
+    StochasticStatefulOptic
+    StochasticStatefulContext
+    ( '[ Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD,
+         Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
+       ]
+    )
+    ( '[ [DiagnosticInfoBayesian (ActionPD, ActionPD, EndStateN) ActionPD],
+         [DiagnosticInfoBayesian (ActionPD, ActionPD, EndStateN) ActionPD]
+       ]
+    )
+    (ActionPD, ActionPD, EndStateN)
+    ()
+    (ActionPD, ActionPD)
+    ()
+basicGame =
+  [opengame|
 
    inputs    : (dec1Old,dec2Old,endState) ;
    feedback  :      ;
@@ -96,7 +97,8 @@ basicGame = [opengame|
 -- Complete Games
 
 -- define the whole game, here with pathological endgame
-completeGame = [opengame|
+completeGame =
+  [opengame|
 
    inputs    : (dec1Old,dec2Old,gameStateOld) ;
    feedback  :  ;
@@ -125,28 +127,31 @@ completeGame = [opengame|
    returns   :         ;
   |]
 
-
 -------------
 -- Strategies
 
 -- Add strategy for stage game
 -- NOTE the payoffs
 strategyEq :: Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
-strategyEq = Kleisli $
-   (\case
-       (_,_, 0) -> playDeterministically Defect
-       -- ^ If in stage 0, play to get to stage 1
-       (_,_, 1) -> playDeterministically Defect
-       -- ^ If in stage 1, play to get to stage 2
-       (_,_, 2) -> playDeterministically Cooperate
-       -- ^ If in stage 2, stay there
-       (_,_, _) -> uniform [Cooperate,Defect])
-       -- ^ If in stage 3, play whatever you want
+strategyEq =
+  Kleisli $
+    ( \case
+        (_, _, 0) -> playDeterministically Defect
+        -- \^ If in stage 0, play to get to stage 1
+        (_, _, 1) -> playDeterministically Defect
+        -- \^ If in stage 1, play to get to stage 2
+        (_, _, 2) -> playDeterministically Cooperate
+        -- \^ If in stage 2, stay there
+        (_, _, _) -> uniform [Cooperate, Defect]
+    )
+
+-- \^ If in stage 3, play whatever you want
 
 strategyAlt :: Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
 strategyAlt = Kleisli $
-       \(_,_, _) -> uniform [Cooperate,Defect]
-       -- ^ Randomize
+  \(_, _, _) -> uniform [Cooperate, Defect]
+
+-- \^ Randomize
 
 -- Strategy tuple for complete game
 strategyTupleEq = strategyEq :- strategyEq :- Nil
@@ -154,56 +159,51 @@ strategyTupleEq = strategyEq :- strategyEq :- Nil
 -- Strategy tuple for complete game with randomization in first stage
 strategyTupleAlt = strategyAlt :- strategyAlt :- Nil
 
-
-
-
 -----------------------
 -- Continuation payoffs
 
 -- Extract continuation
 extractContinuation :: StochasticStatefulOptic s () a () -> s -> StateT Vector Stochastic ()
 extractContinuation (StochasticStatefulOptic v u) x = do
-  (z,a) <- ST.lift (v x)
+  (z, a) <- ST.lift (v x)
   u z ()
 
 -- Extract next state (action)
-extractNextState :: StochasticStatefulOptic s () (a,a,EndStateN) () -> s -> Stochastic (a,a,EndStateN)
+extractNextState :: StochasticStatefulOptic s () (a, a, EndStateN) () -> s -> Stochastic (a, a, EndStateN)
 extractNextState (StochasticStatefulOptic v _) x = do
-  (z,a) <- v x
+  (z, a) <- v x
   pure a
 
-
-
 -- Determine continuation for iterator, with the same repeated strategy, using the pathological endgame
-determineContinuationPayoffs :: Integer
-                             ->  List
-                                    '[Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD,
-                                      Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD]
-                             -> (ActionPD,ActionPD,EndStateN)
-                             -> StateT Vector Stochastic ()
-determineContinuationPayoffs 1        strat action = pure ()
+determineContinuationPayoffs ::
+  Integer ->
+  List
+    '[ Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD,
+       Kleisli Stochastic (ActionPD, ActionPD, EndStateN) ActionPD
+     ] ->
+  (ActionPD, ActionPD, EndStateN) ->
+  StateT Vector Stochastic ()
+determineContinuationPayoffs 1 strat action = pure ()
 determineContinuationPayoffs iterator strat action = do
-   extractContinuation executeStrat action
-   nextInput <- ST.lift $ extractNextState executeStrat action
-   determineContinuationPayoffs (pred iterator) strat nextInput
- where executeStrat =  play completeGame strat
-
-
+  extractContinuation executeStrat action
+  nextInput <- ST.lift $ extractNextState executeStrat action
+  determineContinuationPayoffs (pred iterator) strat nextInput
+  where
+    executeStrat = play completeGame strat
 
 ----------
 -- Context
 
 -- Context used for the evaluation of the pathological end state
-contextCont iterator strat initialAction = StochasticStatefulContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
-
+contextCont iterator strat initialAction = StochasticStatefulContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs iterator strat action)
 
 --------------
 -- Equilibrium
 
 -- equilibria of repeated game with continuation payoff
 repeatedCompleteGameEq iterator strat initialAction = evaluate completeGame strat context
-  where context  = contextCont iterator strat initialAction
-
+  where
+    context = contextCont iterator strat initialAction
 
 -- Show output
 eqOutput iterator strat initialAction = generateIsEq $ repeatedCompleteGameEq iterator strat initialAction

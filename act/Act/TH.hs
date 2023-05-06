@@ -1,10 +1,17 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
+
 module Act.TH where
 
+import Act.Prelude
+import Act.TH.Dispatch
+import Act.TH.Extractor
+import Act.TH.State
+import Act.Utils
+import CLI
 import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (unpack)
@@ -14,19 +21,9 @@ import Data.FileEmbed
 import Data.List
 import Data.Validation
 import Error
-
-import Syntax.Annotated
-import CLI
-
-import Act.TH.Dispatch
-import Act.TH.Extractor
-import Act.TH.State
-import Act.Utils
-import Act.Prelude
-
-import Language.Haskell.TH.Syntax as TH
-
 import GHC.IO.Unsafe
+import Language.Haskell.TH.Syntax as TH
+import Syntax.Annotated
 
 -- Convert from a an act filepath to a list of top-level declaration
 -- state is converted into a record
@@ -39,20 +36,22 @@ import GHC.IO.Unsafe
 act2OG :: String -> Q [Dec]
 act2OG filename = do
   let file :: String = unsafePerformIO $ readFile filename
-  let compiled :: Error String [Claim]
-                = (compile $ file)
+  let compiled :: Error String [Claim] =
+        (compile $ file)
   case compiled of
-    Failure err -> reportError (extractError err)
-                >> pure []
+    Failure err ->
+      reportError (extractError err)
+        >> pure []
     -- A parsed Act file is a list of claims
     Success val -> do
       contractFunction <- generateContractFunction val
-      pure (stateDec4Claim val
-                     ++ contractFunction)
-
+      pure
+        ( stateDec4Claim val
+            ++ contractFunction
+        )
   where
-  extractError :: NonEmpty (Pn, String) -> String
-  extractError err = ""
+    extractError :: NonEmpty (Pn, String) -> String
+    extractError err = ""
 
 arr x y = AppT (AppT ArrowT x) y
 
@@ -65,7 +64,7 @@ generateContractFunction claims = do
   let (fnName, behaviors) = extractBehaviors claims
   let fnName' = (mkName (uncapitalise fnName ++ "Contract"))
   let methodInfo = getUpdates4Method behaviors
-  methods <- traverse (\(a, b, c) ->  (a, ) <$> mapMethod2TH c b) methodInfo
+  methods <- traverse (\(a, b, c) -> (a,) <$> mapMethod2TH c b) methodInfo
   extractMethods <- generateExtractMethods (fmap (\(a, b, c) -> (a, c)) methodInfo)
   contractFn <- generateContractDecl fnName' methods
   pure (extractMethods ++ contractFn)
@@ -90,24 +89,26 @@ contractArgs = mkName "args"
 -- ```
 generateContractDecl :: Name -> [(String, TH.Exp)] -> Q [Dec]
 generateContractDecl fnName clauses = do
-    let method = mkName "method"
-    crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
-    transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) $(return (VarP contractArgs))|]
-    pure
-      [ SigD
-          fnName
-          ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState"))))
-      , FunD
-          fnName
-          [Clause
-              [VarP contractState, transactionPattern]
-              (NormalB (CaseE
-                  (VarE method)
-                  (matchClauses ++ [matchE WildP crashMessage])
-                  ))
-              []
-          ]
-      ]
+  let method = mkName "method"
+  crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
+  transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) $(return (VarP contractArgs))|]
+  pure
+    [ SigD
+        fnName
+        ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState")))),
+      FunD
+        fnName
+        [ Clause
+            [VarP contractState, transactionPattern]
+            ( NormalB
+                ( CaseE
+                    (VarE method)
+                    (matchClauses ++ [matchE WildP crashMessage])
+                )
+            )
+            []
+        ]
+    ]
   where
     -- A string of all the methods, comma-separated. Used for printing errors.
     clauseLit :: TH.Exp
@@ -137,8 +138,7 @@ undefinedE = VarE (mkName "undefined")
 -- we don't have any obvious use-case for it.
 getUpdates4Method :: [Behaviour] -> [(String, [Rewrite], Interface)]
 getUpdates4Method behaviors =
-    fmap (\x -> (_name x, _stateUpdates x, _interface x)) $ filter (\b -> _mode b == Pass) behaviors
-
+  fmap (\x -> (_name x, _stateUpdates x, _interface x)) $ filter (\b -> _mode b == Pass) behaviors
 
 -- Return the pattern for bringing the arguments into scope from the argument extractor
 -- functions
@@ -155,18 +155,15 @@ bindVariables xs = TupP (fmap (VarP . mkName . getDeclId) xs)
 -- each constant is also written as a single `State -> State` update function
 mapMethod2TH :: Interface -> [Rewrite] -> Q TH.Exp
 mapMethod2TH (Interface methodName args) actExp = do
-
-    -- body <- [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
-    body <- RecUpdE (VarE contractState) <$> traverse rewriteOne actExp
-    let extractor = AppE (VarE (argumentExtractorName methodName)) (VarE contractArgs)
-    pure $ LetE [ValD (bindVariables args) (NormalB extractor) []] body
-
-    where
-        rewriteOne :: Rewrite -> Q (Name, TH.Exp)
-        rewriteOne (Constant loc) = pure (mkName "unimplemented", VarE (mkName "undefined"))
-        rewriteOne (Rewrite (Update ty (Item _ nm varName _) newValue)) =
-          (mkName varName, ) <$> mapExp newValue
-
+  -- body <- [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
+  body <- RecUpdE (VarE contractState) <$> traverse rewriteOne actExp
+  let extractor = AppE (VarE (argumentExtractorName methodName)) (VarE contractArgs)
+  pure $ LetE [ValD (bindVariables args) (NormalB extractor) []] body
+  where
+    rewriteOne :: Rewrite -> Q (Name, TH.Exp)
+    rewriteOne (Constant loc) = pure (mkName "unimplemented", VarE (mkName "undefined"))
+    rewriteOne (Rewrite (Update ty (Item _ nm varName _) newValue)) =
+      (mkName varName,) <$> mapExp newValue
 
 -- The rest of this file is for debugging purposes
 
@@ -176,16 +173,24 @@ mapMethod2TH (Interface methodName args) actExp = do
 
 printBehaviour :: Behaviour -> String
 printBehaviour b =
-   "name: " ++ _name b ++ "\n" ++
-   "mode: " ++ show (_mode b) ++ "\n" ++
-   "contract: " ++ show (_contract b) ++ "\n" ++
-   "interface: " ++ show (_interface b) ++"\n" ++
-   "preconditions:\n" ++
-   unlines (fmap (("  - " ++) . show) (_preconditions b)) ++
-   "postConditions:\n" ++
-   unlines (fmap (("  - " ++) . show) (_postconditions b)) ++
-   "\nstate updates:\n" ++
-   unlines (fmap (("  - " ++) . show) (_stateUpdates b))
+  "name: "
+    ++ _name b
+    ++ "\n"
+    ++ "mode: "
+    ++ show (_mode b)
+    ++ "\n"
+    ++ "contract: "
+    ++ show (_contract b)
+    ++ "\n"
+    ++ "interface: "
+    ++ show (_interface b)
+    ++ "\n"
+    ++ "preconditions:\n"
+    ++ unlines (fmap (("  - " ++) . show) (_preconditions b))
+    ++ "postConditions:\n"
+    ++ unlines (fmap (("  - " ++) . show) (_postconditions b))
+    ++ "\nstate updates:\n"
+    ++ unlines (fmap (("  - " ++) . show) (_stateUpdates b))
 
 printClaim :: Claim -> String
 printClaim (C constructor) = "constructor: " ++ show constructor
@@ -193,14 +198,15 @@ printClaim (B b) = "behaviour:\n" ++ printBehaviour b
 printClaim (I i) = "invariant: " ++ show i
 printClaim (S s) = "Storage: " ++ show s
 
-
 printConstructor :: Constructor -> String
-printConstructor (Constructor
-  name
-  mode
-  interface
-  preconditions
-  postconditions
-  initialStorage
-  stateupdates) =
-  "constructor: " ++ name
+printConstructor
+  ( Constructor
+      name
+      mode
+      interface
+      preconditions
+      postconditions
+      initialStorage
+      stateupdates
+    ) =
+    "constructor: " ++ name

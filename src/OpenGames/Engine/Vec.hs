@@ -1,5 +1,9 @@
-{-# LANGUAGE KindSignatures, DataKinds, GADTs, PolyKinds,
-             TypeOperators, TypeFamilies #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module OpenGames.Engine.Vec where
 
@@ -7,6 +11,7 @@ import OpenGames.Engine.Nat
 import Prelude hiding (map, replicate)
 
 infixr 6 :>
+
 data Vec (n :: Nat) (t :: *) where
   Empty :: Vec n a
   (:>) :: t -> Vec n t -> Vec (S n) t
@@ -19,7 +24,7 @@ map f (x :> xs) = f x :> map f xs
 -- given a nat, generate the list of numbers for it starting with 0
 enumerate :: Natural n -> Vec n Int
 enumerate Zero = Empty
-enumerate (Succ n) = 0 :> map (1+) (enumerate n)
+enumerate (Succ n) = 0 :> map (1 +) (enumerate n)
 
 -- replicate an element `n` times into a vector
 replicate :: Natural n -> a -> Vec n a

@@ -1,17 +1,18 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 
 module Examples.Auctions.SimultaneousBidAuction where
 
-
+import Examples.Auctions.AuctionSupportFunctions
 import OpenGames
 import OpenGames.Preprocessor
-import Examples.Auctions.AuctionSupportFunctions
 
 ----------
 -- A Model
@@ -22,7 +23,7 @@ import Examples.Auctions.AuctionSupportFunctions
 
 type Values = Double
 
-values = [0,20..100]
+values = [0, 20 .. 100]
 
 reservePriceParameter :: Double
 reservePriceParameter = 1
@@ -31,7 +32,8 @@ reservePriceParameter = 1
 -- 1 The actual games
 
 -- Draws a value and creates a pair of _value_ _name_
-natureDrawsTypeStage name = [opengame|
+natureDrawsTypeStage name =
+  [opengame|
 
     inputs    :   ;
     feedback  :   ;
@@ -49,7 +51,8 @@ natureDrawsTypeStage name = [opengame|
   |]
 
 -- Individual bidding stage
-biddingStage name = [opengame|
+biddingStage name =
+  [opengame|
 
     inputs    :  nameValuePair  ;
     feedback  :   ;
@@ -66,9 +69,9 @@ biddingStage name = [opengame|
     returns   :  payments  ;
   |]
 
-
 -- Transforms the payments into a random reshuffling
-transformPaymentsReservePrice kPrice kSlots = [opengame|
+transformPaymentsReservePrice kPrice kSlots =
+  [opengame|
 
    inputs    : (bids,reservePrice) ;
    feedback  :      ;
@@ -85,9 +88,8 @@ transformPaymentsReservePrice kPrice kSlots = [opengame|
    returns   :      ;
   |]
 
-
-
-bidding2ReservePrice kPrice kSlots = [opengame|
+bidding2ReservePrice kPrice kSlots =
+  [opengame|
 
    inputs    : reservePrice    ;
    feedback  :      ;
@@ -128,10 +130,10 @@ bidding2ReservePrice kPrice kSlots = [opengame|
    returns   :      ;
    |]
 
-
 ---- Without reserve price
 -- Transforms the payments into a random reshuffling
-transformPayments kPrice kSlots reservePrice = [opengame|
+transformPayments kPrice kSlots reservePrice =
+  [opengame|
 
    inputs    : bids ;
    feedback  :      ;
@@ -148,9 +150,9 @@ transformPayments kPrice kSlots reservePrice = [opengame|
    returns   :      ;
   |]
 
-
 -- Instantiates a simplified version with two players
-bidding2 kPrice kSlots reservePrice  = [opengame|
+bidding2 kPrice kSlots reservePrice =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -191,9 +193,6 @@ bidding2 kPrice kSlots reservePrice  = [opengame|
    returns   :      ;
    |]
 
-
-
-
 -- B Analysis
 -------------
 
@@ -202,33 +201,33 @@ bidding2 kPrice kSlots reservePrice  = [opengame|
 
 -- Truthful bidding
 stratBidderTruth :: Kleisli Stochastic (String, Values) Values
-stratBidderTruth  = Kleisli (\(_,x) -> playDeterministically x)
+stratBidderTruth = Kleisli (\(_, x) -> playDeterministically x)
 
 -- Constant bidding
-constBidding :: Values -> Kleisli Stochastic (String,Values) Values
-constBidding x = Kleisli (\(_,_) -> playDeterministically x)
+constBidding :: Values -> Kleisli Stochastic (String, Values) Values
+constBidding x = Kleisli (\(_, _) -> playDeterministically x)
 
 -- Complete strategy for truthful bidding for 2 players
 truthfulStrat ::
   List
-    '[Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
+    '[ Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values
+     ]
 truthfulStrat =
   stratBidderTruth
-  :- stratBidderTruth
-  :- Nil
+    :- stratBidderTruth
+    :- Nil
 
 -- Complete strategy for const bidding for 2 players
 constBiddingStrat x y =
   constBidding x
-  :- constBidding y
-  :- Nil
+    :- constBidding y
+    :- Nil
 
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
 equilibriumGame kPrice kSlots reservePrice strat = evaluate (bidding2 kPrice kSlots reservePrice) strat void
-
 
 ------------------------
 -- 2 Interactive session
@@ -238,4 +237,3 @@ equilibriumGame kPrice kSlots reservePrice strat = evaluate (bidding2 kPrice kSl
 
 -- Not an equilibrium
 -- generateIsEq $ equilibriumGame 2 1 reservePriceParameter (constBiddingStrat 30 30)
-

@@ -1,14 +1,12 @@
 {-# LANGUAGE TupleSections #-}
+
 module Act.TH.Dispatch where
 
+import Act.Utils
 import Data.Bifunctor
 import Data.List (nub)
-
-import Syntax.Annotated
-
-import Act.Utils
-
 import Language.Haskell.TH.Syntax
+import Syntax.Annotated
 
 -- get the type declaration for the interface of the contract
 dispatchDec4Claims :: [Claim] -> Dec
@@ -37,13 +35,14 @@ findMethods = nub . fmap _interface
 -- and the name of each interface as inhabitants. This will be used
 -- as "method dispatch"
 dec4Methods :: (String, [Interface]) -> Dec
-dec4Methods (tyName, constructors) = DataD
-  [] -- no constraints
-  (mkName $ capitalise (tyName ++ "Method")) -- the name is the name from the store
-  [] -- no type variables
-  Nothing -- no kind signature, not a GADT
-  (fmap interface2Constructor constructors)
-  [] -- no derived clauses, for now. Might be useful to have Eq etc defined
+dec4Methods (tyName, constructors) =
+  DataD
+    [] -- no constraints
+    (mkName $ capitalise (tyName ++ "Method")) -- the name is the name from the store
+    [] -- no type variables
+    Nothing -- no kind signature, not a GADT
+    (fmap interface2Constructor constructors)
+    [] -- no derived clauses, for now. Might be useful to have Eq etc defined
   where
     interface2Constructor :: Interface -> Con
     interface2Constructor (Interface name args) =
@@ -51,5 +50,3 @@ dec4Methods (tyName, constructors) = DataD
 
     declType :: Decl -> AbiType
     declType (Decl ty name) = ty
-
-

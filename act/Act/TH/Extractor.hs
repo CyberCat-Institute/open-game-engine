@@ -1,18 +1,15 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+
 module Act.TH.Extractor (argumentExtractorName, generateExtractMethods) where
 
 import Act.Prelude
 import Act.Utils
-
 import Data.Data
-
 import EVM.ABI
-
-import Syntax.Annotated
-
 import Language.Haskell.TH.Syntax as TH
+import Syntax.Annotated
 
 deriving instance Data AbiType
 
@@ -31,10 +28,8 @@ deriving instance Data AbiType
 generateExtractMethods :: [(String, Interface)] -> Q [TH.Dec]
 generateExtractMethods = fmap concat . traverse generateExtract
 
-
 argumentExtractorName :: String -> TH.Name
 argumentExtractorName methodName = mkName ("extract" ++ capitalise methodName)
-
 
 -- Given a name and an interface, generate a function definition which extracts the arguments
 -- expected from the given interface
@@ -47,14 +42,15 @@ generateExtract (name, signature) = do
   pure
     [ SigD
         fnName
-        sig
-    , FunD
+        sig,
+      FunD
         fnName
         [ Clause
             [patterns]
             (NormalB (expression4Interface signature))
-            []
-        , Clause [VarP (mkName "x")] (NormalB (incorrectPatternError)) []]
+            [],
+          Clause [VarP (mkName "x")] (NormalB (incorrectPatternError)) []
+        ]
     ]
 
 -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT
@@ -64,15 +60,13 @@ patternForDecl :: Decl -> Q TH.Pat
 patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [VarP (mkName name)])
 
 templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
-templateCons a b = [p| $a : $b |]
+templateCons a b = [p|$a : $b|]
 
 patterns4Interface :: Interface -> Q TH.Pat
-patterns4Interface (Interface _ types) = foldr templateCons [p| [] |] $ fmap patternForDecl types
-
+patterns4Interface (Interface _ types) = foldr templateCons [p|[]|] $ fmap patternForDecl types
 
 constructorNameForType :: AbiType -> Name
 constructorNameForType = mkName . show . toConstr
-
 
 -- Convert an ACT Interface into the tuple of values extracted from the list of arguments
 -- This implement the extractor function which signature is given by `extractorTypeForSignature`
@@ -83,7 +77,6 @@ expression4Interface :: Interface -> TH.Exp
 expression4Interface (Interface _ []) = ConE '()
 expression4Interface (Interface _ [Decl _ name]) = VarE (mkName name)
 expression4Interface (Interface _ decls) = TupE (fmap (Just . VarE . mkName . getDeclId) decls)
-
 
 -- Convert a list of declarations name-type into a single tuple. If there
 -- is only one declaration then the result is the type of that declaration
@@ -104,4 +97,4 @@ convertDecls (Decl ty _ : decls) =
 -- The argument tuple is defined by `convertDecls` the implementation of the
 -- function is handled by `expression4Interface`
 extractorTypeForSignature :: Interface -> Q Type
-extractorTypeForSignature (Interface _ decls) = [t|[AbiType] -> $(pure (convertDecls decls)) |]
+extractorTypeForSignature (Interface _ decls) = [t|[AbiType] -> $(pure (convertDecls decls))|]

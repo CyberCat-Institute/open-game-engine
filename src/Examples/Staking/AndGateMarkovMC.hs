@@ -1,75 +1,72 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Examples.Staking.AndGateMarkovMC where
 
-import           Debug.Trace
-import           OpenGames hiding (fromLens,Agent,fromFunctions,discount,nature)
-import           OpenGames.Engine.IOGames
-import           OpenGames.Engine.BayesianGames (uniformDist, playDeterministically)
-import           OpenGames.Preprocessor
-
-import           Control.Arrow (Kleisli(..))
-import           Control.Monad.State  hiding (state, void, lift)
-import qualified Control.Monad.State  as ST
+import Control.Arrow (Kleisli (..))
+import Control.Monad.State hiding (lift, state, void)
+import qualified Control.Monad.State as ST
 import qualified Data.Vector as V
-import           Numeric.Probability.Distribution hiding (map, lift, filter)
-import           System.Random.MWC.CondensedTable
-import           System.Random
-import           System.Random.Stateful
-
+import Debug.Trace
+import Numeric.Probability.Distribution hiding (filter, lift, map)
+import OpenGames hiding (Agent, discount, fromFunctions, fromLens, nature)
+import OpenGames.Engine.BayesianGames (playDeterministically, uniformDist)
+import OpenGames.Engine.IOGames
+import OpenGames.Preprocessor
+import System.Random
+import System.Random.MWC.CondensedTable
+import System.Random.Stateful
 
 -- TODO change the structure of the continuation iteration
 -- DONE What effect happens through the state hack and the discounting? The discounting at least does not seem to make a difference.
 
 --------
 -- Types
-andGateMarkovTestParams = AndGateMarkovParams {
-    sampleSize1 = 100,
-    sampleSize2 = 100,
-    sampleSize3 = 100,
-    sampleSizeA = 100,
-    reward = 1.0,
-    costOfCapital = 0.05,
-    minBribe = 0.0,
-    maxBribe = 5.0,
-    incrementBribe = 1.0,
-    maxSuccessfulAttackPayoff = 1000.0,
-    attackerProbability = 0.001,
-    penalty = 0.5,
-    minDeposit = 0.0,
-    maxDeposit = 10.0,
-    incrementDeposit = 1,
-    epsilon = 0.001,
-    discountFactor = 0.5
-}
+andGateMarkovTestParams =
+  AndGateMarkovParams
+    { sampleSize1 = 100,
+      sampleSize2 = 100,
+      sampleSize3 = 100,
+      sampleSizeA = 100,
+      reward = 1.0,
+      costOfCapital = 0.05,
+      minBribe = 0.0,
+      maxBribe = 5.0,
+      incrementBribe = 1.0,
+      maxSuccessfulAttackPayoff = 1000.0,
+      attackerProbability = 0.001,
+      penalty = 0.5,
+      minDeposit = 0.0,
+      maxDeposit = 10.0,
+      incrementDeposit = 1,
+      epsilon = 0.001,
+      discountFactor = 0.5
+    }
 
-
-data AndGateMarkovParams = AndGateMarkovParams {
-  sampleSize1 :: Int,
-  sampleSize2 :: Int,
-  sampleSize3 :: Int,
-  sampleSizeA :: Int,
-  reward :: Double,
-  costOfCapital :: Double,
-  minBribe :: Double,
-  maxBribe :: Double,
-  incrementBribe :: Double,
-  maxSuccessfulAttackPayoff :: Double,
-  attackerProbability :: Double,
-  penalty :: Double,
-  minDeposit :: Double,
-  maxDeposit :: Double,
-  incrementDeposit :: Double,
-  epsilon :: Double,
-  discountFactor :: Double
-}
-
+data AndGateMarkovParams = AndGateMarkovParams
+  { sampleSize1 :: Int,
+    sampleSize2 :: Int,
+    sampleSize3 :: Int,
+    sampleSizeA :: Int,
+    reward :: Double,
+    costOfCapital :: Double,
+    minBribe :: Double,
+    maxBribe :: Double,
+    incrementBribe :: Double,
+    maxSuccessfulAttackPayoff :: Double,
+    attackerProbability :: Double,
+    penalty :: Double,
+    minDeposit :: Double,
+    maxDeposit :: Double,
+    incrementDeposit :: Double,
+    epsilon :: Double,
+    discountFactor :: Double
+  }
 
 data MessageType = Bool | Double
 
@@ -78,28 +75,29 @@ data MessageType = Bool | Double
 
 attackerPayoff :: [Bool] -> Double -> Double -> Double
 attackerPayoff bribesAccepted bribe successfulAttackPayoff
-  | (numBribed == numPlayers) = successfulAttackPayoff - bribe*(fromIntegral numBribed)
-  | (otherwise)               = -bribe*(fromIntegral numBribed)
-  where numPlayers = length bribesAccepted
-        numBribed  = length (filter id bribesAccepted)
+  | (numBribed == numPlayers) = successfulAttackPayoff - bribe * (fromIntegral numBribed)
+  | (otherwise) = -bribe * (fromIntegral numBribed)
+  where
+    numPlayers = length bribesAccepted
+    numBribed = length (filter id bribesAccepted)
 
 obfuscateAndGate :: [Bool] -> Bool
 obfuscateAndGate = and
 
 successfulAttackPayoffDistribution :: Double -> Double -> CondensedTableV Double
 successfulAttackPayoffDistribution attackerProbability maxSuccessfulAttackPayoff
-  | (attackerProbability == 0) = tableFromProbabilities $  V.fromList [(0,0)]
-  | (attackerProbability == 1) = tableFromProbabilities $  V.fromList [(maxSuccessfulAttackPayoff,1)]
-  | (otherwise) = tableFromProbabilities $  V.fromList [(0, 1-attackerProbability), (maxSuccessfulAttackPayoff, attackerProbability)]
+  | (attackerProbability == 0) = tableFromProbabilities $ V.fromList [(0, 0)]
+  | (attackerProbability == 1) = tableFromProbabilities $ V.fromList [(maxSuccessfulAttackPayoff, 1)]
+  | (otherwise) = tableFromProbabilities $ V.fromList [(0, 1 - attackerProbability), (maxSuccessfulAttackPayoff, attackerProbability)]
 
 payoffAndGate :: Double -> Double -> [Double] -> Bool -> [Double]
 payoffAndGate penalty reward deposits True
-  | (sumDeposits > 0) = [deposit*reward/sumDeposits | deposit <- deposits]
+  | (sumDeposits > 0) = [deposit * reward / sumDeposits | deposit <- deposits]
   | (sumDeposits == 0) = [0 | _ <- deposits]
-  where sumDeposits = sum deposits
-payoffAndGate penalty reward deposits False
-  = [-penalty*deposit | deposit <- deposits]
-
+  where
+    sumDeposits = sum deposits
+payoffAndGate penalty reward deposits False =
+  [-penalty * deposit | deposit <- deposits]
 
 andGateTestPrior = do
   deposits <- uniformDist [replicate 3 x | x <- [0.0, 1.0 .. 10.0]]
@@ -109,7 +107,8 @@ andGateTestPrior = do
 --------
 -- Games
 
-depositStagePlayer name sampleSize minDeposit maxDeposit incrementDeposit epsilon = [opengame|
+depositStagePlayer name sampleSize minDeposit maxDeposit incrementDeposit epsilon =
+  [opengame|
   inputs : summaryStatistic, costOfCapital ;
 
   :---:
@@ -124,7 +123,8 @@ depositStagePlayer name sampleSize minDeposit maxDeposit incrementDeposit epsilo
   outputs : deposit ;
 |]
 
-playingStagePlayer name sampleSize moves = [opengame|
+playingStagePlayer name sampleSize moves =
+  [opengame|
   inputs : summaryStatistic, observation, bribe ;
 
   :---:
@@ -140,8 +140,8 @@ playingStagePlayer name sampleSize moves = [opengame|
   returns : payoff, bribePaid ;
 |]
 
-
-stakingRound sampleSizeP1 sampleSizeP2 sampleSizeP3 costOfCapital minDeposit maxDeposit incrementDeposit epsilon = [opengame|
+stakingRound sampleSizeP1 sampleSizeP2 sampleSizeP3 costOfCapital minDeposit maxDeposit incrementDeposit epsilon =
+  [opengame|
 
 
   inputs : summaryStatistic ;
@@ -181,24 +181,29 @@ indexLs = (!!)
 
 nothing = 0.0
 
-playingRound :: Int
-             -> Int
-             -> Int
-             -> OpenGame
-                    MonadOptic
-                    MonadContext
-                    ('[Kleisli CondensedTableV (([Double],Bool), [Double], Double) Bool,
-                        Kleisli CondensedTableV (([Double],Bool), [Double], Double) Bool,
-                        Kleisli CondensedTableV (([Double],Bool), [Double], Double) Bool]
-                      )
-                    ('[IO (DiagnosticsMC Bool),
-                       IO (DiagnosticsMC Bool),
-                       IO (DiagnosticsMC Bool)])
-                    (([Double],Bool), [Double], Double)
-                    ()
-                    [Bool]
-                    [(Double, Bool)]
-playingRound sampleSizeP1 sampleSizeP2 sampleSizeP3= [opengame|
+playingRound ::
+  Int ->
+  Int ->
+  Int ->
+  OpenGame
+    MonadOptic
+    MonadContext
+    ( '[ Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
+         Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
+         Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool
+       ]
+    )
+    ( '[ IO (DiagnosticsMC Bool),
+         IO (DiagnosticsMC Bool),
+         IO (DiagnosticsMC Bool)
+       ]
+    )
+    (([Double], Bool), [Double], Double)
+    ()
+    [Bool]
+    [(Double, Bool)]
+playingRound sampleSizeP1 sampleSizeP2 sampleSizeP3 =
+  [opengame|
 
   inputs : (summaryStatistic, deposits, bribe) ;
 
@@ -232,9 +237,8 @@ playingRound sampleSizeP1 sampleSizeP2 sampleSizeP3= [opengame|
   returns : lsPayBribes ;
  |]
 
-
-
-discountingStage discountFactor = [opengame|
+discountingStage discountFactor =
+  [opengame|
 
   inputs : ;
 
@@ -254,29 +258,35 @@ discountingStage discountFactor = [opengame|
 
 |]
 
-andGateGame :: AndGateMarkovParams
-                     -> OpenGame
-                          MonadOptic
-                          MonadContext
-                          ('[Kleisli CondensedTableV (([Double], Bool), Double) Double,
-                             Kleisli CondensedTableV (([Double], Bool), Double) Double,
-                             Kleisli CondensedTableV (([Double], Bool), Double) Double,
-                             Kleisli CondensedTableV ([Double], Double) Double,
-                             Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
-                             Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
-                             Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool])
-                          ('[IO (DiagnosticsMC Double),
-                             IO (DiagnosticsMC Double),
-                             IO (DiagnosticsMC Double),
-                             IO (DiagnosticsMC Double),
-                             IO (DiagnosticsMC Bool),
-                             IO (DiagnosticsMC Bool),
-                             IO (DiagnosticsMC Bool)])
-                          ([Double], Bool)
-                          ()
-                          ([Double], Bool)
-                          ()
-andGateGame (AndGateMarkovParams {..} ) = [opengame|
+andGateGame ::
+  AndGateMarkovParams ->
+  OpenGame
+    MonadOptic
+    MonadContext
+    ( '[ Kleisli CondensedTableV (([Double], Bool), Double) Double,
+         Kleisli CondensedTableV (([Double], Bool), Double) Double,
+         Kleisli CondensedTableV (([Double], Bool), Double) Double,
+         Kleisli CondensedTableV ([Double], Double) Double,
+         Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
+         Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool,
+         Kleisli CondensedTableV (([Double], Bool), [Double], Double) Bool
+       ]
+    )
+    ( '[ IO (DiagnosticsMC Double),
+         IO (DiagnosticsMC Double),
+         IO (DiagnosticsMC Double),
+         IO (DiagnosticsMC Double),
+         IO (DiagnosticsMC Bool),
+         IO (DiagnosticsMC Bool),
+         IO (DiagnosticsMC Bool)
+       ]
+    )
+    ([Double], Bool)
+    ()
+    ([Double], Bool)
+    ()
+andGateGame (AndGateMarkovParams {..}) =
+  [opengame|
 
   inputs : summaryStatistic ;
 
@@ -310,128 +320,124 @@ andGateGame (AndGateMarkovParams {..} ) = [opengame|
   outputs : (deposits, obfuscateAndGate moves) ;
 |]
 
-
 ---------------
 -- continuation
 
 -- extract continuation
 extractContinuation :: MonadOptic s () s () -> s -> StateT Vector IO ()
 extractContinuation (MonadOptic v u) x = do
-  (z,a) <- ST.lift (v x)
+  (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
 extractNextState :: MonadOptic s () s () -> s -> IO s
 extractNextState (MonadOptic v _) x = do
-  (z,a) <- v x
+  (z, a) <- v x
   pure a
 
-extractContinuation2 :: MonadOptic Double () ([Double],Bool) () -> Double -> StateT Vector IO ()
+extractContinuation2 :: MonadOptic Double () ([Double], Bool) () -> Double -> StateT Vector IO ()
 extractContinuation2 (MonadOptic v u) x = do
-  (z,a) <- ST.lift (v x)
+  (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
-extractNextState2 :: MonadOptic Double () ([Double],Bool) () -> Double -> IO ([Double],Bool)
+extractNextState2 :: MonadOptic Double () ([Double], Bool) () -> Double -> IO ([Double], Bool)
 extractNextState2 (MonadOptic v _) x = do
-  (z,a) <- v x
+  (z, a) <- v x
   pure a
 
 -- Random prior indpendent of previous moves
-determineContinuationPayoffs parameters 1        strat action = pure ()
+determineContinuationPayoffs parameters 1 strat action = pure ()
 determineContinuationPayoffs parameters iterator strat action = do
-   extractContinuation executeStrat action
-   g <- newStdGen
-   gS <- newIOGenM g
-   nextInput <- ST.lift $ genFromTable (transformStochasticToProbTable andGateTestPrior) gS
-   determineContinuationPayoffs parameters (pred iterator) strat nextInput
- where executeStrat =  play (andGateGame parameters) strat
+  extractContinuation executeStrat action
+  g <- newStdGen
+  gS <- newIOGenM g
+  nextInput <- ST.lift $ genFromTable (transformStochasticToProbTable andGateTestPrior) gS
+  determineContinuationPayoffs parameters (pred iterator) strat nextInput
+  where
+    executeStrat = play (andGateGame parameters) strat
 
 -- Actual moves affect next moves
-determineContinuationPayoffs' parameters 1        strat action = pure ()
+determineContinuationPayoffs' parameters 1 strat action = pure ()
 determineContinuationPayoffs' parameters iterator strat action = do
-   extractContinuation executeStrat action
-   nextInput <- ST.lift $ extractNextState executeStrat action
-   determineContinuationPayoffs' parameters (pred iterator) strat nextInput
- where executeStrat =  play (andGateGame parameters) strat
+  extractContinuation executeStrat action
+  nextInput <- ST.lift $ extractNextState executeStrat action
+  determineContinuationPayoffs' parameters (pred iterator) strat nextInput
+  where
+    executeStrat = play (andGateGame parameters) strat
 
-determineContinuationPayoffs3 1        _             = pure ()
+determineContinuationPayoffs3 1 _ = pure ()
 determineContinuationPayoffs3 iterator initialAction = do
   extractContinuation executeStrat initialAction
   nextInput <- ST.lift $ extractNextState executeStrat $ initialAction
   determineContinuationPayoffs3 (pred iterator) initialAction
   pure ()
- where executeStrat =  play (andGateGame andGateMarkovTestParams) strategyTuple
+  where
+    executeStrat = play (andGateGame andGateMarkovTestParams) strategyTuple
 
 -- fix context used for the evaluation
-contextCont parameters iterator strat initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
+contextCont parameters iterator strat initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
 
-contextCont' parameters iterator strat initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
+contextCont' parameters iterator strat initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
 
-contextCont3 iterator initialAction = MonadContext (pure ((),initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
-
-
-
+contextCont3 iterator initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
 
 -----------
 -- Strategy
 
 transformStrat :: Kleisli Stochastic x y -> Kleisli CondensedTableV x y
-transformStrat strat = Kleisli (\x ->
-  let y = runKleisli strat x
-      ls = decons y
-      v = V.fromList ls
-      in tableFromProbabilities v)
+transformStrat strat =
+  Kleisli
+    ( \x ->
+        let y = runKleisli strat x
+            ls = decons y
+            v = V.fromList ls
+         in tableFromProbabilities v
+    )
 
 transformStochasticToProbTable dist =
   let ls = decons dist
-      v  = V.fromList ls
-      in tableFromProbabilities v
+      v = V.fromList ls
+   in tableFromProbabilities v
 
-
-depositStrategy = transformStrat $  Kleisli $ \((_, previousRoundTrue), _) -> playDeterministically $ if previousRoundTrue then 4.6 else 0.0
+depositStrategy = transformStrat $ Kleisli $ \((_, previousRoundTrue), _) -> playDeterministically $ if previousRoundTrue then 4.6 else 0.0
 
 attackerStrategy = transformStrat $ Kleisli (\(deposits, successfulAttackPayoff) -> if successfulAttackPayoff == maxSuccessfulAttackPayoff andGateMarkovTestParams && sum deposits > 0.0 then playDeterministically 5.0 else playDeterministically 0.0)
 
 signalStrategy = transformStrat $ Kleisli $ \((_, previousRoundTrue), _, bribe) -> playDeterministically $ previousRoundTrue && bribe < 5.0
 
-
 strategyTuple =
-      depositStrategy
-  :- depositStrategy
-  :- depositStrategy
-  :- attackerStrategy
-  :- signalStrategy
-  :- signalStrategy
-  :- signalStrategy
-  :- Nil
-
+  depositStrategy
+    :- depositStrategy
+    :- depositStrategy
+    :- attackerStrategy
+    :- signalStrategy
+    :- signalStrategy
+    :- signalStrategy
+    :- Nil
 
 -----------------------
 -- Equilibrium analysis
 
-
 andGateMarkovGameEq parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
-  where context  = contextCont parameters iterator strat initialAction
+  where
+    context = contextCont parameters iterator strat initialAction
 
 eqOutput parameters iterator strat initialAction = andGateMarkovGameEq parameters iterator strat initialAction
 
-
-
 andGateMarkovGameEq' parameters iterator strat initialAction = evaluate (andGateGame parameters) strat context
-  where context  = contextCont' parameters iterator strat initialAction
+  where
+    context = contextCont' parameters iterator strat initialAction
 
-eqOutput' parameters iterator strat initialAction =  andGateMarkovGameEq' parameters iterator strat initialAction
-
+eqOutput' parameters iterator strat initialAction = andGateMarkovGameEq' parameters iterator strat initialAction
 
 andGateMarkovGameEq3 iterator initialAction = evaluate (andGateGame andGateMarkovTestParams) strategyTuple context
-  where context  = contextCont3 iterator initialAction
+  where
+    context = contextCont3 iterator initialAction
 
-eqOutput3 iterator initialAction =  andGateMarkovGameEq3 iterator initialAction
+eqOutput3 iterator initialAction = andGateMarkovGameEq3 iterator initialAction
 
-
-
-testInitialAction = ([10.0,10.0,10.0],True)
+testInitialAction = ([10.0, 10.0, 10.0], True)
 
 testEq iterator = eqOutput andGateMarkovTestParams iterator strategyTuple testInitialAction
 
@@ -439,12 +445,17 @@ testEq' iterator = eqOutput' andGateMarkovTestParams iterator strategyTuple test
 
 testEq3 iterator = eqOutput3 iterator testInitialAction
 
-printOutput :: List
-                '[IO (DiagnosticsMC Double), IO (DiagnosticsMC Double),
-                  IO (DiagnosticsMC Double), IO (DiagnosticsMC Double),
-                  IO (DiagnosticsMC Bool), IO (DiagnosticsMC Bool),
-                  IO (DiagnosticsMC Bool)]
-             -> IO ()
+printOutput ::
+  List
+    '[ IO (DiagnosticsMC Double),
+       IO (DiagnosticsMC Double),
+       IO (DiagnosticsMC Double),
+       IO (DiagnosticsMC Double),
+       IO (DiagnosticsMC Bool),
+       IO (DiagnosticsMC Bool),
+       IO (DiagnosticsMC Bool)
+     ] ->
+  IO ()
 printOutput (result1 :- result2 :- result3 :- result4 :- result5 :- result6 :- result7 :- Nil) = do
   result1' <- result1
   result2' <- result2
@@ -467,10 +478,3 @@ printOutput (result1 :- result2 :- result3 :- result4 :- result5 :- result6 :- r
   print result6'
   putStrLn "Player7"
   print result7'
-
-
-
-
-
-
-

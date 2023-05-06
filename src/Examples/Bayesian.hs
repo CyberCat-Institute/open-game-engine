@@ -1,13 +1,12 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Examples.Bayesian where
 
 import OpenGames
 import OpenGames.Preprocessor
-
 
 --------------
 -- 0. Overview
@@ -18,7 +17,7 @@ import OpenGames.Preprocessor
 
 -- 1.0 Single player coordinating with nature
 
-data CoordinateMove = A | B deriving (Eq,Ord,Show)
+data CoordinateMove = A | B deriving (Eq, Ord, Show)
 
 -- | payoff for player is matching the right state of the world
 coordinateWithNaturePayoff :: CoordinateMove -> CoordinateMove -> Double
@@ -26,6 +25,7 @@ coordinateWithNaturePayoff x y = if x == y then 1 else 0
 
 -- 1.1 Prisoner's dilemma
 data PDNature = Rat | NoRat deriving (Eq, Ord, Show)
+
 data PDMove = Confess | DontConfess deriving (Eq, Ord, Show)
 
 -- | standard PD payoff
@@ -46,20 +46,20 @@ pdPayoff2 NoRat Confess DontConfess = -10
 pdPayoff2 NoRat DontConfess Confess = -7
 pdPayoff2 NoRat DontConfess DontConfess = -2
 
-
 --------------------------
 -- 2. Game representations
 -- 2.0. coordination with nature
 
 -- | Distribution of states of the world
-distributionNature probA = distFromList [(A,probA),(B, 1- probA)]
+distributionNature probA = distFromList [(A, probA), (B, 1 - probA)]
 
 -- | signal structure, given precision probability that the correct state of nature is sent
-signal signalPrecision A = distFromList [(A,signalPrecision),(B, 1- signalPrecision)]
-signal signalPrecision B = distFromList [(B,signalPrecision),(A, 1- signalPrecision)]
+signal signalPrecision A = distFromList [(A, signalPrecision), (B, 1 - signalPrecision)]
+signal signalPrecision B = distFromList [(B, signalPrecision), (A, 1 - signalPrecision)]
 
 -- | This game represents a stochastic process: Nature draws from a distribution given _probA_ of A, then a signal is sent with a given probability _signalPrecision_
-stochasticEnv probA signalPrecision = [opengame|
+stochasticEnv probA signalPrecision =
+  [opengame|
    inputs    :      ;
    feedback  :      ;
 
@@ -81,9 +81,9 @@ stochasticEnv probA signalPrecision = [opengame|
    returns   :      ;
   |]
 
-
 -- | The complete game
-coordinateWithNature probA signalPrecision = [opengame|
+coordinateWithNature probA signalPrecision =
+  [opengame|
    inputs    :      ;
    feedback  :      ;
 
@@ -107,7 +107,8 @@ coordinateWithNature probA signalPrecision = [opengame|
    |]
 
 -- 2.1. Prisoner's dilemma
-bayesianPD  = [opengame|
+bayesianPD =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -146,13 +147,14 @@ bayesianPD  = [opengame|
 isEquilibriumCoordinationNature probA signalPrecision strat = generateIsEq $ evaluate (coordinateWithNature probA signalPrecision) strat void
 
 -- | We define two strategies _followSignal_ and _doOpposite_
-followSignal,doOpposite :: Kleisli Stochastic CoordinateMove CoordinateMove
+followSignal, doOpposite :: Kleisli Stochastic CoordinateMove CoordinateMove
 followSignal = Kleisli (\x -> playDeterministically x)
-doOpposite   = Kleisli (\case {A -> playDeterministically B; B -> playDeterministically A})
+doOpposite = Kleisli (\case A -> playDeterministically B; B -> playDeterministically A)
 
 -- | Putting strategies into the list
 followSignalStrategy = followSignal :- Nil
-doOppositeStrategy   = doOpposite :- Nil
+
+doOppositeStrategy = doOpposite :- Nil
 
 -- Example usage
 -- isEquilibriumCoordinationNature 0.6 0.7 followSignalStrategy
@@ -160,8 +162,7 @@ doOppositeStrategy   = doOpposite :- Nil
 -- 3.1. Bayesian Prisoner's Dilemma
 
 -- | Equilibrium function
-isEquilibriumBayesianPDE strat  = generateIsEq $  evaluate bayesianPD strat void
-
+isEquilibriumBayesianPDE strat = generateIsEq $ evaluate bayesianPD strat void
 
 -- | Strategy player 1
 player1Strategy :: Kleisli Stochastic () PDMove
@@ -169,12 +170,15 @@ player1Strategy = pureAction Confess
 
 -- | Strategy player 2
 player2Strategy :: Kleisli Stochastic PDNature PDMove
-player2Strategy  = Kleisli (\case { Rat   -> playDeterministically Confess
-                                  ; NoRat -> playDeterministically DontConfess})
+player2Strategy =
+  Kleisli
+    ( \case
+        Rat -> playDeterministically Confess
+        NoRat -> playDeterministically DontConfess
+    )
 
 -- | Complete strategy tuple
 strategyTuplePD = player1Strategy :- player2Strategy :- Nil
 
 -- Example usage
 -- isEquilibriumBayesianPDE strategyTuplePD
-

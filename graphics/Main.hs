@@ -1,26 +1,29 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Main where
 
-import OpenGames.Preprocessor
-import Graphics as Gfx
-
 import Data.GraphViz
 import Data.GraphViz.Attributes.Complete
 import Data.GraphViz.Commands.IO
-
+import Graphics as Gfx
+import OpenGames.Preprocessor
 
 customParams :: GraphvizParams n String Gfx.ArrowType () String
-customParams = let rec = quickParams :: GraphvizParams n String Gfx.ArrowType () String in
-                   rec { fmtNode = \x -> Shape BoxShape : (fmtNode rec x)
-                       , fmtEdge = \case (_, _, (Contravariant lbl)) -> [Label $ toLabelValue lbl, Style [SItem Dotted []]]
-                                         (_, _, Covariant lbl) -> [Label $ toLabelValue lbl, Style [SItem Solid []]]
-                                         (_, _, Gfx.Both lbl) -> [Label $ toLabelValue lbl, Style [SItem Dotted [], SItem Solid []]] }
+customParams =
+  let rec = quickParams :: GraphvizParams n String Gfx.ArrowType () String
+   in rec
+        { fmtNode = \x -> Shape BoxShape : (fmtNode rec x),
+          fmtEdge = \case
+            (_, _, (Contravariant lbl)) -> [Label $ toLabelValue lbl, Style [SItem Dotted []]]
+            (_, _, Covariant lbl) -> [Label $ toLabelValue lbl, Style [SItem Solid []]]
+            (_, _, Gfx.Both lbl) -> [Label $ toLabelValue lbl, Style [SItem Dotted [], SItem Solid []]]
+        }
 
-bidding = [parseTree|
+bidding =
+  [parseTree|
 
    inputs    :      ;
    feedback  :      ;
@@ -80,8 +83,6 @@ bidding = [parseTree|
    outputs   :      ;
    returns   :      ;
    |]
-
-
 
 main :: IO ()
 main = writeDotFile "dotfile" (graphToDot customParams (convertBlock bidding))

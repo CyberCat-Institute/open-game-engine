@@ -1,4 +1,6 @@
-{-# LANGUAGE KindSignatures, DataKinds, GADTs #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 
 module OpenGames.Engine.Nat where
 
@@ -20,4 +22,3 @@ plus = undefined
 natToInt :: Natural n -> Int
 natToInt Zero = 0
 natToInt (Succ n) = 1 + natToInt n
-

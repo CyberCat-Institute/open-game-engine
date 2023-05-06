@@ -1,18 +1,19 @@
-{-# Language TemplateHaskell #-}
-{-# Language NamedFieldPuns #-}
-{-# LANGUAGE QuasiQuotes  #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module OpenGames.Preprocessor.CompileSyntax where
 
-import Prelude hiding (lines)
-import Data.Char
 import Data.Bifunctor
-import OpenGames.Preprocessor.Parser
-import OpenGames.Preprocessor.BlockSyntax
-import OpenGames.Preprocessor.RuntimeAST
+import Data.Char
 -- import OpenGames.Preprocessor.CompileBlock
-import Language.Haskell.TH.Syntax
+
 import Language.Haskell.TH as TH
+import Language.Haskell.TH.Syntax
+import OpenGames.Preprocessor.BlockSyntax
+import OpenGames.Preprocessor.Parser
+import OpenGames.Preprocessor.RuntimeAST
+import Prelude hiding (lines)
 
 compileLiteral :: Literal -> Exp
 compileLiteral (LInt i) = LitE $ IntegerL i
@@ -28,8 +29,9 @@ compileRange (LFromThenToR from step to) = FromThenToR (compileLambda from) (com
 
 compileLambda :: Lambda -> Exp
 compileLambda (Lit l) = compileLiteral l
-compileLambda (Var s) | isUpper (head s)  = ConE (mkName s)
-                      | otherwise         = VarE (mkName s)
+compileLambda (Var s)
+  | isUpper (head s) = ConE (mkName s)
+  | otherwise = VarE (mkName s)
 compileLambda (App f a) = AppE (compileLambda f) (compileLambda a)
 compileLambda (Lam pat body) = LamE [compilePattern pat] (compileLambda body)
 compileLambda (LList ls) = ListE $ map compileLambda ls
@@ -41,16 +43,21 @@ compileLambda (Do sm) = DoE Nothing (map toStatement sm)
 compileLambda (Tuple f s r) = TupE (map (Just . compileLambda) (f : s : r))
 compileLambda (Range range) = ArithSeqE (compileRange range)
 compileLambda (IfThenElse prd thn els) = CondE (compileLambda prd) (compileLambda thn) (compileLambda els)
-compileLambda (Ifix op left right) = InfixE (Just $ compileLambda left)
-                                            (VarE $ mkName op)
-                                            (Just $ compileLambda right)
-
+compileLambda (Ifix op left right) =
+  InfixE
+    (Just $ compileLambda left)
+    (VarE $ mkName op)
+    (Just $ compileLambda right)
 compileLambda (PFix "-" arg) = AppE (VarE (mkName "negate")) (compileLambda arg)
 compileLambda (PFix op arg) = error $ "unsupported prefix operator: " ++ op
-compileLambda (LLet pat val body) = LetE [ValD (compilePattern pat)
-                                               (NormalB (compileLambda val))
-                                               []]
-                                         (compileLambda body)
+compileLambda (LLet pat val body) =
+  LetE
+    [ ValD
+        (compilePattern pat)
+        (NormalB (compileLambda val))
+        []
+    ]
+    (compileLambda body)
 compileLambda (LComp stmts) = CompE (map compileStmt stmts)
 
 compileStmt :: LStmt -> Stmt
@@ -70,7 +77,5 @@ compilePattern (PVar i) = VarP (mkName i)
 compLine :: Line (Maybe String) Pattern Lambda -> Line (Maybe String) Pat Exp
 compLine = bimap compilePattern compileLambda
 
-
 convertGame :: Block Pattern Lambda -> Block Pat Exp
 convertGame = bimap compilePattern compileLambda
-

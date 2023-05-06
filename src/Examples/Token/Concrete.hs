@@ -1,22 +1,23 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module Examples.Token.Concrete where
 
 -- - concrete token
 -- - abstract token
 -- -
 
-import OpenGames.Engine.Diagnostics
-import OpenGames
-import OpenGames.Preprocessor
 import Control.Monad.Identity
-import OpenGames.Engine.Nat
 -- import OpenGames.Engine.BayesianGamesNonState
 import Data.HashMap as M
-import Data.Maybe
 import Data.List
+import Data.Maybe
 import GHC.Utils.Misc
+import OpenGames
+import OpenGames.Engine.Diagnostics
+import OpenGames.Engine.Nat
+import OpenGames.Preprocessor
 import Syntax.Annotated
 
 type Address = String
@@ -32,11 +33,11 @@ set = M.insert
 transfer :: Address -> Address -> Int -> TokenState -> TokenState
 transfer source target amount st =
   let local = balance source st
-  in if local < amount
+   in if local < amount
         then st
-        else let s1 = set source (local - amount) st
-             in set target (balance target s1 + amount) s1
-
+        else
+          let s1 = set source (local - amount) st
+           in set target (balance target s1 + amount) s1
 
 data Action
   = Transfer Address Address Int
@@ -59,11 +60,13 @@ initialState :: TokenState
 initialState = M.insert "player2" 20 empty
 
 defaultContext :: StochasticStatefulContext TokenState () TokenState ()
-defaultContext = let h = return ((), initialState)
-                     k () = const $ return ()
-                  in StochasticStatefulContext h k
+defaultContext =
+  let h = return ((), initialState)
+      k () = const $ return ()
+   in StochasticStatefulContext h k
 
-transferGame playerIndex addresses amounts = [opengame|
+transferGame playerIndex addresses amounts =
+  [opengame|
 
   inputs : state ;
 
@@ -82,19 +85,23 @@ transferGame playerIndex addresses amounts = [opengame|
 
   outputs : newState; |]
 
-
 defaultAmounts :: [Int]
 defaultAmounts = [0, 5, 10]
+
 defaultAddresses = ["player1", "player2", "player3"]
 
 player0 = transferGame 0 defaultAddresses defaultAmounts
+
 player1 = transferGame 1 defaultAddresses defaultAmounts
+
 player2 = transferGame 2 defaultAddresses defaultAmounts
 
-evaluated = evaluate (player0 >>> player1 >>> player2)
-                     (pure (Transfer "player2" "player1" 10) :-
-                      pure (Transfer "player1" "player2" 10) :-
-                      pure (Transfer "player2" "player3" 10) :- Nil)
-                     defaultContext
-
-
+evaluated =
+  evaluate
+    (player0 >>> player1 >>> player2)
+    ( pure (Transfer "player2" "player1" 10)
+        :- pure (Transfer "player1" "player2" 10)
+        :- pure (Transfer "player2" "player3" 10)
+        :- Nil
+    )
+    defaultContext

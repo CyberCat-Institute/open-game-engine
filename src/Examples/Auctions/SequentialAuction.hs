@@ -1,19 +1,18 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 
 module Examples.Auctions.SequentialAuction where
 
-
+import Examples.Auctions.AuctionSupportFunctions
 import OpenGames
 import OpenGames.Preprocessor
-import Examples.Auctions.AuctionSupportFunctions
-
-
 
 -- TODO Generalize to population of players
 
@@ -26,7 +25,7 @@ import Examples.Auctions.AuctionSupportFunctions
 
 type Values = Double
 
-values = [20,30,60]
+values = [20, 30, 60]
 
 reservePrice :: Double
 reservePrice = 1
@@ -35,7 +34,8 @@ reservePrice = 1
 -- 1 The actual games
 
 -- Draws a value and creates a pair of _value_ _name_
-natureDrawsTypeStage name = [opengame|
+natureDrawsTypeStage name =
+  [opengame|
 
     inputs    :   ;
     feedback  :   ;
@@ -53,7 +53,8 @@ natureDrawsTypeStage name = [opengame|
   |]
 
 -- Individual bidding stage
-biddingStage name = [opengame|
+biddingStage name =
+  [opengame|
 
     inputs    :  nameValuePair  ;
     feedback  :   ;
@@ -71,7 +72,8 @@ biddingStage name = [opengame|
   |]
 
 -- Transforms the payments into a random reshuffling
-transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
+transformPayments kPrice kSlots noLotteries paymentFunction =
+  [opengame|
 
    inputs    : bids ;
    feedback  :      ;
@@ -94,10 +96,9 @@ transformPayments kPrice kSlots noLotteries paymentFunction = [opengame|
    returns   :      ;
   |]
 
-
-
 -- Instantiates a simplified version with three players
-bidding kPrice kSlots noLotteries paymentFunction = [opengame|
+bidding kPrice kSlots noLotteries paymentFunction =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -158,66 +159,69 @@ bidding kPrice kSlots noLotteries paymentFunction = [opengame|
 
 -- Truthful bidding
 stratBidderTruth :: Kleisli Stochastic (String, Values) Values
-stratBidderTruth  = Kleisli (\(_,x) -> playDeterministically x)
+stratBidderTruth = Kleisli (\(_, x) -> playDeterministically x)
 
 -- Bidding strategy with threshold 50 and value 10
 stratBidderThreshold :: Kleisli Stochastic (String, Values) Values
-stratBidderThreshold = Kleisli (\(_,x) -> if x >= 50 then playDeterministically 20 else playDeterministically 10)
+stratBidderThreshold = Kleisli (\(_, x) -> if x >= 50 then playDeterministically 20 else playDeterministically 10)
 
 -- Bidding with different threshold
 stratBidderThreshold' :: Kleisli Stochastic (String, Values) Values
-stratBidderThreshold' = Kleisli (\(_,x) -> case () of
-                                              _ | x < 30    -> playDeterministically 0
-                                                | x == 30   -> playDeterministically 10
-                                                | otherwise -> playDeterministically 20)
-
-
+stratBidderThreshold' =
+  Kleisli
+    ( \(_, x) -> case () of
+        _
+          | x < 30 -> playDeterministically 0
+          | x == 30 -> playDeterministically 10
+          | otherwise -> playDeterministically 20
+    )
 
 -- Complete strategy for truthful bidding for 3 players
 truthfulStrat ::
   List
-    '[Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
+    '[ Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values
+     ]
 truthfulStrat =
   stratBidderTruth
-  :- stratBidderTruth
-  :- stratBidderTruth
-  :- Nil
+    :- stratBidderTruth
+    :- stratBidderTruth
+    :- Nil
 
 -- Complete strategy for threshold bidding 3 players
 thresholdStrat ::
   List
-    '[Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
+    '[ Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values
+     ]
 thresholdStrat =
   stratBidderThreshold
-  :- stratBidderThreshold
-  :- stratBidderThreshold
-  :- Nil
+    :- stratBidderThreshold
+    :- stratBidderThreshold
+    :- Nil
 
 -- Complete strategy for threshold' bidding 3 players
 thresholdStrat' ::
   List
-    '[Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values,
-      Kleisli Stochastic (String, Values) Values]
+    '[ Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values,
+       Kleisli Stochastic (String, Values) Values
+     ]
 thresholdStrat' =
   stratBidderThreshold'
-  :- stratBidderThreshold'
-  :- stratBidderThreshold'
-  :- Nil
+    :- stratBidderThreshold'
+    :- stratBidderThreshold'
+    :- Nil
 
 ---------------
 -- 1 Equilibria
 -- 1.0 Eq. game with 3 players
 equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidding kPrice kSlots noLotteries paymentFunction) strat void
 
-
 ------------------------
 -- 2 Interactive session
-
 
 -- 3 players with 1 auction slot, 2nd highest price, and 1 lottery slot - truthful bidding - not an eq
 -- generateIsEq $ equilibriumGame 2 1 1 lotteryPayment truthfulStrat
@@ -239,5 +243,3 @@ equilibriumGame kPrice kSlots noLotteries paymentFunction strat = evaluate (bidd
 
 -- Also note: Once we exclude slots via lottery, and just auction off one slot, truthful bidding becomes an equilibrium
 -- generateIsEq $ equilibriumGame 2 1 0 noLotteryPayment truthfulStrat
-
-

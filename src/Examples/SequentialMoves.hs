@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
-
+{-# LANGUAGE TemplateHaskell #-}
 
 module Examples.SequentialMoves where
 
@@ -12,19 +11,19 @@ import OpenGames.Preprocessor
 -- 0. Overview
 -- This file contains three simple sequential move games: the ultimatum game, the trust game, and a sequential version of rock paper scissors
 
-
 -----------------------
 -- 1. Types and payoffs
 
 -- 1.0 Ultimatum Game
 
 type Pie = Double
+
 type Proposal = Double
 
 data ResponderAction = Accept | Reject
-  deriving (Eq,Ord,Show)
+  deriving (Eq, Ord, Show)
 
-ultimatumGamePayoffProposer,ultimatumGamePayoffResponder :: Pie -> Proposal -> ResponderAction -> Payoff
+ultimatumGamePayoffProposer, ultimatumGamePayoffResponder :: Pie -> Proposal -> ResponderAction -> Payoff
 ultimatumGamePayoffProposer pie proposal reaction =
   if reaction == Accept then pie - proposal else 0
 ultimatumGamePayoffResponder pie proposal reaction =
@@ -32,33 +31,35 @@ ultimatumGamePayoffResponder pie proposal reaction =
 
 -- 1.1 Trust Game
 type Sent = Double
+
 type SentBack = Double
+
 type Factor = Double
 
-trustGamePayoffProposer,trustGamePayoffResponder :: Factor -> Sent -> SentBack -> Payoff
+trustGamePayoffProposer, trustGamePayoffResponder :: Factor -> Sent -> SentBack -> Payoff
 trustGamePayoffProposer factor send reaction = reaction
 trustGamePayoffResponder factor proposal reaction = proposal * factor - reaction
 
 -- 1.2. Sequential rockPaperScissors
 data ActionRPS = Rock | Paper | Scissors
-   deriving (Eq,Ord,Show)
+  deriving (Eq, Ord, Show)
 
 rockPaperScissorsMatrix :: ActionRPS -> ActionRPS -> Double
-rockPaperScissorsMatrix Rock Scissors     = 1
-rockPaperScissorsMatrix Rock Paper        = -1
-rockPaperScissorsMatrix Rock Rock         = 0
-rockPaperScissorsMatrix Scissors Rock     = -1
-rockPaperScissorsMatrix Scissors Paper    = 1
+rockPaperScissorsMatrix Rock Scissors = 1
+rockPaperScissorsMatrix Rock Paper = -1
+rockPaperScissorsMatrix Rock Rock = 0
+rockPaperScissorsMatrix Scissors Rock = -1
+rockPaperScissorsMatrix Scissors Paper = 1
 rockPaperScissorsMatrix Scissors Scissors = 0
-rockPaperScissorsMatrix Paper Rock        = 1
-rockPaperScissorsMatrix Paper Scissors    = -1
-rockPaperScissorsMatrix Paper Paper       = -1
-
+rockPaperScissorsMatrix Paper Rock = 1
+rockPaperScissorsMatrix Paper Scissors = -1
+rockPaperScissorsMatrix Paper Paper = -1
 
 --------------------
 -- 1. Representation
 -- 1.0. Ultimatum Game
-ultimatumGame pie = [opengame|
+ultimatumGame pie =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -83,7 +84,8 @@ ultimatumGame pie = [opengame|
    |]
 
 -- 1.1. Trust Game
-trustGame pie factor = [opengame|
+trustGame pie factor =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -107,9 +109,9 @@ trustGame pie factor = [opengame|
    returns   :      ;
    |]
 
-
 -- 1.2. A sequential version of Rock Paper Scissors in verbose form
-rockPaperScissorsSeqVerbose = [opengame|
+rockPaperScissorsSeqVerbose =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -134,7 +136,8 @@ rockPaperScissorsSeqVerbose = [opengame|
    |]
 
 -- | Same game in reduced form
-rockPaperScissorsSeqReduced = [opengame|
+rockPaperScissorsSeqReduced =
+  [opengame|
 
    inputs    :      ;
    feedback  :      ;
@@ -149,8 +152,6 @@ rockPaperScissorsSeqReduced = [opengame|
    returns   : rockPaperScissorsMatrix decisionPlayer2 decisionPlayer1 ;
 
    |]
-
-
 
 ---------------
 -- 2.  Analysis
@@ -168,10 +169,9 @@ responderStrategyUG = pureAction Accept
 -- illustration of another responder strategy
 responderStrategy' :: Kleisli Stochastic Proposal ResponderAction
 responderStrategy' = Kleisli acceptThreshold
-   where
+  where
     acceptThreshold :: Proposal -> Stochastic ResponderAction
-    acceptThreshold proposal = if proposal > 5 then playDeterministically Accept else uniformDist [Accept,Reject]
-
+    acceptThreshold proposal = if proposal > 5 then playDeterministically Accept else uniformDist [Accept, Reject]
 
 -- strategy Tuple
 stratTupleUG = proposerSelfishStrategyUG :- responderStrategyUG :- Nil
@@ -190,7 +190,6 @@ proposerSelfishStrategyTG = pureAction 1
 responderSelfishStrategyTG :: Kleisli Stochastic Sent SentBack
 responderSelfishStrategyTG = pureAction 0
 
-
 -- strategy Tuple
 stratTupleTG = proposerSelfishStrategyTG :- responderSelfishStrategyTG :- Nil
 
@@ -200,15 +199,15 @@ stratTupleTG = proposerSelfishStrategyTG :- responderSelfishStrategyTG :- Nil
 -- 2.2. Sequential Rock Paper Scissors
 
 -- | Equilibrium definition
-isEquilibriumRPSSeq strat = generateIsEq $ evaluate rockPaperScissorsSeqReduced  strat void
+isEquilibriumRPSSeq strat = generateIsEq $ evaluate rockPaperScissorsSeqReduced strat void
 
 -- | Fix an arbitrary strategy by player 1
 stratPlayer1 :: ActionRPS -> Kleisli Stochastic () ActionRPS
 stratPlayer1 x = pureAction x
 
 -- | Optimal reply by player 2
-optimalReplyPlayer2 Paper    = playDeterministically Scissors
-optimalReplyPlayer2 Rock     = playDeterministically Paper
+optimalReplyPlayer2 Paper = playDeterministically Scissors
+optimalReplyPlayer2 Rock = playDeterministically Paper
 optimalReplyPlayer2 Scissors = playDeterministically Rock
 
 -- | Fix the winning strategy

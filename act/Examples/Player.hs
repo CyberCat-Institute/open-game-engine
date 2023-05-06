@@ -2,31 +2,29 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
+
 module Examples.Player where
 
-import Examples.AmmGenerated
-
+import Act.Execution
+import Act.Prelude
 import Data.List
-
+import EVM.ABI (AbiType (..))
+import Examples.AmmGenerated
+import OpenGames.Engine.Engine
 import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
-import OpenGames.Engine.Engine
-
-import Act.Prelude
-import Act.Execution
-import EVM.ABI (AbiType(..))
 
 swapStrategy :: Int -> [Int]
 swapStrategy n = [0, 1 .. n]
 
-bigPayoff finalUSD initialUSD swappedUSD
-  = finalUSD + initialUSD - swappedUSD
+bigPayoff finalUSD initialUSD swappedUSD =
+  finalUSD + initialUSD - swappedUSD
 
 swap0 :: Int -> Transaction
-swap0 d = Transaction "" "swap0" [AbiUIntType d];
+swap0 d = Transaction "" "swap0" [AbiUIntType d]
 
 swap1 :: Int -> Transaction
-swap1 d = Transaction "" "swap1" [AbiUIntType d];
+swap1 d = Transaction "" "swap1" [AbiUIntType d]
 
 diffEur :: AmmState -> AmmState -> Int
 diffEur (AmmState old _) (AmmState new _) = new - old
@@ -34,7 +32,8 @@ diffEur (AmmState old _) (AmmState new _) = new - old
 diffUsd :: AmmState -> AmmState -> Int
 diffUsd (AmmState old _) (AmmState new _) = new - old
 
-playerAutomatic usd = [opengame|
+playerAutomatic usd =
+  [opengame|
   inputs   : ammSt1, ammSt2 ;
   feedback : ;
   :-------:
@@ -63,9 +62,11 @@ playerAutomatic usd = [opengame|
 contracts = (combine [("amm1", ammContract)])
 
 allTransaction =
-    [Transaction "amm1" "swap0" [AbiUIntType 5]
-    ,Transaction "amm1" "swap1" [AbiUIntType 10]
-    ,Transaction "amm1" "swap0" [AbiUIntType 15]]
+  [ Transaction "amm1" "swap0" [AbiUIntType 5],
+    Transaction "amm1" "swap1" [AbiUIntType 10],
+    Transaction "amm1" "swap0" [AbiUIntType 15]
+  ]
+
 transactionOrders :: [[Transaction]]
 transactionOrders = permutations allTransaction
 
@@ -73,8 +74,8 @@ twoTokensPayoff :: AmmState -> AmmState -> Int
 twoTokensPayoff (AmmState t1old t2old) (AmmState t1new t2new) =
   (t1new - t1old) + (t2new - t2old)
 
-
-swapSequence = [opengame|
+swapSequence =
+  [opengame|
   inputs   : ammSt1 ;
   feedback : ;
 
@@ -94,5 +95,3 @@ swapSequence = [opengame|
   outputs: ;
   returns : ;
 |]
-
-

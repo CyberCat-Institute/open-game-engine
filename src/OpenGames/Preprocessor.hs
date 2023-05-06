@@ -1,6 +1,7 @@
 module OpenGames.Preprocessor
-   ( module Preprocessor
-   ) where
+  ( module Preprocessor,
+  )
+where
 
 import OpenGames.Preprocessor.BlockSyntax as Preprocessor
 import OpenGames.Preprocessor.Codegen as Preprocessor
