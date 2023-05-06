@@ -23,6 +23,7 @@ jobs:
       - uses: cachix/install-nix-action@v20
         with:
           nix_path: nixpkgs=channel:nixos-unstable
+      - uses: haskell-actions/run-ormolu@v11
       - uses: haskell/actions/setup@v1
         with:
           ghc-version: '8.10.4' # Exact version of ghc to use
