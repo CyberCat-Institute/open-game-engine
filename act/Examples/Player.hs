@@ -14,6 +14,9 @@ import OpenGames.Engine.Engine
 import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
 
+-- This combines two contracts with non-shared state
+twoAmms = combine (unionContracts ("amm1", ammContract) ("amm2", ammContract))
+
 swapStrategy :: Int -> [Int]
 swapStrategy n = [0, 1 .. n]
 

@@ -4,7 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
-module Act.TH where
+module Act.TH (act2OG, module Act.Prelude) where
 
 import Act.Prelude
 import Act.TH.Dispatch
@@ -12,12 +12,6 @@ import Act.TH.Extractor
 import Act.TH.State
 import Act.Utils
 import CLI
-import Data.Bifunctor
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (unpack)
-import Data.Char
-import Data.Data (Data, toConstr)
-import Data.FileEmbed
 import Data.List
 import Data.Validation
 import Error
