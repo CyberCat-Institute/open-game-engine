@@ -7,6 +7,7 @@ module Act.TH.Extractor (argumentExtractorName, generateExtractMethods) where
 import Act.Prelude
 import Act.Utils
 import Data.Data
+import Data.List
 import EVM.ABI
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated
@@ -31,13 +32,23 @@ generateExtractMethods = fmap concat . traverse generateExtract
 argumentExtractorName :: String -> TH.Name
 argumentExtractorName methodName = mkName ("extract" ++ capitalise methodName)
 
+transactionSignature :: Interface -> String
+transactionSignature (Interface _ types) =
+  let constructors = fmap (\(Decl ty _) -> show ty) types
+   in concat $ intersperse ", " constructors
+
+parens :: String -> String
+parens x = "(" ++ x ++ ")"
+
 -- Given a name and an interface, generate a function definition which extracts the arguments
 -- expected from the given interface
 generateExtract :: (String, Interface) -> Q [TH.Dec]
 generateExtract (name, signature) = do
   let fnName = argumentExtractorName name
   sig <- extractorTypeForSignature signature
-  incorrectPatternError <- [|error ("unexpected arguments: " ++ show x)|]
+  let signatureStr = transactionSignature signature
+  let asStringSplice = pure (LitE (StringL (parens signatureStr)))
+  incorrectPatternError <- [|error ("unexpected arguments, got: " ++ show x ++ "\nexpected: " ++ $asStringSplice)|]
   patterns <- patterns4Interface signature
   pure
     [ SigD
@@ -53,6 +64,9 @@ generateExtract (name, signature) = do
         ]
     ]
 
+constructorNameForType :: AbiType -> Name
+constructorNameForType = mkName . show . toConstr
+
 -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT
 -- variable and therefore the constructor to use for out `AbiType` the name will be used as
 -- binding variable and used in the body to return the value of that type
@@ -62,11 +76,11 @@ patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [VarP (mk
 templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
 templateCons a b = [p|$a : $b|]
 
+-- Generate the pattern for matching on the list of arguments of a transaction, the `Interface`
+-- describes the argument tuple as a list of types and we convert it into a list-pattern
+-- for each type. The type is used to create a constructor-pattern for `AbiType`
 patterns4Interface :: Interface -> Q TH.Pat
 patterns4Interface (Interface _ types) = foldr templateCons [p|[]|] $ fmap patternForDecl types
-
-constructorNameForType :: AbiType -> Name
-constructorNameForType = mkName . show . toConstr
 
 -- Convert an ACT Interface into the tuple of values extracted from the list of arguments
 -- This implement the extractor function which signature is given by `extractorTypeForSignature`
