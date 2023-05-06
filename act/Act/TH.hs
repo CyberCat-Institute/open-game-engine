@@ -66,8 +66,8 @@ generateContractFunction claims = do
   let methodInfo = getUpdates4Method behaviors
   methods <- traverse (\(a, b, c) -> (a,) <$> mapMethod2TH c b) methodInfo
   extractMethods <- generateExtractMethods (fmap (\(a, b, c) -> (a, c)) methodInfo)
-  contractFn <- generateContractDecl fnName' methods
-  pure (extractMethods ++ contractFn)
+  contractFn <- generateContractDecl fnName' methods extractMethods
+  pure (contractFn)
 
 contractState :: TH.Name
 contractState = mkName "contractState"
@@ -87,8 +87,8 @@ contractArgs = mkName "args"
 --     "m2" -> let (arg1, arg2, arg3) <- extractm2 (args transaction) in b2
 --     "m3" -> let (arg1) <- extractm3 (args transaction) in b3
 -- ```
-generateContractDecl :: Name -> [(String, TH.Exp)] -> Q [Dec]
-generateContractDecl fnName clauses = do
+generateContractDecl :: Name -> [(String, TH.Exp)] -> [Dec] -> Q [Dec]
+generateContractDecl fnName clauses extractMethods = do
   let method = mkName "method"
   crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
   transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) $(return (VarP contractArgs))|]
@@ -106,7 +106,7 @@ generateContractDecl fnName clauses = do
                     (matchClauses ++ [matchE WildP crashMessage])
                 )
             )
-            []
+            extractMethods
         ]
     ]
   where
