@@ -43,7 +43,7 @@ playerAutomatic usd =
 
   operation : dependentDecision "Marx" (const (swapStrategy usd)) ;
   outputs   : d ;
-  returns   : fromIntegral ((diffUsd ammSt2 st''));
+  returns   : fromIntegral (diffUsd ammSt2 st'');
 
   inputs    : ammSt1, swap0 d;
   feedback  : ;
@@ -62,16 +62,19 @@ playerAutomatic usd =
   returns : ;
 |]
 
-contracts = (combine [("amm1", ammContract)])
+contracts = (combine [("amm2", ammContract), ("amm1", ammContract)])
 
-allTransaction =
-  [ Transaction "amm1" "swap0" [AbiUIntType 5],
-    Transaction "amm1" "swap1" [AbiUIntType 10],
-    Transaction "amm1" "swap0" [AbiUIntType 15]
+allTransactionSwap =
+  [ Transaction "amm1" "swap1" [AbiUIntType 5],
+    Transaction "amm2" "swap0" [AbiUIntType 10]
+  ]
+
+allTransaction x =
+  [ Transaction "amm2" "swap0" [AbiUIntType x] | x <- [1.. x]
   ]
 
 transactionOrders :: [[Transaction]]
-transactionOrders = permutations allTransaction
+transactionOrders = permutations allTransactionSwap
 
 twoTokensPayoff :: AmmState -> AmmState -> Int
 twoTokensPayoff (AmmState t1old t2old) (AmmState t1new t2new) =

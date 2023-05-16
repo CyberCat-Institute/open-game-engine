@@ -9,3 +9,4 @@ import Act.TH
 
 -- This generates the `ammContract`
 $(act2OG "amm.act")
+-- $(hevm2OG "contract") --- do something???

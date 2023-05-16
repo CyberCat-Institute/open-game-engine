@@ -66,7 +66,7 @@ ctx1 =
     (pure ((), (AmmState 10 10)))
     (\_ _ -> return ())
 
-ev1 = evaluate (swapSequence) ((pureAction (reverse allTransaction)) :- Nil) ctx1
+ev1 = evaluate (swapSequence) ((pureAction (reverse (allTransactionSwap))) :- Nil) ctx1
 
 main :: IO ()
 main = putStrLn "hello Act"
