@@ -51,11 +51,11 @@ extra-deps:
  - hevm-0.51.0
    # - git: https://github.com/ethereum/hevm
    #   commit: 852b1543db409529da772d368777079d80af8036
- - git: https://github.com/ethereum/act.git
+ - git: https://github.com/andrevidela/act.git
    # commit: f05cf360d3412c1dd01b8497bbf54b547683c92f -- hacky version
    subdirs:
      - src
-   commit: 0435be0145d350ee60cf9514f04345d2428449ef # zoe branch + act-internal
+   commit: 061a43f5799760133769f6553e3031f5a20959ff # zoe branch + act-internal
 
 allow-newer: true
 

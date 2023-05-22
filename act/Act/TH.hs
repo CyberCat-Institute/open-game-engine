@@ -30,19 +30,20 @@ import Syntax.Annotated
 act2OG :: String -> Q [Dec]
 act2OG filename = do
   let file :: String = unsafePerformIO $ readFile filename
-  let compiled :: Error String [Claim] =
+  let compiled :: Error String Act =
         (compile $ file)
   case compiled of
     Failure err ->
       reportError (extractError err)
         >> pure []
     -- A parsed Act file is a list of claims
-    Success val -> do
-      contractFunction <- generateContractFunction val
+    Success (Main [Contract (Definition _ name interface _ states _ _) ts]) -> do
+      contractFunction <- generateContractFunction interface
       pure
-        ( stateDec4Claim val
+        ( stateDec4Claim states
             ++ contractFunction
         )
+    Success (Main contracts) -> error "todo, support multiple contracts"
   where
     extractError :: NonEmpty (Pn, String) -> String
     extractError err = ""

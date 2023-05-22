@@ -5,19 +5,19 @@ module Act.TH.State where
 import Act.Utils
 import Data.Bifunctor
 import qualified Data.Map as M
-import EVM.Solidity (SlotType)
 import Language.Haskell.TH.Syntax
-import Syntax.Annotated
+import Syntax.Untyped (Creates(..), SlotType)
+import Syntax.Annotated (Id)
 
 -- Generate a type for the global state of the contract
-stateDec4Claim :: [Claim] -> [Dec]
-stateDec4Claim = concatMap convertStorage
-  where
-    convertStorage :: Claim -> [Dec]
-    convertStorage (C c) = []
-    convertStorage (B b) = []
-    convertStorage (I i) = []
-    convertStorage (S s) = fmap (createDataDeclaration . second M.toList) (M.toList s)
+stateDec4Claim :: Creates -> [Dec]
+stateDec4Claim (Creates assign) = [createDataDeclaration undefined]
+--   where
+--     convertStorage :: Claim -> [Dec]
+--     convertStorage (C c) = []
+--     convertStorage (B b) = []
+--     convertStorage (I i) = []
+--     convertStorage (S s) = fmap (createDataDeclaration . second M.toList) (M.toList s)
 
 createDataDeclaration :: (Id, [(Id, SlotType)]) -> Dec
 createDataDeclaration (storeName, types) =
