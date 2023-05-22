@@ -110,7 +110,7 @@ executable act-exec
   ghc-options: -fwarn-unused-imports
   build-depends:
       QuickCheck
-    , act >=0.1 && <1
+    , act
     , ad
     , base >=4.7 && <5
     , bytestring
@@ -125,7 +125,7 @@ executable act-exec
     , hashable
     , hashmap
     , haskeline
-    , hevm
+    , hevm >=0.51.0
     , lens
     , monad-bayes
     , mtl

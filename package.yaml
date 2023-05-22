@@ -90,12 +90,12 @@ executables:
     ghc-options:
       - -fwarn-unused-imports
     dependencies:
-      - act >= 0.1 && < 1
+      - act
       - open-games-hs
       - file-embed
       - bytestring
       - validation
-      - hevm
+      - hevm >= 0.51.0
       - containers
       - text
   graphics:
