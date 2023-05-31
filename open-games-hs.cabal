@@ -98,7 +98,6 @@ executable act-exec
       Act.Execution
       Act.Prelude
       Act.TH
-      Act.TH.Dispatch
       Act.TH.Extractor
       Act.TH.State
       Act.Utils

@@ -7,7 +7,6 @@
 module Act.TH (act2OG, module Act.Prelude) where
 
 import Act.Prelude
-import Act.TH.Dispatch
 import Act.TH.Extractor
 import Act.TH.State
 import Act.Utils
