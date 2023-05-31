@@ -14,6 +14,7 @@ import Act.Utils
 import CLI
 import Data.List
 import Data.Validation
+import Data.Foldable
 import Error
 import GHC.IO.Unsafe
 import Language.Haskell.TH.Syntax as TH
@@ -30,20 +31,16 @@ import Syntax.Annotated
 act2OG :: String -> Q [Dec]
 act2OG filename = do
   let file :: String = unsafePerformIO $ readFile filename
-  let compiled :: Error String Act =
-        (compile $ file)
+  let compiled :: Error String Act = compile file
   case compiled of
     Failure err ->
       reportError (extractError err)
         >> pure []
     -- A parsed Act file is a list of claims
-    Success (Main [Contract (Definition _ name interface _ states _ _) ts]) -> do
-      contractFunction <- generateContractFunction interface
-      pure
-        ( stateDec4Claim states
-            ++ contractFunction
-        )
-    Success (Main contracts) -> error "todo, support multiple contracts"
+    Success (Act store contracts) -> do
+      methods <- traverse generateContractFunction contracts
+      let stateTypes = stateDec4Interface store
+      pure (stateTypes ++ concat methods)
   where
     extractError :: NonEmpty (Pn, String) -> String
     extractError err = ""
@@ -54,15 +51,13 @@ arr x y = AppT (AppT ArrowT x) y
 -- it's type will always be the same:
 -- (ContractState, ContractMethod) -> ContractState
 -- This is then going to be instanciated as an open game using `fromFunctions`
-generateContractFunction :: [Claim] -> Q [Dec]
-generateContractFunction claims = do
-  let (fnName, behaviors) = extractBehaviors claims
-  let fnName' = (mkName (uncapitalise fnName ++ "Contract"))
-  let methodInfo = getUpdates4Method behaviors
-  methods <- traverse (\(a, b, c) -> (a,) <$> mapMethod2TH c b) methodInfo
-  extractMethods <- generateExtractMethods (fmap (\(a, b, c) -> (a, c)) methodInfo)
-  contractFn <- generateContractDecl fnName' methods extractMethods
-  pure (contractFn)
+generateContractFunction :: Contract -> Q [Dec]
+generateContractFunction (Contract constr behav) = do
+  let contractName = uncapitalise (_cname constr)
+  let interface = _cinterface constr
+  extractMethods <- generateExtractMethods [(_name b, _interface b) | b <- behav ]
+  methodClauses <- traverse mapMethod2TH behav
+  generateContractDecl contractName methodClauses extractMethods
 
 contractState :: TH.Name
 contractState = mkName "contractState"
@@ -71,10 +66,11 @@ contractArgs :: TH.Name
 contractArgs = mkName "args"
 
 -- This builds the function signature for the contract, each contract generates one function
--- that recieves transactions, each contract function has it's own internal "method dispatched"
--- which matches on the method of the transaction, extracts the arguments and calls the body with
+-- that recieves transactions, each contract function has it's own internal "method dispatcher"
+-- that matches on the method of the transaction, extracts the arguments and calls the body with
 -- the arguments in scope
--- Each contract is of this shape:
+-- Each contract has this shape:
+--
 -- ```
 -- contractName :: ContractState -> Transaction -> ContractState
 -- contractName st transaction = case method transaction of
@@ -82,15 +78,13 @@ contractArgs = mkName "args"
 --     "m2" -> let (arg1, arg2, arg3) <- extractm2 (args transaction) in b2
 --     "m3" -> let (arg1) <- extractm3 (args transaction) in b3
 -- ```
-generateContractDecl :: Name -> [(String, TH.Exp)] -> [Dec] -> Q [Dec]
-generateContractDecl fnName clauses extractMethods = do
+generateContractDecl :: String -> [(String, TH.Exp)] -> [Dec] -> Q [Dec]
+generateContractDecl contractName clauses extractMethods = do
   let method = mkName "method"
   crashMessage <- [|error ("unexpected method, got '" ++ $(return (VarE method)) ++ "'\\nexpected one of : " ++ $(return clauseLit))|]
   transactionPattern <- [p|Act.Prelude.Transaction _ $(return (VarP method)) $(return (VarP contractArgs))|]
   pure
-    [ SigD
-        fnName
-        ((ConT (mkName "AmmState")) `arr` (ConT (mkName "Transaction") `arr` (ConT (mkName "AmmState")))),
+    [ signatureForContract,
       FunD
         fnName
         [ Clause
@@ -105,6 +99,22 @@ generateContractDecl fnName clauses extractMethods = do
         ]
     ]
   where
+    -- The name of the function is the name of the contract
+    fnName :: Name
+    fnName = mkName (contractName ++ "Contract")
+
+    -- The name of the type that represents the storage for the contract is given
+    -- by the function `storeTypeName`. It capitalises and appends "state" to its argument
+    contractStateTypeName :: Type
+    contractStateTypeName = (ConT (storeTypeName contractName))
+
+    -- The signature for a contract named "c" is given by the type
+    -- c :: CState -> Transaction -> CState
+    signatureForContract :: Dec
+    signatureForContract = SigD
+        fnName
+        (contractStateTypeName `arr` (ConT (mkName "Transaction") `arr` contractStateTypeName))
+
     -- A string of all the methods, comma-separated. Used for printing errors.
     clauseLit :: TH.Exp
     clauseLit = LitE (StringL (intercalate ", " (fmap fst clauses)))
@@ -122,19 +132,6 @@ generateContractDecl fnName clauses extractMethods = do
 
 undefinedE = VarE (mkName "undefined")
 
--- Extract the program associated with each method
--- Each program is a list of rewrite, the method is kept around as a string
--- The act compiler has two version of each method one for the "reverting"
--- behaviour of the method and one for the non-reverting behaviour (we know which
--- mode we're in if we check the `_mode` field and see if its `Pass`, the reverting
--- behavious is called `Fail`).
--- For Open Games we are only interested in the non-revering behaviour.
--- Transaction reversion will be handled at a later date if necessary. For now,
--- we don't have any obvious use-case for it.
-getUpdates4Method :: [Behaviour] -> [(String, [Rewrite], Interface)]
-getUpdates4Method behaviors =
-  fmap (\x -> (_name x, _stateUpdates x, _interface x)) $ filter (\b -> _mode b == Pass) behaviors
-
 -- Return the pattern for bringing the arguments into scope from the argument extractor
 -- functions
 -- If the method has no argument, the pattern is a unit
@@ -148,16 +145,15 @@ bindVariables xs = TupP (fmap (VarP . mkName . getDeclId) xs)
 -- A series of rewrites of the state is translated as the composition of the rewrites applied to the state
 -- each rewrite is written as a single `State -> State` update function as per the implementation of `rewriteOne`
 -- each constant is also written as a single `State -> State` update function
-mapMethod2TH :: Interface -> [Rewrite] -> Q TH.Exp
-mapMethod2TH (Interface methodName args) actExp = do
-  -- body <- [| ($(foldl1 (\e1 e2 -> [|$e2 . $e1|]) (fmap rewriteOne actExp))) $(return (VarE contractState)) |]
+mapMethod2TH :: Behaviour -> Q (String, TH.Exp)
+mapMethod2TH (Behaviour methodName _ (Interface _ args) _ _ _ actExp _) = do
   body <- RecUpdE (VarE contractState) <$> traverse rewriteOne actExp
   let extractor = AppE (VarE (argumentExtractorName methodName)) (VarE contractArgs)
-  pure $ LetE [ValD (bindVariables args) (NormalB extractor) []] body
+  pure $ (methodName, LetE [ValD (bindVariables args) (NormalB extractor) []] body)
   where
     rewriteOne :: Rewrite -> Q (Name, TH.Exp)
     rewriteOne (Constant loc) = pure (mkName "unimplemented", VarE (mkName "undefined"))
-    rewriteOne (Rewrite (Update ty (Item _ nm varName _) newValue)) =
+    rewriteOne (Rewrite (Update ty (Item _ _ (SVar _ _ varName)) newValue)) =
       (mkName varName,) <$> mapExp newValue
 
 -- The rest of this file is for debugging purposes
@@ -171,9 +167,6 @@ printBehaviour b =
   "name: "
     ++ _name b
     ++ "\n"
-    ++ "mode: "
-    ++ show (_mode b)
-    ++ "\n"
     ++ "contract: "
     ++ show (_contract b)
     ++ "\n"
@@ -186,12 +179,6 @@ printBehaviour b =
     ++ unlines (fmap (("  - " ++) . show) (_postconditions b))
     ++ "\nstate updates:\n"
     ++ unlines (fmap (("  - " ++) . show) (_stateUpdates b))
-
-printClaim :: Claim -> String
-printClaim (C constructor) = "constructor: " ++ show constructor
-printClaim (B b) = "behaviour:\n" ++ printBehaviour b
-printClaim (I i) = "invariant: " ++ show i
-printClaim (S s) = "Storage: " ++ show s
 
 printConstructor :: Constructor -> String
 printConstructor

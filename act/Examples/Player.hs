@@ -5,13 +5,10 @@
 
 module Examples.Player where
 
-import Act.Execution
-import Act.Prelude
+import Act
 import Data.List
-import EVM.ABI (AbiType (..))
 import Examples.AmmGenerated
 import OpenGames.Engine.Engine
-import OpenGames.Engine.OpenGames
 import OpenGames.Preprocessor
 
 -- This combines two contracts with non-shared state

@@ -5,18 +5,9 @@
 
 module Main where
 
-import Act.Execution
-import Act.Prelude
-import Act.TH
--- import Examples.Amm
-
-import EVM.ABI
 import Examples.AmmGenerated
 import Examples.Player
-import Numeric.Probability.Distribution
 import OpenGames.Engine.Engine
-import OpenGames.Engine.OpenGames
-import OpenGames.Preprocessor
 
 -- questions:
 -- - What do we improve in this model next?

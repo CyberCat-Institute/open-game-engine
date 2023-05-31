@@ -5,8 +5,7 @@
 
 module Examples.Amm where
 
-import Act.Execution
-import Act.Prelude
+import Act
 import OpenGames
 import OpenGames.Engine.OpenGames
 import OpenGames.Engine.OpticClass

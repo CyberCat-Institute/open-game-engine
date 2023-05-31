@@ -89,16 +89,16 @@ packages:
   original:
     hackage: hevm-0.51.0
 - completed:
-    commit: 061a43f5799760133769f6553e3031f5a20959ff
+    commit: eb9a1dd16c4533f7faaba52cc3e00e110d0b8487
     git: https://github.com/andrevidela/act.git
     name: act
     pantry-tree:
-      sha256: 79ca5f5a0d1474fd6dfdd7073f2028b9add511c4bc024c29db748e0e2012ed77
+      sha256: 78cc4643860657a2be70ba2f95d675f130c312800393a1cb52c88ec6701ce7bd
       size: 1217
     subdir: src
     version: 0.1.0.0
   original:
-    commit: 061a43f5799760133769f6553e3031f5a20959ff
+    commit: eb9a1dd16c4533f7faaba52cc3e00e110d0b8487
     git: https://github.com/andrevidela/act.git
     subdir: src
 snapshots:

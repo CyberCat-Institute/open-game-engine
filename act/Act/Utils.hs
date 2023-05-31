@@ -6,9 +6,11 @@ module Act.Utils where
 import Data.Char (toLower, toUpper)
 import Data.Text (Text)
 import EVM.ABI
--- import EVM.Solidity
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated as ACT
+
+storeTypeName :: String -> Name
+storeTypeName storeName = mkName (capitalise (storeName ++ "State"))
 
 getDeclId :: Decl -> String
 getDeclId (Decl _ name) = name

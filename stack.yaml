@@ -49,13 +49,10 @@ extra-deps:
  - spawn-0.3
  - spool-0.1
  - hevm-0.51.0
-   # - git: https://github.com/ethereum/hevm
-   #   commit: 852b1543db409529da772d368777079d80af8036
  - git: https://github.com/andrevidela/act.git
-   # commit: f05cf360d3412c1dd01b8497bbf54b547683c92f -- hacky version
    subdirs:
      - src
-   commit: 061a43f5799760133769f6553e3031f5a20959ff # zoe branch + act-internal
+   commit: eb9a1dd16c4533f7faaba52cc3e00e110d0b8487
 
 allow-newer: true
 
