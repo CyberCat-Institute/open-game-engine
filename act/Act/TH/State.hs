@@ -6,7 +6,7 @@ import Act.Utils
 import Data.Bifunctor
 import qualified Data.Map as M
 import Language.Haskell.TH.Syntax
-import Syntax.Annotated (Id, Store, SlotType)
+import Syntax.Annotated (Id, SlotType, Store)
 
 -- Generate a type for the global state of the contract
 stateDec4Interface :: Store -> [Dec]

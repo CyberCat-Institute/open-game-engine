@@ -12,9 +12,9 @@ import Act.TH.Extractor
 import Act.TH.State
 import Act.Utils
 import CLI
+import Data.Foldable
 import Data.List
 import Data.Validation
-import Data.Foldable
 import Error
 import GHC.IO.Unsafe
 import Language.Haskell.TH.Syntax as TH
@@ -55,7 +55,7 @@ generateContractFunction :: Contract -> Q [Dec]
 generateContractFunction (Contract constr behav) = do
   let contractName = uncapitalise (_cname constr)
   let interface = _cinterface constr
-  extractMethods <- generateExtractMethods [(_name b, _interface b) | b <- behav ]
+  extractMethods <- generateExtractMethods [(_name b, _interface b) | b <- behav]
   methodClauses <- traverse mapMethod2TH behav
   generateContractDecl contractName methodClauses extractMethods
 
@@ -111,7 +111,8 @@ generateContractDecl contractName clauses extractMethods = do
     -- The signature for a contract named "c" is given by the type
     -- c :: CState -> Transaction -> CState
     signatureForContract :: Dec
-    signatureForContract = SigD
+    signatureForContract =
+      SigD
         fnName
         (contractStateTypeName `arr` (ConT (mkName "Transaction") `arr` contractStateTypeName))
 

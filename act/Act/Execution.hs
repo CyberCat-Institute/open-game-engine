@@ -24,7 +24,6 @@ combine contracts [transaction] globalState =
   let Just trans = Prelude.lookup (contract transaction) contracts
    in trans globalState transaction
 combine contracts (t : ts) globalState =
-
   case Prelude.lookup (contract t) contracts of
     Just trans -> let newState = trans globalState t in combine contracts ts newState
     Nothing -> error ("got illegal transaction " ++ show t)

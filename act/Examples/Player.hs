@@ -67,7 +67,7 @@ allTransactionSwap =
   ]
 
 allTransaction x =
-  [ Transaction "amm2" "swap0" [AbiUIntType x] | x <- [1.. x]
+  [ Transaction "amm2" "swap0" [AbiUIntType x] | x <- [1 .. x]
   ]
 
 transactionOrders :: [[Transaction]]

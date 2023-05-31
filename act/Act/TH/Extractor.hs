@@ -71,7 +71,7 @@ constructorNameForType = mkName . show . toConstr
 -- variable and therefore the constructor to use for out `AbiType` the name will be used as
 -- binding variable and used in the body to return the value of that type
 patternForDecl :: Decl -> Q TH.Pat
-patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [] [VarP (mkName name)] )
+patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [] [VarP (mkName name)])
 
 templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
 templateCons a b = [p|$a : $b|]
