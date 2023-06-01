@@ -11,7 +11,6 @@ import Act.TH.Extractor
 import Act.TH.State
 import Act.Utils
 import CLI
-import Data.Foldable
 import Data.List
 import Data.Validation
 import Error
