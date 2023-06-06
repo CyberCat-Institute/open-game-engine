@@ -14,22 +14,22 @@ import OpenGames.Preprocessor
 -- This combines two contracts with non-shared state
 twoAmms = combine (unionContracts ("amm1", ammContract) ("amm2", ammContract))
 
-swapStrategy :: Int -> [Int]
+swapStrategy :: Word256 -> [Word256]
 swapStrategy n = [0, 1 .. n]
 
 bigPayoff finalUSD initialUSD swappedUSD =
   finalUSD + initialUSD - swappedUSD
 
-swap0 :: Int -> Transaction
-swap0 d = Transaction "" "swap0" [AbiUIntType d]
+swap0 :: Word256 -> Transaction
+swap0 d = Transaction "" "swap0" [AbiUInt 64 d]
 
-swap1 :: Int -> Transaction
-swap1 d = Transaction "" "swap1" [AbiUIntType d]
+swap1 :: Word256 -> Transaction
+swap1 d = Transaction "" "swap1" [AbiUInt 64 d]
 
-diffEur :: AmmState -> AmmState -> Int
+diffEur :: AmmState -> AmmState -> Word256
 diffEur (AmmState old _) (AmmState new _) = new - old
 
-diffUsd :: AmmState -> AmmState -> Int
+diffUsd :: AmmState -> AmmState -> Word256
 diffUsd (AmmState old _) (AmmState new _) = new - old
 
 playerAutomatic usd =
@@ -62,18 +62,18 @@ playerAutomatic usd =
 contracts = (combine [("amm2", ammContract), ("amm1", ammContract)])
 
 allTransactionSwap =
-  [ Transaction "amm1" "swap1" [AbiUIntType 5],
-    Transaction "amm2" "swap0" [AbiUIntType 10]
+  [ Transaction "amm1" "swap1" [AbiUInt 64 5],
+    Transaction "amm2" "swap0" [AbiUInt 64 10]
   ]
 
 allTransaction x =
-  [ Transaction "amm2" "swap0" [AbiUIntType x] | x <- [1 .. x]
+  [ Transaction "amm2" "swap0" [AbiUInt 64 x] | x <- [1 .. x]
   ]
 
 transactionOrders :: [[Transaction]]
 transactionOrders = permutations allTransactionSwap
 
-twoTokensPayoff :: AmmState -> AmmState -> Int
+twoTokensPayoff :: AmmState -> AmmState -> Word256
 twoTokensPayoff (AmmState t1old t2old) (AmmState t1new t2new) =
   (t1new - t1old) + (t2new - t2old)
 

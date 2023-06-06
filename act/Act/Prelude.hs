@@ -1,11 +1,12 @@
-module Act.Prelude (Transaction (..), AbiType (..)) where
+module Act.Prelude (Word256, Transaction (..), AbiType (..), AbiValue(..)) where
 
-import EVM.ABI (AbiType (..))
+import EVM.ABI (AbiType (..), AbiValue (..))
 import EVM.Solidity (SlotType)
+import Data.DoubleWord (Word256, Int256, signedWord)
 
 data Transaction = Transaction
   { contract :: String,
     method :: String,
-    arguments :: [AbiType]
+    arguments :: [AbiValue]
   }
   deriving (Eq, Show, Ord)

@@ -117,6 +117,7 @@ executable act-exec
     , comonad
     , containers
     , criterion
+    , data-dword
     , extra
     , fgl
     , file-embed

@@ -4,10 +4,13 @@
 module Act.Utils where
 
 import Data.Char (toLower, toUpper)
-import Data.Text (Text)
 import EVM.ABI
+import EVM.Types (Addr)
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated as ACT
+import Data.DoubleWord    (Word256)
+import Data.Vector (Vector)
+
 
 storeTypeName :: String -> Name
 storeTypeName storeName = mkName (capitalise (storeName ++ "State"))
@@ -21,7 +24,7 @@ getDeclType (Decl ty _) = ty
 mapEVMTypes :: SlotType -> Type
 mapEVMTypes (StorageMapping _ _) = undefined
 mapEVMTypes (StorageValue (ContractType contractRef)) = undefined -- fill up to get the storage of a contract reference
-mapEVMTypes (StorageValue (PrimitiveType (AbiUIntType n))) = ConT ''Int
+mapEVMTypes (StorageValue (PrimitiveType (AbiUIntType n))) = ConT ''Word256
 mapEVMTypes (StorageValue (PrimitiveType (AbiIntType n))) = ConT ''Int
 mapEVMTypes (StorageValue (PrimitiveType AbiAddressType)) = undefined
 mapEVMTypes (StorageValue (PrimitiveType AbiBoolType)) = ConT ''Bool
@@ -31,18 +34,20 @@ mapEVMTypes (StorageValue (PrimitiveType AbiStringType)) = undefined
 mapEVMTypes (StorageValue (PrimitiveType (AbiArrayDynamicType ty))) = undefined
 mapEVMTypes (StorageValue (PrimitiveType (AbiArrayType n ty))) = undefined
 mapEVMTypes (StorageValue (PrimitiveType (AbiTupleType _))) = undefined
+mapEVMTypes (StorageValue (PrimitiveType AbiFunctionType)) = undefined
 
 mapAbiTypes :: AbiType -> Type
-mapAbiTypes (AbiUIntType n) = ConT ''Int
+mapAbiTypes (AbiUIntType n) = ConT ''Word256
 mapAbiTypes (AbiIntType n) = ConT ''Int
-mapAbiTypes AbiAddressType = undefined
+mapAbiTypes AbiAddressType = ConT ''Addr
 mapAbiTypes AbiBoolType = ConT ''Bool
-mapAbiTypes (AbiBytesType n) = undefined
-mapAbiTypes AbiBytesDynamicType = undefined
-mapAbiTypes AbiStringType = ConT ''Text
-mapAbiTypes (AbiArrayDynamicType ty) = undefined
-mapAbiTypes (AbiArrayType n ty) = undefined
-mapAbiTypes (AbiTupleType vty) = undefined
+mapAbiTypes (AbiBytesType n) = ConT ''ByteString
+mapAbiTypes AbiBytesDynamicType = ConT ''ByteString
+mapAbiTypes AbiStringType = ConT ''ByteString
+mapAbiTypes (AbiArrayDynamicType ty) = ConT ''Vector `AppT` ConT ''AbiType
+mapAbiTypes (AbiArrayType n ty) = ConT ''Vector `AppT` ConT ''AbiType
+mapAbiTypes (AbiTupleType vty) = ConT ''Vector `AppT` ConT ''AbiType
+mapAbiTypes (AbiFunctionType) = error "function types not supported"
 
 capitalise :: String -> String
 capitalise [] = []
@@ -58,6 +63,8 @@ defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
 -- todo: Complete this function
 accessStorage :: ACT.StorageRef -> TH.Exp
 accessStorage (SVar _ _ varName) = VarE $ mkName varName
+accessStorage (SMapping _ _ _) = error "contract storage access unimplemented"
+accessStorage (SField _ _ _ _) = error "contract storage field access unimplemented"
 
 mapExp :: ACT.Exp t -> Q TH.Exp
 -- mapExp _ = VarE (mkName "undefined")
@@ -96,3 +103,4 @@ mapExp (NEq _ _ x y) = [|$(mapExp x) /= $(mapExp y)|]
 mapExp (ITE _ condition _then _else) = [|if $(mapExp condition) then $(mapExp _then) else $(mapExp _else)|]
 mapExp (Var _ _ id) = pure (VarE $ mkName id)
 mapExp (TEntry _ _ (Item _ _ storage)) = pure (AppE (accessStorage storage) (VarE (mkName "contractState")))
+mapExp (Create _ _ _ _) = error "create unimplemented"

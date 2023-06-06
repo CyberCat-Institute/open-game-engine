@@ -91,6 +91,7 @@ executables:
       - -fwarn-unused-imports
     dependencies:
       - act
+      - data-dword
       - open-games-hs
       - file-embed
       - bytestring

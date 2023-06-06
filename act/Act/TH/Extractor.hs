@@ -49,7 +49,7 @@ generateExtract (name, signature) = do
   let signatureStr = transactionSignature signature
   let asStringSplice = pure (LitE (StringL (parens signatureStr)))
   incorrectPatternError <- [|error ("unexpected arguments, got: " ++ show x ++ "\nexpected: " ++ $asStringSplice)|]
-  patterns <- patterns4Interface signature
+  valuePatterns <- valuePatterns4Interface signature
   pure
     [ SigD
         fnName
@@ -57,30 +57,40 @@ generateExtract (name, signature) = do
       FunD
         fnName
         [ Clause
-            [patterns]
+            [valuePatterns]
             (NormalB (expression4Interface signature))
             [],
           Clause [VarP (mkName "x")] (NormalB (incorrectPatternError)) []
         ]
     ]
 
-constructorNameForType :: AbiType -> Name
-constructorNameForType = mkName . show . toConstr
+constructorNameForType :: String -> AbiType -> Pat
+constructorNameForType name (AbiUIntType _)          = ConP (mkName "AbiUInt") []         [WildP, VarP (mkName name)]
+constructorNameForType name (AbiIntType _)           = ConP (mkName "AbiInt") []          [WildP, VarP (mkName name)]
+constructorNameForType name (AbiAddressType)         = ConP (mkName "AbiAddress") []      [VarP (mkName name)]
+constructorNameForType name (AbiBoolType)            = ConP (mkName "AbiBool") []         [VarP (mkName name)]
+constructorNameForType name (AbiBytesType _)         = ConP (mkName "AbiBytes") []        [WildP, VarP (mkName name)]
+constructorNameForType name (AbiBytesDynamicType)    = ConP (mkName "AbiBytesDynamic") [] [VarP (mkName name)]
+constructorNameForType name (AbiStringType)          = ConP (mkName "AbiString") []       [VarP (mkName name)]
+constructorNameForType name (AbiArrayDynamicType ty) = ConP (mkName "AbiArrayDynamic") [] [WildP, VarP (mkName name)]
+constructorNameForType name (AbiArrayType size ty)   = ConP (mkName "AbiArray") []        [WildP, WildP, VarP (mkName name)]
+constructorNameForType name (AbiTupleType types)     = ConP (mkName "AbiTuple") []        [VarP (mkName name)]
+constructorNameForType name (AbiFunctionType)        = error "functions unsupported"
 
 -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT
 -- variable and therefore the constructor to use for out `AbiType` the name will be used as
 -- binding variable and used in the body to return the value of that type
 patternForDecl :: Decl -> Q TH.Pat
-patternForDecl (Decl ty name) = pure (ConP (constructorNameForType ty) [] [VarP (mkName name)])
+patternForDecl (Decl ty name) = pure (constructorNameForType name ty)
 
 templateCons :: Q TH.Pat -> Q TH.Pat -> Q TH.Pat
 templateCons a b = [p|$a : $b|]
 
 -- Generate the pattern for matching on the list of arguments of a transaction, the `Interface`
--- describes the argument tuple as a list of types and we convert it into a list-pattern
--- for each type. The type is used to create a constructor-pattern for `AbiType`
-patterns4Interface :: Interface -> Q TH.Pat
-patterns4Interface (Interface _ types) = foldr templateCons [p|[]|] $ fmap patternForDecl types
+-- describes the argument tuple as a list of values and we convert it into a list-pattern
+-- for each value. The type is used to create a constructor-pattern for `AbiType`
+valuePatterns4Interface :: Interface -> Q TH.Pat
+valuePatterns4Interface (Interface _ types) = foldr templateCons [p|[]|] $ fmap patternForDecl types
 
 -- Convert an ACT Interface into the tuple of values extracted from the list of arguments
 -- This implement the extractor function which signature is given by `extractorTypeForSignature`
@@ -111,4 +121,4 @@ convertDecls (Decl ty _ : decls) =
 -- The argument tuple is defined by `convertDecls` the implementation of the
 -- function is handled by `expression4Interface`
 extractorTypeForSignature :: Interface -> Q Type
-extractorTypeForSignature (Interface _ decls) = [t|[AbiType] -> $(pure (convertDecls decls))|]
+extractorTypeForSignature (Interface _ decls) = [t|[AbiValue] -> $(pure (convertDecls decls))|]
