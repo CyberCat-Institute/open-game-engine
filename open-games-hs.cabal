@@ -101,7 +101,7 @@ executable act-exec
       Act.TH.Extractor
       Act.TH.State
       Act.Utils
-      Examples.Amm
+      EVM.TH
       Examples.AmmGenerated
       Examples.Player
       Paths_open_games_hs
