@@ -93,6 +93,8 @@ executables:
       - act
       - data-dword
       - open-games-hs
+      - optics-core
+      - optics-extra
       - file-embed
       - bytestring
       - validation

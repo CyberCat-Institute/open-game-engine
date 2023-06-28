@@ -132,6 +132,8 @@ executable act-exec
     , mtl
     , mwc-random
     , open-games-hs
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability

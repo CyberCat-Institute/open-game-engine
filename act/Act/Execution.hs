@@ -1,7 +1,13 @@
+{-# LANGUAGE DuplicateRecordFields
+    , NoFieldSelectors
+    , OverloadedRecordDot
+ #-}
 module Act.Execution where
 
 import Act.Prelude
 import Data.Bifunctor
+import EVM.Types
+import Data.ByteString
 
 -- An ACT contract is a pair of a _name_ and a function that updates
 -- a state `s` given a transaction
@@ -21,9 +27,9 @@ unionContracts (n1, f1) (n2, f2) =
 -- performs a list of transaction on the given set of contracts.
 combine :: [ActContract s] -> [Transaction] -> s -> s
 combine contracts [transaction] globalState =
-  let Just trans = Prelude.lookup (contract transaction) contracts
+  let Just trans = Prelude.lookup (transaction.contract) contracts
    in trans globalState transaction
 combine contracts (t : ts) globalState =
-  case Prelude.lookup (contract t) contracts of
+  case Prelude.lookup (t.contract) contracts of
     Just trans -> let newState = trans globalState t in combine contracts ts newState
     Nothing -> error ("got illegal transaction " ++ show t)

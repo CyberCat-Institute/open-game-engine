@@ -95,6 +95,10 @@ swapSequence =
   returns   : ;
 
   :-------:
-  outputs: ;
-  returns : ;
+  outputs   : ;
+  returns   : ;
 |]
+
+-- test out 2 erc contracts
+-- test out multi-contract calls
+--
