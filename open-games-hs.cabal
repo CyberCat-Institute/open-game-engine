@@ -103,6 +103,7 @@ executable act-exec
       Act.Utils
       EVM.TH
       Examples.AmmGenerated
+      Examples.EVM
       Examples.Player
       Paths_open_games_hs
   hs-source-dirs:

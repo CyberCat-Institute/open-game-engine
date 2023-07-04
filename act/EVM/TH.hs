@@ -1,10 +1,11 @@
 {-# LANGUAGE DuplicateRecordFields, OverloadedLabels, OverloadedRecordDot #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module EVM.TH where
 
 import Prelude hiding (FilePath, readFile)
-import Data.Text (Text, pack)
-import Data.Text.IO
+import Data.Text (Text, pack, unpack)
+import Data.Text.IO (readFile)
 import Data.Map as Map
 import Data.ByteString (ByteString)
 import Data.Vector  as Vector (fromList)
@@ -18,6 +19,8 @@ import EVM.FeeSchedule
 import EVM (blankState, initialContract)
 import Act.Prelude (EthTransaction(..))
 import Control.Monad.Trans.State.Strict (State, put)
+
+import GHC.IO.Unsafe
 
 makeCallData :: EthTransaction -> ByteString
 makeCallData (EthTransaction _ method args _ _) =
@@ -88,20 +91,22 @@ emptyVM contracts = VM
   bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
 -- setup a new VM state from the list of contracts we are using
-loadContracts :: [(Addr, ByteString)] -> State VM ()
-loadContracts contracts =
+loadIntoVM :: [(Addr, ByteString)] -> State VM ()
+loadIntoVM contracts =
   put (emptyVM contracts)
 
 -- import a list of contracts as an open game
 -- - first we read off all the files and translate them into solidity bytecode
 -- - Then we associate each contract to a contract name which
-evm2OG :: Map String [Text] -> IO (State VM ())
-evm2OG contractMap = do
-  files :: [(Text, Text)] <- traverse (\filename -> (pack filename,) <$> readFile filename) (keys contractMap)
+loadEVM :: [(Text, Text)] -> IO (State VM ())
+loadEVM contracts = do
+  files :: [(Text, Text)] <- traverse (\(name, filename) -> (name,) <$> readFile (unpack filename)) (contracts)
   contracts :: [ByteString] <- traverse (\(nm, body) -> do
       Just bytecode <- solcRuntime nm body
       pure bytecode) files
   let bytecodeMap :: [(Addr, ByteString)] = zip [0 .. ] contracts
-  let newVM = loadContracts bytecodeMap
+  let newVM = loadIntoVM bytecodeMap
   pure newVM
 
+loadContracts :: [(Text,Text)] -> Q [Dec]
+loadContracts arg = [d|vmState :: State VM (); vmState = $([e|unsafePerformIO $ loadEVM arg|])|]
