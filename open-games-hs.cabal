@@ -139,6 +139,7 @@ executable act-exec
     , probability
     , profunctors
     , random
+    , rosezipper
     , template-haskell
     , text
     , transformers

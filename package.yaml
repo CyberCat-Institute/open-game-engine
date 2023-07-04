@@ -95,6 +95,7 @@ executables:
       - open-games-hs
       - optics-core
       - optics-extra
+      - rosezipper
       - file-embed
       - bytestring
       - validation
