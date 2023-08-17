@@ -32,6 +32,42 @@ makeCallData :: EthTransaction -> ByteString
 makeCallData (EthTransaction _ method args _ _) =
   abiMethod method (AbiTuple (Vector.fromList args))
 
+sendTransaction :: Contract -> EthTransaction -> VM -> VM
+sendTransaction cts tx st = st { frames = [txFrame] }
+  where
+  txFrame :: Frame
+  txFrame = Frame frameCtx frameState
+
+  frameCtx :: FrameContext
+  frameCtx = CallContext
+      { target        = tx.contract
+      , context       = 0
+      , offset        = 0
+      , size          = 0
+      , codehash      = cts.codehash
+      , abi           = Nothing
+      , calldata      = ConcreteBuf (makeCallData tx)
+      , callreversion = (undefined, undefined)
+      , subState      = SubState mempty mempty mempty mempty mempty
+      }
+
+  frameState :: FrameState
+  frameState = FrameState
+      { contract     = tx.contract
+      , codeContract = undefined
+      , code         = cts.contractcode
+      , pc           = 0
+      , stack        = mempty
+      , memory       = undefined
+      , memorySize   = 0
+      , calldata     = ConcreteBuf (makeCallData tx)
+      , callvalue    = Lit 0
+      , caller       = Lit 0
+      , gas          = tx.gas
+      , returndata   = undefined
+      , static       = undefined
+      }
+
 emptyVM :: [(Addr, ByteString)] -> VM
 emptyVM contracts =
   VM

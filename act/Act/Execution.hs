@@ -31,3 +31,7 @@ combine contracts (t : ts) globalState =
     Just trans -> let newState = trans globalState t in combine contracts ts newState
     Nothing -> error ("got illegal transaction " ++ show t)
 combine _ [] st = error "we were not given any transactions"
+
+class ExecEnv st where
+  send :: Transaction -> st -> st
+  run :: st -> st
