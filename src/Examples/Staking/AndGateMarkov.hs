@@ -6,12 +6,12 @@
 
 module Examples.Staking.AndGateMarkov where
 
-import Control.Arrow (Kleisli (..))
 import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
-import Debug.Trace
 import OpenGames.Engine.Engine
 import OpenGames.Preprocessor
+
+import Debug.Trace
 
 -- TODO change the structure of the continuation iteration
 -- DONE What effect happens through the state hack and the discounting? The discounting at least does not seem to make a difference.

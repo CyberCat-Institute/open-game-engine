@@ -34,7 +34,6 @@ module OpenGames.Engine.TLL where
 import Control.Applicative
 import Data.Kind
 import OpenGames.Engine.Nat
-import OpenGames.Engine.Vec
 
 infixr 6 :-
 
@@ -163,7 +162,7 @@ type family LastL xs where
   LastL '[x] = x
   LastL (x ': xs) = LastL xs
 
-lastL :: List a -> LastL a
+lastL :: List (a ': as) -> LastL (a ': as)
 lastL (x :- Nil) = x
 lastL (x :- xs@(_ :- _)) = lastL xs
 

@@ -6,7 +6,6 @@
 
 module Examples.Markov.RepeatedPDNonState where
 
-import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames hiding
   ( Agent (..),
     StochasticStatefulBayesianOpenGame (..),

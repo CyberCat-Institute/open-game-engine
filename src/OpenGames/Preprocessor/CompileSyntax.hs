@@ -9,10 +9,8 @@ import Data.Char
 -- import OpenGames.Preprocessor.CompileBlock
 
 import Language.Haskell.TH as TH
-import Language.Haskell.TH.Syntax
 import OpenGames.Preprocessor.BlockSyntax
 import OpenGames.Preprocessor.Parser
-import OpenGames.Preprocessor.RuntimeAST
 import Prelude hiding (lines)
 
 compileLiteral :: Literal -> Exp
@@ -73,6 +71,7 @@ compilePattern (PLit (LString str)) = LitP $ StringL str
 compilePattern (PList ls) = ListP $ fmap compilePattern ls
 compilePattern (PTuple ts) = TupP $ fmap compilePattern ts
 compilePattern (PVar i) = VarP (mkName i)
+compilePattern (PCon nm args) = ConP (mkName nm) [] (fmap compilePattern args)
 
 compLine :: Line (Maybe String) Pattern Lambda -> Line (Maybe String) Pat Exp
 compLine = bimap compilePattern compileLambda

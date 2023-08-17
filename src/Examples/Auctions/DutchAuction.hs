@@ -16,7 +16,6 @@ module Examples.Auctions.DutchAuction where
 
 import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
-import Examples.Auctions.AuctionSupportFunctions
 import OpenGames
 import OpenGames.Preprocessor
 

@@ -154,6 +154,7 @@ mapMethod2TH (Behaviour methodName _ (Interface _ args) _ _ _ actExp _) = do
     rewriteOne (Constant loc) = pure (mkName "unimplemented", VarE (mkName "undefined"))
     rewriteOne (Rewrite (Update ty (Item _ _ (SVar _ _ varName)) newValue)) =
       (mkName varName,) <$> mapExp newValue
+    rewriteOne _ = error "unsupported method"
 
 -- The rest of this file is for debugging purposes
 

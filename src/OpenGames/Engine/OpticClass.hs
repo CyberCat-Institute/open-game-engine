@@ -23,11 +23,7 @@ where
 
 import Control.Monad.State hiding (state)
 import Data.HashMap as HM hiding (map, mapMaybe, null)
-import Data.Maybe
-import qualified Data.Vector as V
 import Numeric.Probability.Distribution hiding (lift)
-import System.Random.MWC.CondensedTable
-import System.Random.Stateful
 
 class Optic o where
   lens :: (s -> a) -> (s -> b -> t) -> o s t a b

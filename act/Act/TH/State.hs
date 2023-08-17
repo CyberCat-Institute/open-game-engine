@@ -3,7 +3,6 @@
 module Act.TH.State where
 
 import Act.Utils
-import Data.Bifunctor
 import qualified Data.Map as M
 import Language.Haskell.TH.Syntax
 import Syntax.Annotated (Id, SlotType, Store)

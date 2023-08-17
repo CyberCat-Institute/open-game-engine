@@ -89,6 +89,7 @@ executables:
     source-dirs:         act
     ghc-options:
       - -fwarn-unused-imports
+      - -Wno-partial-type-signatures
     dependencies:
       - act
       - data-dword

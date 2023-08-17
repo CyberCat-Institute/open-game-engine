@@ -8,9 +8,7 @@ module Examples.Markov.RepeatedPD where
 
 import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
-import Debug.Trace
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
-import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames
 import OpenGames.Preprocessor
 

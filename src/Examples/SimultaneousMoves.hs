@@ -4,9 +4,7 @@
 
 module Examples.SimultaneousMoves where
 
-import Control.Arrow (Kleisli (..))
 import OpenGames
-import OpenGames.Engine.BayesianGames
 import OpenGames.Preprocessor
 
 --------------

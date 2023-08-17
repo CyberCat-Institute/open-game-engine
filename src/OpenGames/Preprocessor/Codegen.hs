@@ -12,7 +12,6 @@ module OpenGames.Preprocessor.Codegen
 where
 
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax hiding (lift)
 import OpenGames.Preprocessor.RuntimeAST
 
 combinePats :: [Pat] -> Pat
@@ -33,6 +32,7 @@ patToExp (TupP e) = mkTup (map (patToExp) e)
 patToExp (LitP e) = LitE e
 patToExp (ListP e) = ListE (fmap patToExp e)
 patToExp (ConP n _ e) = apply (VarE n) (fmap patToExp e)
+patToExp _ = error "unsupported pattern"
 
 interpretFunction :: FunctionExpression Pat Exp -> Q Exp
 interpretFunction Identity = [|id|]

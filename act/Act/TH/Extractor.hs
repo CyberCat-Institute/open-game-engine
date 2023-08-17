@@ -8,7 +8,6 @@ import Act.Prelude
 import Act.Utils
 import Data.Data
 import Data.List
-import EVM.ABI
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated
 
@@ -65,17 +64,17 @@ generateExtract (name, signature) = do
     ]
 
 constructorNameForType :: String -> AbiType -> Pat
-constructorNameForType name (AbiUIntType _)          = ConP (mkName "AbiUInt") []         [WildP, VarP (mkName name)]
-constructorNameForType name (AbiIntType _)           = ConP (mkName "AbiInt") []          [WildP, VarP (mkName name)]
-constructorNameForType name (AbiAddressType)         = ConP (mkName "AbiAddress") []      [VarP (mkName name)]
-constructorNameForType name (AbiBoolType)            = ConP (mkName "AbiBool") []         [VarP (mkName name)]
-constructorNameForType name (AbiBytesType _)         = ConP (mkName "AbiBytes") []        [WildP, VarP (mkName name)]
-constructorNameForType name (AbiBytesDynamicType)    = ConP (mkName "AbiBytesDynamic") [] [VarP (mkName name)]
-constructorNameForType name (AbiStringType)          = ConP (mkName "AbiString") []       [VarP (mkName name)]
+constructorNameForType name (AbiUIntType _) = ConP (mkName "AbiUInt") [] [WildP, VarP (mkName name)]
+constructorNameForType name (AbiIntType _) = ConP (mkName "AbiInt") [] [WildP, VarP (mkName name)]
+constructorNameForType name (AbiAddressType) = ConP (mkName "AbiAddress") [] [VarP (mkName name)]
+constructorNameForType name (AbiBoolType) = ConP (mkName "AbiBool") [] [VarP (mkName name)]
+constructorNameForType name (AbiBytesType _) = ConP (mkName "AbiBytes") [] [WildP, VarP (mkName name)]
+constructorNameForType name (AbiBytesDynamicType) = ConP (mkName "AbiBytesDynamic") [] [VarP (mkName name)]
+constructorNameForType name (AbiStringType) = ConP (mkName "AbiString") [] [VarP (mkName name)]
 constructorNameForType name (AbiArrayDynamicType ty) = ConP (mkName "AbiArrayDynamic") [] [WildP, VarP (mkName name)]
-constructorNameForType name (AbiArrayType size ty)   = ConP (mkName "AbiArray") []        [WildP, WildP, VarP (mkName name)]
-constructorNameForType name (AbiTupleType types)     = ConP (mkName "AbiTuple") []        [VarP (mkName name)]
-constructorNameForType name (AbiFunctionType)        = error "functions unsupported"
+constructorNameForType name (AbiArrayType size ty) = ConP (mkName "AbiArray") [] [WildP, WildP, VarP (mkName name)]
+constructorNameForType name (AbiTupleType types) = ConP (mkName "AbiTuple") [] [VarP (mkName name)]
+constructorNameForType name (AbiFunctionType) = error "functions unsupported"
 
 -- Generate a pattern for a given declaration, the declaration tells us the type of the ACT
 -- variable and therefore the constructor to use for out `AbiType` the name will be used as

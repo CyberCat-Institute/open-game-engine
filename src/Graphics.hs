@@ -10,12 +10,10 @@ import Control.Lens.Combinators
 import Data.Data.Lens
 import Data.Graph.Inductive.Graph
 import Data.Graph.Inductive.PatriciaTree
-import Data.GraphViz as GV
-import Data.List
+import Data.GraphViz as GV hiding (Both)
 import Data.Maybe
 import Debug.Trace
 import Language.Haskell.TH
-import Language.Haskell.TH.Lens
 import OpenGames.Preprocessor.BlockSyntax
 
 freshLabel :: [String] -> [LNode String]
@@ -33,6 +31,7 @@ data ArrowType = Contravariant String | Covariant String | Both String
 instance Labellable ArrowType where
   toLabelValue (Contravariant s) = toLabelValue s
   toLabelValue (Covariant s) = toLabelValue s
+  toLabelValue (Both x) = undefined
 
 -- | An expression contains the name `Name` if any of the constructor of `Exp` uses it
 containsName :: Name -> Exp -> Bool
@@ -55,6 +54,7 @@ getName (Graphics.Both nm) = nm
 remove :: Int -> [a] -> [a]
 remove 0 (x : xs) = xs
 remove n (y : ys) = y : remove (n - 1) ys
+remove _ _ = error "cannot remove from an empty list"
 
 convertBoth :: (a -> a -> Bool) -> (a -> a) -> [a] -> [a]
 convertBoth test map [] = []

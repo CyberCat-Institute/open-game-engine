@@ -15,16 +15,13 @@ import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
 import Data.Utils
 import qualified Data.Vector as V
-import Debug.Trace
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames hiding (Agent, discount, fromFunctions, fromLens)
 import OpenGames.Engine.IOGames
 import OpenGames.Preprocessor
 import System.IO.Unsafe
-import System.Random
 import System.Random.MWC.CondensedTable
-import System.Random.Stateful
 
 ---------------------------------------------
 -- Contains a first, very, very shaky version

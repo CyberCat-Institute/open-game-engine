@@ -9,7 +9,7 @@ module Examples.Markov.NStageMarkov where
 import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
 import Data.Tuple.Extra (uncurry3)
-import Examples.SimultaneousMoves (ActionPD (..), Location (..))
+import Examples.SimultaneousMoves (ActionPD (..))
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames
 import OpenGames.Preprocessor

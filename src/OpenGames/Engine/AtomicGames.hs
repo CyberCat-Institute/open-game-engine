@@ -13,7 +13,6 @@ module OpenGames.Engine.AtomicGames
   )
 where
 
-import Language.Haskell.TH
 import OpenGames.Engine.BayesianGames
 import OpenGames.Engine.OpenGames
 import OpenGames.Engine.OpticClass

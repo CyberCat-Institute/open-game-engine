@@ -10,7 +10,6 @@
 
 module Examples.Auctions.ChooseReservePrice where
 
-import Examples.Auctions.AuctionSupportFunctions
 import Examples.Auctions.SimultaneousBidAuction
 import OpenGames
 import OpenGames.Preprocessor

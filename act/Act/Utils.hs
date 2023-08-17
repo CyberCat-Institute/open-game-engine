@@ -4,13 +4,12 @@
 module Act.Utils where
 
 import Data.Char (toLower, toUpper)
+import Data.DoubleWord (Word256)
+import Data.Vector (Vector)
 import EVM.ABI
 import EVM.Types (Addr)
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated as ACT
-import Data.DoubleWord    (Word256)
-import Data.Vector (Vector)
-
 
 storeTypeName :: String -> Name
 storeTypeName storeName = mkName (capitalise (storeName ++ "State"))

@@ -10,7 +10,6 @@ module Examples.Decision
   )
 where
 
-import GHC.Generics
 import OpenGames
 import OpenGames.Preprocessor
 

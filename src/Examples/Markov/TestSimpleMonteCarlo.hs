@@ -6,18 +6,11 @@
 
 module Examples.Markov.TestSimpleMonteCarlo where
 
-import Control.Monad.State hiding (lift, state, void)
-import qualified Control.Monad.State as ST
-import qualified Data.Vector as V
 import Debug.Trace
 import Examples.Markov.TestSimpleMonteCarlo.Continuation
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
-import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames
 import OpenGames.Preprocessor
-import System.Random
-import System.Random.MWC.CondensedTable
-import System.Random.Stateful
 
 ------------------------------------------------------------
 -- Combines Bayesian game evaluation of the first stage with

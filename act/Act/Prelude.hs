@@ -1,15 +1,13 @@
-{-# LANGUAGE DuplicateRecordFields
-    , NoFieldSelectors
-    , OverloadedRecordDot
- #-}
-module Act.Prelude (Word256, EthTransaction(..), Transaction (..), AbiType (..), AbiValue(..)) where
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE NoFieldSelectors #-}
 
-import EVM.ABI (AbiType (..), AbiValue (..))
-import EVM.Solidity (SlotType)
-import EVM.Types (Addr, W256)
+module Act.Prelude (Word256, EthTransaction (..), Transaction (..), AbiType (..), AbiValue (..)) where
 
-import Data.Text
 import Data.DoubleWord (Word256)
+import Data.Text
+import EVM.ABI (AbiType (..), AbiValue (..))
+import EVM.Types (Addr, W256)
 
 data Transaction = Transaction
   { contract :: String,

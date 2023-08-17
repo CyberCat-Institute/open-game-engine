@@ -108,7 +108,7 @@ executable act-exec
       Paths_open_games_hs
   hs-source-dirs:
       act
-  ghc-options: -fwarn-unused-imports
+  ghc-options: -fwarn-unused-imports -Wno-partial-type-signatures
   build-depends:
       QuickCheck
     , act

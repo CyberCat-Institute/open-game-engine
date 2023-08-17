@@ -38,3 +38,4 @@ mkVec a = a :> Empty
 -- Given a non-empty vector, get its first element
 vecHead :: Vec (S n) a -> a
 vecHead (x :> _) = x
+vecHead _ = error "impossible"

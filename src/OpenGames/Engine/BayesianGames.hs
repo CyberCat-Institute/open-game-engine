@@ -37,15 +37,12 @@ where
 
 import Control.Arrow hiding ((+++), (+:+))
 import Control.Monad.State hiding (state)
-import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 -- temporary lol
 
-import Data.List (maximumBy)
 import Data.Ord (comparing)
 import Data.Utils
-import GHC.TypeLits
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.OpenGames hiding (lift)
@@ -229,19 +226,6 @@ dependentDecisionIO name _ =
 
 unsafeConcat :: forall b1 b2. List (TMap Maybe b1) -> List (TMap Maybe b2) -> List (TMap Maybe (b1 +:+ b2))
 unsafeConcat = unsafeCoerce (+:+)
-
-data Transaction = T {name :: String, args :: [Int]}
-
-type ActContract s r = (String, (s, Transaction) -> (r, s))
-
-combine :: [ActContract s r] -> [Transaction] -> s -> ([r], s)
-combine contracts [transaction] globalState =
-  let Just trans = Prelude.lookup (name transaction) contracts
-   in first pure (trans (globalState, transaction))
-combine contracts (t : ts) globalState =
-  let Just trans = Prelude.lookup (name t) contracts
-      (result, newState) = trans (globalState, t)
-   in first (result :) (combine contracts ts newState)
 
 (+++) ::
   forall a1 a2 b1 b2 x1 x2 s r y1 y2.

@@ -8,17 +8,10 @@ module Examples.Token.Concrete where
 -- - abstract token
 -- -
 
-import Control.Monad.Identity
--- import OpenGames.Engine.BayesianGamesNonState
 import Data.HashMap as M
-import Data.List
 import Data.Maybe
-import GHC.Utils.Misc
 import OpenGames
-import OpenGames.Engine.Diagnostics
-import OpenGames.Engine.Nat
 import OpenGames.Preprocessor
-import Syntax.Annotated
 
 type Address = String
 

@@ -23,14 +23,8 @@ module OpenGames.Engine.BayesianGamesNonState
 where
 
 import Control.Arrow hiding ((+:+))
-import Control.Monad.State hiding (state)
-import Control.Monad.Trans.Class
 import Data.Foldable
-import Data.HashMap as HM hiding (map, mapMaybe, null)
-import Data.List (maximumBy)
 import Data.Ord (comparing)
-import Data.Utils
-import GHC.TypeLits
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.OpenGames hiding (lift)

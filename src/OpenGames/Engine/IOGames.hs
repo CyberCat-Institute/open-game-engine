@@ -23,19 +23,11 @@ module OpenGames.Engine.IOGames
 where
 
 import Control.Arrow hiding ((+:+))
-import Control.Monad.Bayes.Weighted
 import Control.Monad.State hiding (state)
-import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
-import Data.List (maximumBy)
 import Data.Ord (comparing)
 import Data.Utils
-import qualified Data.Vector as V
-import Debug.Trace
-import GHC.TypeLits
-import Numeric.Probability.Distribution hiding (lift, map)
-import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL

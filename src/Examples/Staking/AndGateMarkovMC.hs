@@ -8,14 +8,11 @@
 
 module Examples.Staking.AndGateMarkovMC where
 
-import Control.Arrow (Kleisli (..))
 import Control.Monad.State hiding (lift, state, void)
 import qualified Control.Monad.State as ST
 import qualified Data.Vector as V
-import Debug.Trace
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames hiding (Agent, discount, fromFunctions, fromLens, nature)
-import OpenGames.Engine.BayesianGames (playDeterministically, uniformDist)
 import OpenGames.Engine.IOGames
 import OpenGames.Preprocessor
 import System.Random
