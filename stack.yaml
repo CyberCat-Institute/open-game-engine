@@ -89,4 +89,4 @@ ghc-options:
 
 nix:
   enable: true
-  packages: [libff, secp256k1, zlib]
+  packages: [libff, secp256k1, zlib, solc]

@@ -1,11 +1,14 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
 module EVM.TH where
+
+import EVM.Fetch
 
 import Act.Prelude (EthTransaction (..))
 import Control.Monad.Trans.State.Strict (State, put)
@@ -15,58 +18,51 @@ import Data.Text (Text, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
-import EVM (blankState, initialContract)
+import EVM (blankState, initialContract, loadContract, resetState)
 import EVM.ABI
 import EVM.FeeSchedule
 import EVM.Solidity (solcRuntime)
 import EVM.Types
+import EVM.Expr
+import EVM.Exec (exec, run)
+import EVM.Transaction (initTx)
 import GHC.IO.Unsafe
 import Language.Haskell.TH.Syntax as TH
 import Prelude hiding (FilePath, readFile)
+import EVM.Stepper
+
+import Optics.Core
+import Optics.State
+import Optics.State.Operators
+
+import Control.Monad.Trans.State.Strict
+
 
 -- put this in sttate.callData
 -- run it to execute the transaction
 -- put more for subsequent calls
 -- run more for more results
-makeCallData :: EthTransaction -> ByteString
-makeCallData (EthTransaction _ method args _ _) =
-  abiMethod method (AbiTuple (Vector.fromList args))
+makeCallData :: EthTransaction -> Expr Buf
+makeCallData (EthTransaction _ caller method args _ _) =
+  ConcreteBuf $ abiMethod method (AbiTuple (Vector.fromList args))
 
-sendTransaction :: Contract -> EthTransaction -> VM -> VM
-sendTransaction cts tx st = st { frames = [txFrame] }
-  where
-  txFrame :: Frame
-  txFrame = Frame frameCtx frameState
+makeTxCall :: EthTransaction -> EVM ()
+makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
+  resetState
+  assign (#tx % #isCreate) False
+  execState (loadContract addr) <$> get >>= put
+  assign (#state % #calldata) (makeCallData tx)
+  assign (#state % #caller) (litAddr caller)
+  assign (#state % #gas) gas
+  -- origin <-
+  --     initialContract (RuntimeCode (ConcreteRuntimeCode ""))
+  -- let insufficientBal = maybe False
+  --   (\b -> b < params.gasprice * (into params.gasCall))
+  --   (maybeLitWord origin.balance)
+  -- when insufficientBal $ internalError "insufficient balance for gas cost"
+  vm <- get
+  put $ initTx vm
 
-  frameCtx :: FrameContext
-  frameCtx = CallContext
-      { target        = tx.contract
-      , context       = 0
-      , offset        = 0
-      , size          = 0
-      , codehash      = cts.codehash
-      , abi           = Nothing
-      , calldata      = ConcreteBuf (makeCallData tx)
-      , callreversion = (undefined, undefined)
-      , subState      = SubState mempty mempty mempty mempty mempty
-      }
-
-  frameState :: FrameState
-  frameState = FrameState
-      { contract     = tx.contract
-      , codeContract = undefined
-      , code         = cts.contractcode
-      , pc           = 0
-      , stack        = mempty
-      , memory       = undefined
-      , memorySize   = 0
-      , calldata     = ConcreteBuf (makeCallData tx)
-      , callvalue    = Lit 0
-      , caller       = Lit 0
-      , gas          = tx.gas
-      , returndata   = undefined
-      , static       = undefined
-      }
 
 emptyVM :: [(Addr, ByteString)] -> VM
 emptyVM contracts =
@@ -138,13 +134,13 @@ emptyVM contracts =
     bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
 -- setup a new VM state from the list of contracts we are using
-loadIntoVM :: [(Addr, ByteString)] -> State VM ()
-loadIntoVM contracts = put (emptyVM contracts)
+loadIntoVM :: [(Addr, ByteString)] -> VM
+loadIntoVM contracts = (emptyVM contracts)
 
 -- import a list of contracts as an open game
 -- - first we read off all the files and translate them into solidity bytecode
 -- - Then we associate each contract to a contract name which
-loadEVM :: [(Text, Text)] -> IO (State VM ())
+loadEVM :: [(Text, Text)] -> IO VM
 loadEVM contracts = do
   files :: [(Text, Text)] <- traverse (\(name, filename) -> (name,) <$> readFile (unpack filename)) (contracts)
   contracts :: [ByteString] <-
@@ -154,12 +150,24 @@ loadEVM contracts = do
           pure bytecode
       )
       files
-  let bytecodeMap :: [(Addr, ByteString)] = zip [0 ..] contracts
+  let bytecodeMap :: [(Addr, ByteString)] = zip [0xabcd ..] contracts
   let newVM = loadIntoVM bytecodeMap
   pure newVM
 
-loadContracts :: [(Text, Text)] -> State VM ()
+loadContracts :: [(Text, Text)] -> VM
 loadContracts arg = unsafePerformIO $ loadEVM arg
 
-compileTimeLoad :: [(Text, Text)] -> Q [Dec]
-compileTimeLoad = undefined
+
+-- TODO: use foundry
+thatOneMethod =
+  let st = loadContracts [("Neg", "solitidy/Simple.sol")]
+      ourTransaction = EthTransaction
+        0xabcd
+        0x1234
+        "negate"
+        [AbiInt 256 3]
+        100000000
+        100000000
+      steps = do evm (makeTxCall ourTransaction)
+                 execFully
+  in interpret (zero 0 (Just 0)) st steps

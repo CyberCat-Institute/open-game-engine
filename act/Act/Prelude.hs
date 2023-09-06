@@ -19,6 +19,7 @@ data Transaction = Transaction
 
 data EthTransaction = EthTransaction
   { contract :: Addr,
+    caller :: Addr,
     method :: Text,
     arguments :: [AbiValue],
     ethAmt :: W256,
