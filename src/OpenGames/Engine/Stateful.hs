@@ -12,10 +12,12 @@ import OpenGames.Engine.Engine
 -- import Control.Monad.State
 
 data Transaction = Tx Int
+  deriving (Eq, Ord, Show)
 
 data State = State { contracts :: [Int]}
+  deriving Show
 
-sendAndRun :: Transaction -> State -> State
+sendAndRun :: [Transaction] -> State -> State
 sendAndRun = undefined
 
 load :: [Int] -> State -> State
@@ -28,8 +30,7 @@ balance :: State -> String -> Double
 balance st name = undefined --balance (lookup "marx" st)
 
 -- actDecision1 :: String -> [Tx] -> OG .....
-actDecision name strategies = [opengame|
-  inputs : observedInput ;
+actDecision name strategies = [opengame| inputs : observedInput ;
   :---:
 
   inputs : observedInput ;
@@ -44,6 +45,7 @@ actDecision name strategies = [opengame|
 
 append = (++)
 
+
 runBlockchain = [opengame|
   inputs : initialState ;
   :---:
@@ -56,8 +58,8 @@ runBlockchain = [opengame|
   outputs : bobTx ;
   returns : finalState ;
 
-  inputs : (append aliceTx bobTx), initialState ;
-  operation : uncurry sendAndRun ;
+  inputs : (append (pure aliceTx) (pure bobTx)), initialState ;
+  operation : fromFunctions (uncurry sendAndRun) id ;
   outputs : finalState ;
 |]
 
