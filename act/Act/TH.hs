@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -12,6 +13,7 @@ import Act.TH.State
 import Act.Utils
 import CLI
 import Data.List
+import Data.Text (Text)
 import Data.Validation
 import Error
 import GHC.IO.Unsafe

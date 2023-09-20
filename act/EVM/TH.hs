@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -164,10 +165,12 @@ thatOneMethod =
       ourTransaction = EthTransaction
         0xabcd
         0x1234
-        "negate"
+        "negate(int256)"
         [AbiInt 256 3]
         100000000
         100000000
       steps = do evm (makeTxCall ourTransaction)
-                 execFully
+                 runFully
   in interpret (zero 0 (Just 0)) st steps
+
+
