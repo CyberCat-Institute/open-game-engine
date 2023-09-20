@@ -1,17 +1,16 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
 module EVM.TH where
 
-import EVM.Fetch
-
 import Act.Prelude (EthTransaction (..))
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
 import Data.ByteString (ByteString)
 import Data.Map as Map
@@ -21,23 +20,20 @@ import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import EVM (blankState, initialContract, loadContract, resetState)
 import EVM.ABI
-import EVM.FeeSchedule
-import EVM.Solidity (solcRuntime)
-import EVM.Types
-import EVM.Expr
 import EVM.Exec (exec, run)
+import EVM.Expr
+import EVM.FeeSchedule
+import EVM.Fetch
+import EVM.Solidity (solcRuntime)
+import EVM.Stepper
 import EVM.Transaction (initTx)
+import EVM.Types
 import GHC.IO.Unsafe
 import Language.Haskell.TH.Syntax as TH
-import Prelude hiding (FilePath, readFile)
-import EVM.Stepper
-
 import Optics.Core
 import Optics.State
 import Optics.State.Operators
-
-import Control.Monad.Trans.State.Strict
-
+import Prelude hiding (FilePath, readFile)
 
 -- put this in sttate.callData
 -- run it to execute the transaction
@@ -63,7 +59,6 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   -- when insufficientBal $ internalError "insufficient balance for gas cost"
   vm <- get
   put $ initTx vm
-
 
 emptyVM :: [(Addr, ByteString)] -> VM
 emptyVM contracts =
@@ -147,8 +142,8 @@ loadEVM contracts = do
   contracts :: [ByteString] <-
     traverse
       ( \(nm, body) -> do
-          Just bytecode <- solcRuntime nm body
-          pure bytecode
+          bytecode <- solcRuntime nm body
+          maybe (error "solc failed") pure bytecode
       )
       files
   let bytecodeMap :: [(Addr, ByteString)] = zip [0xabcd ..] contracts
@@ -158,19 +153,18 @@ loadEVM contracts = do
 loadContracts :: [(Text, Text)] -> VM
 loadContracts arg = unsafePerformIO $ loadEVM arg
 
-
 -- TODO: use foundry
 thatOneMethod =
   let st = loadContracts [("Neg", "solitidy/Simple.sol")]
-      ourTransaction = EthTransaction
-        0xabcd
-        0x1234
-        "negate(int256)"
-        [AbiInt 256 3]
-        100000000
-        100000000
-      steps = do evm (makeTxCall ourTransaction)
-                 runFully
-  in interpret (zero 0 (Just 0)) st steps
-
-
+      ourTransaction =
+        EthTransaction
+          0xabcd
+          0x1234
+          "negate(int256)"
+          [AbiInt 256 3]
+          100000000
+          100000000
+      steps = do
+        evm (makeTxCall ourTransaction)
+        runFully
+   in interpret (zero 0 (Just 0)) st steps

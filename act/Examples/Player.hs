@@ -105,13 +105,13 @@ swapSequence =
 -- test out 2 erc contracts
 -- test out multi-contract calls
 
-
 initSendAndRun x = twoAmms x (AmmState 50 50, AmmState 50 50)
 
 balance :: (AmmState, AmmState) -> String -> Double
 balance (st1, st2) _ = fromIntegral (reserve0 st1 + reserve0 st2)
 
-actDecision name strategies = [opengame| inputs : observedInput ;
+actDecision name strategies =
+  [opengame| inputs : observedInput ;
   :---:
 
   inputs : observedInput ;
@@ -126,8 +126,8 @@ actDecision name strategies = [opengame| inputs : observedInput ;
 
 append = (++)
 
-
-runBlockchain = [opengame|
+runBlockchain =
+  [opengame|
   inputs : ;
   :---:
 
@@ -141,4 +141,3 @@ runBlockchain = [opengame|
 |]
 
 foo = evaluate runBlockchain (Kleisli (const (pure [swap0 0, swap1 0])) :- Nil) void
-
