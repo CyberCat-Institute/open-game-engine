@@ -21,10 +21,13 @@ bigPayoff finalUSD initialUSD swappedUSD =
   finalUSD + initialUSD - swappedUSD
 
 swap0 :: Word256 -> Transaction
-swap0 d = Transaction "" "swap0" [AbiUInt 64 d]
+swap0 d = Transaction "amm1" "swap0" [AbiUInt 64 d]
 
 swap1 :: Word256 -> Transaction
-swap1 d = Transaction "" "swap1" [AbiUInt 64 d]
+swap1 d = Transaction "amm2" "swap1" [AbiUInt 64 d]
+
+bundles :: Word256 -> [[Transaction]]
+bundles swapLimit = [[swap0 n, swap1 n] | n <- [0, 1 .. swapLimit]]
 
 diffEur :: AmmState -> AmmState -> Word256
 diffEur (AmmState old _) (AmmState new _) = new - old
@@ -101,4 +104,40 @@ swapSequence =
 
 -- test out 2 erc contracts
 -- test out multi-contract calls
---
+
+initSendAndRun x = twoAmms x (AmmState 50 50, AmmState 50 50)
+
+balance :: (AmmState, AmmState) -> String -> Double
+balance (st1, st2) _ = fromIntegral (reserve0 st1 + reserve0 st2)
+
+actDecision name strategies =
+  [opengame| inputs : observedInput ;
+  :---:
+
+  inputs : observedInput ;
+  operation : dependentDecision name (const strategies) ;
+  outputs   : tx ;
+  returns  : balance finalState name ;
+
+  :---:
+  outputs : tx ;
+  returns : finalState;
+|]
+
+append = (++)
+
+runBlockchain =
+  [opengame|
+  inputs : ;
+  :---:
+
+  operation : actDecision "Marx" (bundles 10) ;
+  outputs : allTx ;
+  returns : finalState ;
+
+  inputs : allTx ;
+  operation : fromFunctions (initSendAndRun) id ;
+  outputs : finalState ;
+|]
+
+foo = evaluate runBlockchain (Kleisli (const (pure [swap0 0, swap1 0])) :- Nil) void

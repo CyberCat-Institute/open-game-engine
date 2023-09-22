@@ -58,6 +58,7 @@ library
       OpenGames.Engine.BayesianGamesNonState
       OpenGames.Engine.IOGames
       OpenGames.Engine.Nat
+      OpenGames.Engine.Stateful
       OpenGames.Engine.Vec
       Paths_open_games_hs
   hs-source-dirs:
@@ -104,6 +105,7 @@ executable act-exec
       EVM.TH
       Examples.AmmGenerated
       Examples.EVM
+      Examples.HEVM
       Examples.Player
       Paths_open_games_hs
   hs-source-dirs:
