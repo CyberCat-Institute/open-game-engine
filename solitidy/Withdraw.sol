@@ -1,4 +1,3 @@
-
 pragma solidity >=0.8.2 <0.9.0;
 
 /**
@@ -23,6 +22,8 @@ contract Piggybank {
     function retrieve(uint256 _amount) public  {
         require(_balance >= _amount, "insufficient funds.");
         _balance = _balance - _amount;
-        msg.sender.call{value: _amount};
+        (bool res, ) = msg.sender.call{value: _amount}("");
+        require(res, "transfer failed!");
     }
 }
+
