@@ -11,8 +11,13 @@ module Examples.HEVM where
 import Act.Prelude
 import Control.Monad.Trans.State.Strict
 import Data.DoubleWord
+import Data.Text (Text)
+import Data.Text qualified as T
+import Data.Text.IO qualified as T
+import Data.Map qualified as Map
 import Debug.Trace
 import EVM.Exec
+import EVM.Format
 import EVM.Fetch (zero)
 import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
@@ -116,10 +121,25 @@ initial = loadContracts [("Piggybank", "solitidy/Withdraw.sol")]
 outcome = evaluate (playerAutomatic initial) (Kleisli (const $ pure (dummyTx 10)) :- Nil) void
 
 testExec = do
-  makeTxCall (deposit 100)
-  run
+  evm $ makeTxCall (deposit 100)
+  runFully
+  evm $ makeTxCall (dummyTx 20)
+  runFully
 
--- makeTxCall (dummyTx 20)
---  run
+showVM :: VM -> Text
+showVM vm = T.unlines
+  [ "Contracts:"
+  , indent 2 . T.unlines . Map.elems $ Map.mapWithKey (\a c -> T.pack (show a) <> " :\n  " <> showContract c) vm.env.contracts
+  , "Storage: " <> (formatExpr vm.env.storage)
+  , "CallValue: " <> (formatExpr vm.state.callvalue)
+  , "Result: " <> (T.pack $ show vm.result)
+  ]
 
-interp = interpret (zero 0 (Just 0)) initial (evm testExec >> runFully)
+showContract :: Contract -> Text
+showContract c = T.unlines
+  [ "balance: " <> (T.pack $ show c.balance)
+  ]
+
+interp = do
+  vm <- interpret (zero 0 (Just 0)) initial (testExec)
+  T.putStrLn (showVM vm)

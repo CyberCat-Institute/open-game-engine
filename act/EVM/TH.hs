@@ -48,6 +48,7 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   resetState
   assign (#tx % #isCreate) False
   execState (loadContract addr) <$> get >>= put
+  assign (#state % #callvalue) (Lit amt)
   assign (#state % #calldata) (makeCallData tx)
   assign (#state % #caller) (litAddr caller)
   assign (#state % #gas) gas
