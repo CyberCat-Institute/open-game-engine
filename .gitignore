@@ -162,3 +162,10 @@ TSWLatexianTemp*
 .DS_Store
 .stack-work/
 dist-newstyle/
+
+# direnv
+.direnv/
+
+# nix
+result
+result/

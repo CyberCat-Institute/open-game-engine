@@ -6,12 +6,9 @@ module Act.TH.Extractor (argumentExtractorName, generateExtractMethods) where
 
 import Act.Prelude
 import Act.Utils
-import Data.Data
 import Data.List
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated
-
-deriving instance Data AbiType
 
 -- Given each method in the contract we need to know how to extract the arguments from the
 -- arguments' array. for this we create a partial top-level function which matches
