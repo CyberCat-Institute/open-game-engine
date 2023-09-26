@@ -165,3 +165,7 @@ dist-newstyle/
 
 # direnv
 .direnv/
+
+# nix
+result
+result/

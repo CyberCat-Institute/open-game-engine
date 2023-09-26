@@ -34,6 +34,9 @@
           autoWire = [ "packages" "apps" "checks" ];
         };
 
+        packages.default = self'.packages.open-games-hs;
+        apps.default = self'.apps.open-games-hs;
+
         devShells.default = pkgs.mkShell {
           name = "og devshell";
           inputsFrom = [
