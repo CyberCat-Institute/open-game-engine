@@ -122,8 +122,7 @@ emptyVM contracts =
         { contracts = Map.fromList (fmap (fmap bytecodeToContract) contracts),
           chainId = 0,
           storage = EmptyStore,
-          origStorage = mempty,
-          sha3Crack = mempty
+          origStorage = mempty
         }
 
     bytecodeToContract :: ByteString -> Contract
