@@ -20,6 +20,8 @@ module OpenGames.Engine.Engine
     pureAction,
     playDeterministically,
     discount,
+    addPayoffs,
+    addPayoffsReturns,
     DiagnosticInfoBayesian (..),
     generateOutput,
     generateIsEq,

@@ -75,7 +75,7 @@ allow-newer: true
 #
 # Override the architecture used by stack, especially useful on Windows
 # Change to x86_64 for Intel and aarch64 for ARM/apple silicon
-arch: x86_64
+arch: aarch64
 #
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]

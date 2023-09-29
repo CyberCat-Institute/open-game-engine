@@ -28,6 +28,7 @@ module OpenGames.Engine.BayesianGames
     playDeterministically,
     discount,
     addPayoffs,
+    addPayoffsReturns,
     (+++),
     g1,
     g2,
@@ -204,6 +205,18 @@ addPayoffs name =
     { play = \_ ->
         let v x = return (x, ())
             u value () = modify (adjustOrAdd (\x -> x + value) value name)
+         in StochasticStatefulOptic v u,
+      evaluate = \_ _ -> Nil
+    }
+
+-- add payoffs from return
+-- TODO Needs testing
+addPayoffsReturns :: String -> StochasticStatefulBayesianOpenGame '[] '[] () () () Payoff 
+addPayoffsReturns name =
+  OpenGame
+    { play = \_ ->
+        let v () = return ((), ())
+            u () value = modify (adjustOrAdd (\x -> x + value) value name)
          in StochasticStatefulOptic v u,
       evaluate = \_ _ -> Nil
     }
