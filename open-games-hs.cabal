@@ -106,10 +106,13 @@ executable act-exec
       Examples.AmmGenerated
       Examples.EVM
       Examples.HEVM
+      Examples.HEVM.ActionSpaces
       Examples.HEVM.Analytics
       Examples.HEVM.Components
       Examples.HEVM.Model
+      Examples.HEVM.Payoffs
       Examples.HEVM.Strategies
+      Examples.HEVM.Types
       Examples.Player
       Paths_open_games_hs
   hs-source-dirs:
