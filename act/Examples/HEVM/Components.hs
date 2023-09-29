@@ -11,7 +11,10 @@ import OpenGames.Preprocessor
 import OpenGames.Engine.BayesianGames (addPayoffsReturns)
 
 {-
+WORK IN PROGRESS
 Basic Components needed to model different txs
+NOTE We assume that the type of contract functionality used by the player is provided by the modeller
+NOTE For instance, in a case of a swap, the modeller invokes the right transaction type, say a deposit or swap. 
 -}
 
 
@@ -21,7 +24,7 @@ Basic Components needed to model different txs
 -- Single player decision
 -- The structure should cover different kinds of transactions
 -- Only the account difference affects payoffs here
--- NOTE I assume that the modeller specifies the kind of transaction; in so far as there are multiple parameters to choose, we will model this step by step.
+-- NOTE In so far as there are multiple parameters to choose, we will model this step by step.
 singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff  = [opengame|
 
     inputs    :  state, privateValue ;
@@ -47,9 +50,9 @@ singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff  = [open
 ------------------------------------
 -- 2. Accounting for further payoffs
 -- NOTE The player might derive further payoffs from at least three different sources
--- 1. Actions by other players affect his utility as well
--- 2. He receives additional utility directly from the action; possibly with only privately known values
--- 3. He receives direct additional utility from the state change (possible further consequences outside the model).
+-- i.   Actions by other players affect his utility as well
+-- ii.  He receives additional utility directly from the action; possibly with only privately known values
+-- iii. He receives direct additional utility from the state change (possible further consequences outside the model).
 
 -- Account for additional value directly derived from action
 -- NOTE value given exogenously
@@ -220,6 +223,7 @@ outputTest con f = generateOutput $ (testGame f) strategyTest con
 -------------------------
 -- 3. Advancing the state
 
+-- Given the state and contract specific parameters, advance to a new state
 advancingState contractFunctionality = [opengame|
 
     inputs    :  state, parameters  ;
@@ -251,34 +255,37 @@ playerWithAdditionalValue name probDistribution actionSpace replaceMeWithAccount
 
     :---------------------------:
 
+    // Private value for action is drawn
     inputs    :   ;
     feedback  :   ;
     operation :  natureDraw probDistribution ;
     outputs   :  privateValueDirect ;
     returns   :   ;
 
+    // Player observes his private value and decides; account differences are updated
     inputs    :  state, privateValueDirect  ;
     feedback  :   ;
     operation :  singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff ;
     outputs   :  dec ;
     returns   :  stateNew ;
 
+    // Update state
     inputs    :  state, parameters ;
     feedback  :   ;
     operation :  advancingState contractFunctionality ;
     outputs   :  stateNew ;
     returns   :   ;
 
+    // Add utility for the action chosen
     inputs    :  dec, privateValueDirect ;
     feedback  :   ;
     operation :  addPrivateValueDirectEndogenous name payoffFunctionDirect ;
     outputs   :   ;
     returns   :   ;
 
-
-
    :---------------------------:
 
+    // Export state so that we can connect this game with others
     outputs   :  stateNew ;
     returns   :   ;
   |]
