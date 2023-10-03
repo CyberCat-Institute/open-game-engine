@@ -88,19 +88,6 @@ packages:
       size: 4296
   original:
     hackage: hevm-0.51.3
-- completed:
-    commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
-    git: https://github.com/ethereum/act.git
-    name: act
-    pantry-tree:
-      sha256: 78cc4643860657a2be70ba2f95d675f130c312800393a1cb52c88ec6701ce7bd
-      size: 1217
-    subdir: src
-    version: 0.1.0.0
-  original:
-    commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
-    git: https://github.com/ethereum/act.git
-    subdir: src
 snapshots:
 - completed:
     sha256: dcf4fc28f12d805480ddbe8eb8c370e11db12f0461d0110a4240af27ac88d725

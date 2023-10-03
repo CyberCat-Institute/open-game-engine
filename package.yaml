@@ -46,7 +46,6 @@ library:
 
 dependencies:
     - base >=4.7 && <5
-    - act
     - mtl
     - ghc
     - transformers
@@ -84,25 +83,38 @@ executables:
     dependencies:
     - open-games-hs
 
-  act-exec:
-    main:                Main.hs
-    source-dirs:         act
-    ghc-options:
-      - -fwarn-unused-imports
-      - -Wno-partial-type-signatures
+      # act-exec:
+      #   main:                Main.hs
+      #   source-dirs:         act
+      #   ghc-options:
+      #     - -fwarn-unused-imports
+      #     - -Wno-partial-type-signatures
+      #   dependencies:
+      #     - act
+      #     - data-dword
+      #     - open-games-hs
+      #     - optics-core
+      #     - optics-extra
+      #     - rosezipper
+      #     - file-embed
+      #     - bytestring
+      #     - validation
+      #     - hevm >= 0.51.0
+      #     - containers
+      #     - text
+  hevm-exec:
+    main: Main.hs
+    source-dirs: evm
     dependencies:
-      - act
       - data-dword
       - open-games-hs
+      - hevm
+      - text
       - optics-core
       - optics-extra
-      - rosezipper
-      - file-embed
       - bytestring
-      - validation
-      - hevm >= 0.51.0
       - containers
-      - text
+      - rosezipper
   graphics:
     main:                Main.hs
     source-dirs:         graphics

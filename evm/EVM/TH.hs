@@ -9,7 +9,7 @@
 
 module EVM.TH where
 
-import Act.Prelude (EthTransaction (..))
+import EVM.Prelude (EthTransaction (..))
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
 import Data.ByteString (ByteString)

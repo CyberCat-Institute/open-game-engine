@@ -49,10 +49,10 @@ extra-deps:
  - spawn-0.3
  - spool-0.1
  - hevm-0.51.3
- - git: https://github.com/ethereum/act.git
-   subdirs:
-     - src
-   commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
+   #  - git: https://github.com/ethereum/act.git
+   #    subdirs:
+   #      - src
+   #    commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
 
 allow-newer: true
 

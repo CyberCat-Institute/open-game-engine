@@ -8,7 +8,7 @@
 
 module Examples.HEVM where
 
-import Act.Prelude
+import EVM.Prelude
 import Control.Monad.Trans.State.Strict
 import Data.DoubleWord
 import Data.Text (Text)
