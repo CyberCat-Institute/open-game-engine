@@ -12,9 +12,9 @@ import Act.Prelude
 import Control.Monad.Trans.State.Strict
 import Data.DoubleWord
 import Data.Text (Text)
-import Data.Text qualified as T
-import Data.Text.IO qualified as T
-import Data.Map qualified as Map
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import qualified Data.Map as Map
 import Debug.Trace
 import EVM.Exec
 import EVM.Format

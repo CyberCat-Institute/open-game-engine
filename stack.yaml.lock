@@ -82,12 +82,12 @@ packages:
   original:
     hackage: spool-0.1
 - completed:
-    hackage: hevm-0.51.0@sha256:6116fac8aa1434685e41e839dce6b107a64f94e1bc09609d467e81b55f434172,9294
+    hackage: hevm-0.51.3@sha256:0241fa86076f0fd512414aa7bb9a7a7b164c071fd08ecc0248918662a2d65fb5,9753
     pantry-tree:
-      sha256: a4ed66030cbef539ce248f4fd056582ba80e3994fd989a113cdd5c7ca29e25f8
+      sha256: 50458355cb65e65ec4fb31a0dda1312dac0b7e6c2d681db5abeebf64264fd3b0
       size: 4296
   original:
-    hackage: hevm-0.51.0
+    hackage: hevm-0.51.3
 - completed:
     commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
     git: https://github.com/ethereum/act.git

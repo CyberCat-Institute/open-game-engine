@@ -48,7 +48,7 @@ extra-deps:
  - smt2-parser-0.1.0.1
  - spawn-0.3
  - spool-0.1
- - hevm-0.51.0
+ - hevm-0.51.3
  - git: https://github.com/ethereum/act.git
    subdirs:
      - src
