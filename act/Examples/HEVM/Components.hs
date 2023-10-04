@@ -244,8 +244,57 @@ advancingState contractFunctionality = [opengame|
   |]
 
 
+-------------------------------------
+-- 4. Setting up a state from scratch
+
+-- Use parameters to initiate or augment a state (mostly for testing the logic of a game) - in contrast to pulling state
+initiateState  globalState parameters initiationFunction = [opengame|
+
+    inputs    :   ;
+    feedback  :   ;
+
+    :---------------------------:
+
+    inputs    :  globalState, parameters ;
+    feedback  :  ;
+    operation :  forwardFunction initiationFunction ;
+    outputs   :  initiatedState ;
+    returns   : ;
+
+    :---------------------------:
+
+    outputs   :  initiatedState ;
+    returns   :  ;
+  |]
+
+------------------------------------------------
+-- 5. Projection relevant information from state
+
+-- Use for projecting relevant information out of a global state
+-- For many models only partial aspects will be relevant for a player
+projectInformationFromState  projectionFunction = [opengame|
+
+    inputs    :  globalState ;
+    feedback  :   ;
+
+    :---------------------------:
+
+    inputs    :  globalState ;
+    feedback  :  ;
+    operation :  forwardFunction projectionFunction;
+    outputs   :  relevantInfo ;
+    returns   : ;
+
+    :---------------------------:
+
+    outputs   :  relevantInfo ;
+    returns   :  ;
+  |]
+
+
+
 ----------------------
--- 4. Composed modules
+-- 6. Composed modules
 
 -- Player observes private information, chooses a transaction, account balances are update and receives (possibly) additional utility from his action
 playerWithAdditionalValue name probDistribution actionSpace replaceMeWithAccountDiff contractFunctionality payoffFunctionDirect = [opengame|
