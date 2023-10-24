@@ -29,6 +29,7 @@ import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
 import GHC.IO.Unsafe
+import GHC.ST
 import Language.Haskell.TH.Syntax as TH
 import Optics.Core
 import Optics.State
@@ -43,14 +44,16 @@ makeCallData :: EthTransaction -> Expr Buf
 makeCallData (EthTransaction _ caller method args _ _) =
   ConcreteBuf $ abiMethod method (AbiTuple (Vector.fromList args))
 
-makeTxCall :: EthTransaction -> EVM ()
+-- type EVM s = ST s (VM s)
+
+makeTxCall :: EthTransaction -> EVM s ()
 makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   resetState
   assign (#tx % #isCreate) False
   execState (loadContract addr) <$> get >>= put
   assign (#state % #callvalue) (Lit amt)
   assign (#state % #calldata) (makeCallData tx)
-  assign (#state % #caller) (litAddr caller)
+  assign (#state % #caller) (caller)
   assign (#state % #gas) gas
   -- origin <-
   --     initialContract (RuntimeCode (ConcreteRuntimeCode ""))
@@ -61,38 +64,39 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   vm <- get
   put $ initTx vm
 
-emptyVM :: [(Addr, ByteString)] -> VM
-emptyVM contracts =
-  VM
+emptyVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
+emptyVM contracts = do
+  blankSt <- blankState
+  pure $ VM
     { result = Nothing,
-      state = blankState,
+      state = blankSt,
       frames = [],
       env = envForContracts contracts,
       block = emptyBlock,
       tx = emptyTransaction,
       logs = [],
       traces = Zipper.fromForest mempty,
-      cache = Cache mempty mempty mempty,
+      cache = Cache mempty mempty,
       burned = 0,
       iterations = mempty,
       constraints = [],
-      keccakEqs = [],
-      allowFFI = True,
-      overrideCaller = Nothing
+      keccakEqs = []
+      -- allowFFI = True,
+      -- overrideCaller = Nothing
     }
   where
     -- question: Is that a reasonable empty first block?
     emptyBlock :: Block
     emptyBlock =
       Block
-        { coinbase = 0,
+        { coinbase = LitAddr 0,
           timestamp = Lit 0,
           number = 0,
           prevRandao = 0,
           maxCodeSize = 0,
           gaslimit = 0,
           baseFee = 0,
-          schedule = berlin -- specifically this, what is it suppsoed to be?
+          schedule = undefined -- specifically this, what is it suppsoed to be?
         }
     emptyTransaction :: TxState
     emptyTransaction =
@@ -100,8 +104,8 @@ emptyVM contracts =
         { gasprice = 0,
           gaslimit = 0,
           priorityFee = 0,
-          origin = 0,
-          toAddr = 0,
+          origin = LitAddr 0,
+          toAddr = LitAddr 0,
           value = Lit 0,
           substate = emptySubState,
           isCreate = True,
@@ -117,26 +121,26 @@ emptyVM contracts =
           refunds = []
         }
 
-    envForContracts :: [(Addr, ByteString)] -> Env
+    envForContracts :: [(Expr EAddr, ByteString)] -> Env
     envForContracts contracts =
       Env
         { contracts = Map.fromList (fmap (fmap bytecodeToContract) contracts),
-          chainId = 0,
-          storage = EmptyStore,
-          origStorage = mempty
+          chainId = 0
+          -- storage = EmptyStore,
+          -- origStorage = mempty
         }
 
     bytecodeToContract :: ByteString -> Contract
     bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
 -- setup a new VM state from the list of contracts we are using
-loadIntoVM :: [(Addr, ByteString)] -> VM
+loadIntoVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
 loadIntoVM contracts = (emptyVM contracts)
 
 -- import a list of contracts as an open game
 -- - first we read off all the files and translate them into solidity bytecode
 -- - Then we associate each contract to a contract name which
-loadEVM :: [(Text, Text)] -> IO VM
+loadEVM :: [(Text, Text)] -> IO (ST s (VM s))
 loadEVM contracts = do
   files :: [(Text, Text)] <- traverse (\(name, filename) -> (name,) <$> readFile (unpack filename)) (contracts)
   contracts :: [ByteString] <-
@@ -146,11 +150,11 @@ loadEVM contracts = do
           maybe (error "solc failed") pure bytecode
       )
       files
-  let bytecodeMap :: [(Addr, ByteString)] = zip [0xabcd ..] contracts
+  let bytecodeMap :: [(Expr EAddr, ByteString)] = zip (fmap LitAddr [0xabcd ..]) contracts
   let newVM = loadIntoVM bytecodeMap
   pure newVM
 
-loadContracts :: [(Text, Text)] -> VM
+loadContracts :: [(Text, Text)] -> ST s (VM s)
 loadContracts arg = unsafePerformIO $ loadEVM arg
 
 -- TODO: use foundry
@@ -158,8 +162,8 @@ thatOneMethod =
   let st = loadContracts [("Neg", "solitidy/Simple.sol")]
       ourTransaction =
         EthTransaction
-          0xabcd
-          0x1234
+          (LitAddr 0xabcd)
+          (LitAddr 0x1234)
           "negate(int256)"
           [AbiInt 256 3]
           100000000
@@ -167,4 +171,4 @@ thatOneMethod =
       steps = do
         evm (makeTxCall ourTransaction)
         runFully
-   in interpret (zero 0 (Just 0)) st steps
+   in interpret (zero 0 (Just 0)) undefined steps

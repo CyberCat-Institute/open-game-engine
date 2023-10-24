@@ -17,12 +17,3 @@ data Transaction = Transaction
   }
   deriving (Eq, Show, Ord)
 
-data EthTransaction = EthTransaction
-  { contract :: Addr,
-    caller :: Addr,
-    method :: Text,
-    arguments :: [AbiValue],
-    ethAmt :: W256,
-    gas :: Word64
-  }
-  deriving (Eq, Show, Ord)

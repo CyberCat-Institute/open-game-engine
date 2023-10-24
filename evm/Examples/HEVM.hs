@@ -22,19 +22,34 @@ import EVM.Fetch (zero)
 import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
 import EVM.Types
-import OpenGames
+import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
+import OpenGames.Engine.IOGames
 import OpenGames.Preprocessor
 import Optics.Core (view, (%))
 
-sendAndRun :: EthTransaction -> VM -> VM
-sendAndRun tx = execState $ do
-  makeTxCall tx
+import Control.Monad.ST
+-- State EVM a
+-- State EVM a
+
+-- ST s2 EVM
+-- ST s1 EVM
+
+
+-- send and run a transaction on the EVM state
+sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
+sendAndRun' tx = do
+  EVM.TH.makeTxCall tx
   run
+
+-- exectute the EVM state in IO
+sendAndRun :: EthTransaction
+            -> VM RealWorld -> IO (VM RealWorld)
+sendAndRun tx st = stToIO (execStateT (sendAndRun' tx) st)
 
 deposit amt =
   EthTransaction
-    0xabcd
-    0x1234
+    (LitAddr 0xabcd)
+    (LitAddr 0x1234)
     "deposit()"
     []
     amt
@@ -43,8 +58,8 @@ deposit amt =
 dummyTx :: Int256 -> EthTransaction
 dummyTx amt =
   EthTransaction
-    0xabcd
-    0x1234
+    (LitAddr 0xabcd)
+    (LitAddr 0x1234)
     "retrieve(uint256)"
     [AbiInt 256 amt]
     0
@@ -53,7 +68,7 @@ dummyTx amt =
 transactionList :: Int256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
-balance :: VM -> String -> Double
+balance :: VM s -> String -> Double
 balance st name = trace ("memory size: " ++ show (view (#state % #memorySize) st) ++ "memory: " ++ show (view (#state % #memory) st)) 0
 
 -- actDecision1 :: String -> [Tx] -> OG .....
@@ -62,7 +77,7 @@ actDecision name strategies =
   :---:
 
   inputs : observedInput ;
-  operation : dependentDecision name (const strategies) ;
+  operation : dependentDecisionIO name 1 (strategies) ;
   outputs   : tx ;
   returns  : balance finalState name ;
 
@@ -97,16 +112,16 @@ playerAutomatic globalState =
   :-------:
 
   inputs    : globalState ;
-  operation : fromFunctions (sendAndRun (deposit 100)) id ;
+  operation : fromLensM (sendAndRun (deposit 100)) (const pure) ;
   outputs   : withFunds ;
 
-  operation : dependentDecision "AllPlayers" (const (transactionList 2)) ;
+  operation : dependentDecisionIO "AllPlayers" 1 (transactionList 2) ;
   outputs   : transactions ;
-  returns   : (balance finalState "a") ;
+  returns   : balance finalState "a";
 
   inputs    : transactions, withFunds;
   feedback  : ;
-  operation : forwardFunction (uncurry sendAndRun) ;
+  operation : fromLensM (uncurry sendAndRun) (const pure) ;
   outputs   : finalState ;
   returns   : ;
 
@@ -115,10 +130,12 @@ playerAutomatic globalState =
   returns : ;
 |]
 
-initial :: VM
+initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solitidy/Withdraw.sol")]
 
-outcome = evaluate (playerAutomatic initial) (Kleisli (const $ pure (dummyTx 10)) :- Nil) void
+outcome = do
+  i <- stToIO initial
+  pure $ evaluate (playerAutomatic i) (Kleisli (pure undefined) :- Nil) void
 
 testExec = do
   evm $ makeTxCall (deposit 100)
@@ -126,11 +143,11 @@ testExec = do
   evm $ makeTxCall (dummyTx 20)
   runFully
 
-showVM :: VM -> Text
+showVM :: VM s -> Text
 showVM vm = T.unlines
   [ "Contracts:"
   , indent 2 . T.unlines . Map.elems $ Map.mapWithKey (\a c -> T.pack (show a) <> " :\n  " <> showContract c) vm.env.contracts
-  , "Storage: " <> (formatExpr vm.env.storage)
+  -- , "Storage: " <> (formatExpr vm.env.storage)
   , "CallValue: " <> (formatExpr vm.state.callvalue)
   , "Result: " <> (T.pack $ show vm.result)
   ]
@@ -140,6 +157,6 @@ showContract c = T.unlines
   [ "balance: " <> (T.pack $ show c.balance)
   ]
 
-interp = do
-  vm <- interpret (zero 0 (Just 0)) initial (testExec)
-  T.putStrLn (showVM vm)
+-- interp = do
+--   vm <- interpret (zero 0 (Just 0)) initial (testExec)
+--   T.putStrLn (showVM vm)

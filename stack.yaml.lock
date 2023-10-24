@@ -82,12 +82,16 @@ packages:
   original:
     hackage: spool-0.1
 - completed:
-    hackage: hevm-0.51.3@sha256:0241fa86076f0fd512414aa7bb9a7a7b164c071fd08ecc0248918662a2d65fb5,9753
+    commit: c5e40507c35e6f2119aeb5f0740dc3564100ebdc
+    git: https://github.com/ethereum/hevm
+    name: hevm
     pantry-tree:
-      sha256: 50458355cb65e65ec4fb31a0dda1312dac0b7e6c2d681db5abeebf64264fd3b0
-      size: 4296
+      sha256: 92c4d9ca0864a6d334f4940b558b61daa7dc67ddfc145a6599a035abc31e8153
+      size: 5802
+    version: 0.51.3
   original:
-    hackage: hevm-0.51.3
+    commit: c5e40507c35e6f2119aeb5f0740dc3564100ebdc
+    git: https://github.com/ethereum/hevm
 snapshots:
 - completed:
     sha256: dcf4fc28f12d805480ddbe8eb8c370e11db12f0461d0110a4240af27ac88d725

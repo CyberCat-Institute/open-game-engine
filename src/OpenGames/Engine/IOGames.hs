@@ -16,6 +16,7 @@ module OpenGames.Engine.IOGames
     DiagnosticsMC (..),
     dependentDecisionIO,
     fromLens,
+    fromLensM,
     fromFunctions,
     nature,
     discount,
@@ -51,7 +52,9 @@ data DiagnosticsMC y = DiagnosticsMC
   deriving (Show)
 
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] -> IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
+dependentDecisionIO :: (Eq x, Show x, Ord y, Show y)
+    => String -> Int -> [y]
+    -> IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
 -- s t  a b
 
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
@@ -122,6 +125,13 @@ fromLens v u =
 
 fromFunctions :: (x -> y) -> (r -> s) -> IOOpenGame '[] '[] x s y r
 fromFunctions f g = fromLens f (const g)
+
+fromLensM :: (x -> IO y) -> (x -> r -> IO s) -> IOOpenGame '[] '[] x s y r
+fromLensM f g =
+  OpenGame
+    { play = \Nil -> MonadOptic (\x ->  (x,) <$> f x) (\x r -> lift $ g x r),
+      evaluate = \Nil _ -> Nil
+    }
 
 nature :: CondensedTableV x -> IOOpenGame '[] '[] () () x ()
 nature table = OpenGame {play, evaluate}
