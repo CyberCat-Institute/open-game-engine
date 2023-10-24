@@ -25,6 +25,7 @@ where
 
 import Control.Arrow hiding ((+:+))
 import Control.Monad.State hiding (state)
+import Control.Monad.ST
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Data.Ord (comparing)
@@ -36,7 +37,16 @@ import System.Random
 import System.Random.MWC.CondensedTable
 import System.Random.Stateful
 
+import GHC.ST
+
 -- TODO implement printout
+
+copy :: StateT (gameState s) (ST s) (gameState s)
+copy = undefined
+
+restore :: gameState s -> StateT (gameState s) (ST s) ()
+restore = undefined
+
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
@@ -51,12 +61,32 @@ data DiagnosticsMC y = DiagnosticsMC
   }
   deriving (Show)
 
+hevmDecision :: String -> [y] -> IOOpenGame '[x -> y] '[IO (DiagnosticsMC y)] x () y Double
+hevmDecision name ys = OpenGame undefined eval
+  where
+    eval :: List '[x -> y]
+         -> MonadContext x () y Double -> List '[IO (DiagnosticsMC y)]
+    eval (strat :- Nil) (MonadContext h k) = output :- Nil
+      where
+        output :: IO (DiagnosticsMC y1)
+        output = do (residual, observation) <- h
+                    let u y = do stToIO (execStateT copy undefined)
+                                 execStateT (k residual y) HM.empty
+                                 payoff <- undefined
+                                 undefined
+                              -- stToIO (execStateT ( do initialState <- copy
+                              --                         let hack = execStateT (k residual y) HM.empty
+                              --                         payoff <- _ -- k residual y
+                              --                         restore initialState
+                              --                         pure payoff) undefined)
+                    undefined
+
+
 -- NOTE This ignores the state
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y)
     => String -> Int -> [y]
     -> IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
 -- s t  a b
-
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
 dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
   where

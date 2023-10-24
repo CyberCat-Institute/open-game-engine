@@ -18,6 +18,7 @@ import Data.Text (Text, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
+import Data.Vector.Mutable
 import EVM (blankState, initialContract, loadContract, resetState)
 import EVM.ABI
 import EVM.Exec (exec, run)
@@ -172,3 +173,30 @@ thatOneMethod =
         evm (makeTxCall ourTransaction)
         runFully
    in interpret (zero 0 (Just 0)) undefined steps
+
+-- cloneMemory :: Memory s -> StateT st (ST s) (Memory s)
+-- cloneMemory (ConcreteMemory s) = ConcreteMemory <$> clone s
+-- cloneMemory (SymbolicMemory b) = pure $ SymbolicMemory b
+--
+--
+-- cloneFrameState :: FrameState s -> StateT st (ST s) (FrameState s)
+-- cloneFrameState fs = do
+--   copiedMemory = view #memory fs
+--   mem' <- cloneFrameState copiedMemory
+--   pure $ update #memory mem'
+--
+-- cloneFrame :: Frame s -> StateT st (ST s) (Frame s)
+-- cloneFrame fs = undefined
+
+copy :: StateT (VM s) (ST s) (VM s)
+copy = do -- vmState <- get
+          -- let internalState = view #state vmState
+          -- let frames = view #frames vmState
+          -- copiedState <- cloneFrameState internalState
+          -- copiedFrames <- traverse cloneFrame frames
+          undefined
+restore :: VM s -> StateT (VM s) (ST s) ()
+restore = undefined
+--   assign (#state % #calldata) (makeCallData tx)
+--   assign (#state % #caller) (caller)
+
