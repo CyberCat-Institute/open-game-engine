@@ -36,6 +36,7 @@ import OpenGames.Engine.TLL
 import System.Random
 import System.Random.MWC.CondensedTable
 import System.Random.Stateful
+import EVM.Types
 
 import GHC.ST
 
@@ -50,6 +51,8 @@ restore = undefined
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
+type IOOpenGameM m a b x s y r = OpenGame MonadOptic (MonadContextM m) a b x s y r
+
 type Agent = String
 
 data DiagnosticsMC y = DiagnosticsMC
@@ -61,26 +64,26 @@ data DiagnosticsMC y = DiagnosticsMC
   }
   deriving (Show)
 
-hevmDecision :: String -> [y] -> IOOpenGame '[x -> y] '[IO (DiagnosticsMC y)] x () y Double
+hevmDecision :: String -> [y] -> IOOpenGameM (StateT (VM RealWorld) (ST RealWorld)) '[x -> y] '[StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y)] x () y Double
 hevmDecision name ys = OpenGame undefined eval
   where
     eval :: List '[x -> y]
-         -> MonadContext x () y Double -> List '[IO (DiagnosticsMC y)]
-    eval (strat :- Nil) (MonadContext h k) = output :- Nil
+         -> MonadContextM (StateT (VM RealWorld) (ST RealWorld)) x () y Double -> List '[StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y)]
+    eval (strat :- Nil) (MonadContextM h k) = output :- Nil
       where
-        output :: IO (DiagnosticsMC y1)
+        output :: StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y1)
         output = do (residual, observation) <- h
-                    let u y = do stToIO (execStateT copy undefined)
-                                 execStateT (k residual y) HM.empty
-                                 payoff <- undefined
-                                 undefined
-                              -- stToIO (execStateT ( do initialState <- copy
-                              --                         let hack = execStateT (k residual y) HM.empty
-                              --                         payoff <- _ -- k residual y
-                              --                         restore initialState
-                              --                         pure payoff) undefined)
-                    undefined
-
+                    let u y = do saveState <- copy
+                                 payoff <- execStateT (k residual y) HM.empty
+                                 restore saveState
+                                 pure payoff
+                    return $ DiagnosticsMC
+                        { playerNameMC = name
+                        , averageUtilStrategyMC = _
+                        , samplePayoffsMC = undefined
+                        , optimalMoveMC = undefined
+                        , optimalPayoffMC = undefined
+                        }
 
 -- NOTE This ignores the state
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y)

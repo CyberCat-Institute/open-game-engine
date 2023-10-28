@@ -195,6 +195,7 @@ copy = do -- vmState <- get
           -- copiedState <- cloneFrameState internalState
           -- copiedFrames <- traverse cloneFrame frames
           undefined
+
 restore :: VM s -> StateT (VM s) (ST s) ()
 restore = undefined
 --   assign (#state % #calldata) (makeCallData tx)
