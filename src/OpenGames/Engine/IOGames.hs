@@ -33,6 +33,7 @@ import Data.Utils
 import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
+import OpenGames.Engine.Copy
 import System.Random
 import System.Random.MWC.CondensedTable
 import System.Random.Stateful
@@ -41,13 +42,6 @@ import EVM.Types
 import GHC.ST
 
 -- TODO implement printout
-
-copy :: StateT (gameState s) (ST s) (gameState s)
-copy = undefined
-
-restore :: gameState s -> StateT (gameState s) (ST s) ()
-restore = undefined
-
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
@@ -79,7 +73,7 @@ hevmDecision name ys = OpenGame undefined eval
                                  pure payoff
                     return $ DiagnosticsMC
                         { playerNameMC = name
-                        , averageUtilStrategyMC = _
+                        , averageUtilStrategyMC = undefined
                         , samplePayoffsMC = undefined
                         , optimalMoveMC = undefined
                         , optimalPayoffMC = undefined

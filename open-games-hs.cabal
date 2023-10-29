@@ -56,6 +56,7 @@ library
       Examples.Token.Concrete
       OpenGames.Engine.AtomicGames
       OpenGames.Engine.BayesianGamesNonState
+      OpenGames.Engine.Copy
       OpenGames.Engine.IOGames
       OpenGames.Engine.Nat
       OpenGames.Engine.Stateful
