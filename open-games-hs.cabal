@@ -26,6 +26,7 @@ library
       OpenGames.Engine.OpenGames
       OpenGames.Engine.OpticClass
       OpenGames.Engine.TLL
+      OpenGames.Engine.IOGames
       OpenGames.Preprocessor
       OpenGames.Preprocessor.BlockSyntax
       OpenGames.Preprocessor.Codegen
@@ -57,7 +58,6 @@ library
       OpenGames.Engine.AtomicGames
       OpenGames.Engine.BayesianGamesNonState
       OpenGames.Engine.Copy
-      OpenGames.Engine.IOGames
       OpenGames.Engine.Nat
       OpenGames.Engine.Stateful
       OpenGames.Engine.Vec
@@ -77,10 +77,13 @@ library
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
     , mwc-random
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability
@@ -111,11 +114,14 @@ executable graphics
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
     , mwc-random
     , open-games-hs
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability
@@ -193,11 +199,14 @@ executable open-games-exe
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
     , mwc-random
     , open-games-hs
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability

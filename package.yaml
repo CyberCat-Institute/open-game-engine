@@ -21,6 +21,7 @@ library:
     - OpenGames.Engine.OpenGames
     - OpenGames.Engine.OpticClass
     - OpenGames.Engine.TLL
+    - OpenGames.Engine.IOGames
     - OpenGames.Preprocessor
     - OpenGames.Preprocessor.BlockSyntax
     - OpenGames.Preprocessor.Codegen
@@ -70,6 +71,9 @@ dependencies:
     - vector
     - monad-bayes
     - criterion
+    - optics-core
+    - optics-extra
+    - hevm
 
 
 executables:

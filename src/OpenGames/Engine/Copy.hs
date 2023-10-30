@@ -1,4 +1,5 @@
 {-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedLabels #-}
 module OpenGames.Engine.Copy where
 
@@ -21,13 +22,13 @@ class Restore (a :: Type -> Type) where
 
 instance Copy VM where
   copy = do state <- get
-            -- technically `result` also depends on the ST thread but only as
-            -- a continuation so we don't duplicate the continuation
             let st = state ^. #state
             let fr = state ^. #frames
             st' <- copyFrameState st
             fr' <- traverse copyFrame fr
-            let newState = (state & #state .~ st') & #frames .~ fr'
+            let newState = state & #state .~ st'
+                                 & #frames .~ fr'
+                                 & #result .~ Nothing
             pure newState
             where
 
