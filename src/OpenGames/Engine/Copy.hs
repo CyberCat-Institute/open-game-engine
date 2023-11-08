@@ -13,7 +13,6 @@ import Data.Vector.Unboxed.Mutable
 import Optics.Core
 import Optics.State
 
-
 class Copy (a :: Type -> Type) where
   copy :: StateT (a s) (ST s) (a s)
 

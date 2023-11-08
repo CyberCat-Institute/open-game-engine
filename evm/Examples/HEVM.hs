@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedRecordDot #-}
@@ -23,7 +24,7 @@ import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
 import EVM.Types
 import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
-import OpenGames.Engine.IOGames
+import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor
 import Optics.Core (view, (%))
 
@@ -43,8 +44,9 @@ sendAndRun' tx = do
 
 -- exectute the EVM state in IO
 sendAndRun :: EthTransaction
-            -> VM RealWorld -> IO (VM RealWorld)
-sendAndRun tx st = stToIO (execStateT (sendAndRun' tx) st)
+            -> VM RealWorld -> HEVMState (VM RealWorld)
+sendAndRun tx st = let g = (execStateT (sendAndRun' tx) st)
+                    in undefined
 
 deposit amt =
   EthTransaction
@@ -77,7 +79,7 @@ actDecision name strategies =
   :---:
 
   inputs : observedInput ;
-  operation : dependentDecisionIO name 1 (strategies) ;
+  operation : hevmDecision name (strategies) ;
   outputs   : tx ;
   returns  : balance finalState name ;
 
@@ -115,7 +117,7 @@ playerAutomatic globalState =
   operation : fromLensM (sendAndRun (deposit 100)) (const pure) ;
   outputs   : withFunds ;
 
-  operation : dependentDecisionIO "AllPlayers" 1 (transactionList 2) ;
+  operation : hevmDecision "AllPlayers" (transactionList 2) ;
   outputs   : transactions ;
   returns   : balance finalState "a";
 
@@ -135,7 +137,8 @@ initial = loadContracts [("Piggybank", "solitidy/Withdraw.sol")]
 
 outcome = do
   i <- stToIO initial
-  pure $ evaluate (playerAutomatic i) (Kleisli (pure undefined) :- Nil) void
+  -- let term :- Nil =  evaluate (playerAutomatic i) ((pure undefined) :- Nil) void
+  undefined
 
 testExec = do
   evm $ makeTxCall (deposit 100)

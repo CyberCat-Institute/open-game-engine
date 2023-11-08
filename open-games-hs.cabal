@@ -27,6 +27,7 @@ library
       OpenGames.Engine.OpticClass
       OpenGames.Engine.TLL
       OpenGames.Engine.IOGames
+      OpenGames.Engine.HEVMGames
       OpenGames.Preprocessor
       OpenGames.Preprocessor.BlockSyntax
       OpenGames.Preprocessor.Codegen

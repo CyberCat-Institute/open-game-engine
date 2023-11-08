@@ -46,40 +46,18 @@ import GHC.ST
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
 
-type IOOpenGameM m a b x s y r = OpenGame MonadOptic (MonadContextM m) a b x s y r
-
+type IOOpenGameM m a b x s y r = OpenGame (MonadOpticM m) (MonadContextM m) a b x s y r
+type HEVMState = StateT (VM RealWorld) (ST RealWorld)
 type Agent = String
 
 data DiagnosticsMC y = DiagnosticsMC
-  { playerNameMC :: String,
-    averageUtilStrategyMC :: Double,
-    samplePayoffsMC :: [Double],
-    optimalMoveMC :: y,
-    optimalPayoffMC :: Double
+  { playerNameMC :: String
+  , averageUtilStrategyMC :: Double
+  , samplePayoffsMC :: [Double]
+  , optimalMoveMC :: y
+  , optimalPayoffMC :: Double
   }
   deriving (Show)
-
-hevmDecision :: String -> [y] -> IOOpenGameM (StateT (VM RealWorld) (ST RealWorld)) '[x -> y] '[StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y)] x () y Double
-hevmDecision name ys = OpenGame undefined eval
-  where
-    eval :: List '[x -> y]
-         -> MonadContextM (StateT (VM RealWorld) (ST RealWorld)) x () y Double -> List '[StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y)]
-    eval (strat :- Nil) (MonadContextM h k) = output :- Nil
-      where
-        output :: StateT (VM RealWorld) (ST RealWorld) (DiagnosticsMC y1)
-        output = do (residual, observation) <- h
-                    let u y = do saveState <- copy
-                                 payoff <- execStateT (k residual y) HM.empty
-                                 restore saveState
-                                 pure payoff
-                    return $ DiagnosticsMC
-                        { playerNameMC = name
-                        , averageUtilStrategyMC = undefined
-                        , samplePayoffsMC = undefined
-                        , optimalMoveMC = undefined
-                        , optimalPayoffMC = undefined
-                        }
-
 -- NOTE This ignores the state
 dependentDecisionIO :: (Eq x, Show x, Ord y, Show y)
     => String -> Int -> [y]

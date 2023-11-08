@@ -240,6 +240,9 @@ data MonadContextM m s t a b where
 instance Precontext MonadContext where
   void = MonadContext (return ((), ())) (\() () -> return ())
 
+instance Monad m => Precontext (MonadContextM m) where
+  void = MonadContextM (return ((), ())) (\() () -> return ())
+
 instance Context MonadContext MonadOptic where
   cmap (MonadOptic v1 u1) (MonadOptic v2 u2) (MonadContext h k) =
     let h' = do (z, s) <- h; (_, s') <- v1 s; return (z, s')
@@ -253,3 +256,19 @@ instance Context MonadContext MonadOptic where
     let h' = do (z, (s1, s2)) <- h; return ((z, s2), s1)
         k' (z, s2) a1 = do (_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1
      in MonadContext h' k'
+
+instance Monad m => Context (MonadContextM m) (MonadOpticM m) where
+  cmap (MonadOpticM v1 u1) (MonadOpticM v2 u2) (MonadContextM h k) =
+    let h' = do (z, s) <- h; (_, s') <- v1 s; return (z, s')
+        k' z a = do (z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'
+     in MonadContextM h' k'
+  (//) (MonadOpticM v u) (MonadContextM h k) =
+    let h' = do (z, (s1, s2)) <- h; return ((z, s1), s2)
+        k' (z, s1) a2 = do (_, a1) <- lift (v s1); (_, b2) <- k z (a1, a2); return b2
+     in MonadContextM h' k'
+  (\\) (MonadOpticM v u) (MonadContextM h k) =
+    let h' = do (z, (s1, s2)) <- h; return ((z, s2), s1)
+        k' (z, s2) a1 = do (_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1
+     in MonadContextM h' k'
+
+-- maybe `fromFunctions` should live here
