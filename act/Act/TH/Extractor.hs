@@ -11,8 +11,6 @@ import Data.List
 import Language.Haskell.TH.Syntax as TH
 import Syntax.Annotated
 
-deriving instance Data AbiType
-
 -- Given each method in the contract we need to know how to extract the arguments from the
 -- arguments' array. for this we create a partial top-level function which matches
 -- on the argument array and return the correct number of argument in its expected type

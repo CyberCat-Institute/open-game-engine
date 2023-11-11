@@ -39,20 +39,19 @@ extra-deps:
  - restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
  - s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
  - semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
-   #  - text-format-0.3.2@sha256:2a3fc17cf87120fcfdbca62a0da59759755549285841cdc1483081c35fb3d115,1814
  - probability-0.2.7@sha256:3e9fe130af3bd75e791e1add902eb2caab170cc95373281c0a9626b01fc3b104,2869
-   # - random-1.2.0
  - splitmix-0.1
  - mwc-random-0.15.0.2
  - monad-bayes-1.1.0
  - smt2-parser-0.1.0.1
  - spawn-0.3
  - spool-0.1
- - hevm-0.51.0
- - git: https://github.com/ethereum/act.git
-   subdirs:
-     - src
-   commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
+ - git: https://github.com/ethereum/hevm
+   commit: c5e40507c35e6f2119aeb5f0740dc3564100ebdc
+   #  - git: https://github.com/ethereum/act.git
+   #    subdirs:
+   #      - src
+   #    commit: 52e99daf3121a4e6a6cb28255e862cf8e83cf4cd
 
 allow-newer: true
 

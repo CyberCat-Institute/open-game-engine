@@ -26,6 +26,8 @@ library
       OpenGames.Engine.OpenGames
       OpenGames.Engine.OpticClass
       OpenGames.Engine.TLL
+      OpenGames.Engine.IOGames
+      OpenGames.Engine.HEVMGames
       OpenGames.Preprocessor
       OpenGames.Preprocessor.BlockSyntax
       OpenGames.Preprocessor.Codegen
@@ -56,7 +58,7 @@ library
       Examples.Token.Concrete
       OpenGames.Engine.AtomicGames
       OpenGames.Engine.BayesianGamesNonState
-      OpenGames.Engine.IOGames
+      OpenGames.Engine.Copy
       OpenGames.Engine.Nat
       OpenGames.Engine.Stateful
       OpenGames.Engine.Vec
@@ -65,7 +67,6 @@ library
       src
   build-depends:
       QuickCheck
-    , act
     , ad
     , base >=4.7 && <5
     , comonad
@@ -77,10 +78,13 @@ library
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
     , mwc-random
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability
@@ -92,28 +96,55 @@ library
     , vector
   default-language: Haskell2010
 
-executable act-exec
+executable graphics
   main-is: Main.hs
   other-modules:
-      Act
-      Act.Execution
-      Act.Prelude
-      Act.TH
-      Act.TH.Extractor
-      Act.TH.State
-      Act.Utils
-      EVM.TH
-      Examples.AmmGenerated
-      Examples.EVM
-      Examples.HEVM
-      Examples.Player
       Paths_open_games_hs
   hs-source-dirs:
-      act
-  ghc-options: -fwarn-unused-imports -Wno-partial-type-signatures
+      graphics
   build-depends:
       QuickCheck
-    , act
+    , ad
+    , base >=4.7 && <5
+    , comonad
+    , criterion
+    , extra
+    , fgl
+    , ghc
+    , graphviz
+    , hashable
+    , hashmap
+    , haskeline
+    , hevm
+    , lens
+    , monad-bayes
+    , mtl
+    , mwc-random
+    , open-games-hs
+    , optics-core
+    , optics-extra
+    , parsec
+    , poly
+    , probability
+    , profunctors
+    , random
+    , template-haskell
+    , transformers
+    , typed-process
+    , vector
+  default-language: Haskell2010
+
+executable hevm-exec
+  main-is: Main.hs
+  other-modules:
+      EVM.Prelude
+      EVM.TH
+      Examples.HEVM
+      Paths_open_games_hs
+  hs-source-dirs:
+      evm
+  build-depends:
+      QuickCheck
     , ad
     , base >=4.7 && <5
     , bytestring
@@ -123,13 +154,12 @@ executable act-exec
     , data-dword
     , extra
     , fgl
-    , file-embed
     , ghc
     , graphviz
     , hashable
     , hashmap
     , haskeline
-    , hevm >=0.51.0
+    , hevm
     , lens
     , monad-bayes
     , mtl
@@ -147,43 +177,6 @@ executable act-exec
     , text
     , transformers
     , typed-process
-    , validation
-    , vector
-  default-language: Haskell2010
-
-executable graphics
-  main-is: Main.hs
-  other-modules:
-      Paths_open_games_hs
-  hs-source-dirs:
-      graphics
-  build-depends:
-      QuickCheck
-    , act
-    , ad
-    , base >=4.7 && <5
-    , comonad
-    , criterion
-    , extra
-    , fgl
-    , ghc
-    , graphviz
-    , hashable
-    , hashmap
-    , haskeline
-    , lens
-    , monad-bayes
-    , mtl
-    , mwc-random
-    , open-games-hs
-    , parsec
-    , poly
-    , probability
-    , profunctors
-    , random
-    , template-haskell
-    , transformers
-    , typed-process
     , vector
   default-language: Haskell2010
 
@@ -196,7 +189,6 @@ executable open-games-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
-    , act
     , ad
     , base >=4.7 && <5
     , comonad
@@ -208,11 +200,14 @@ executable open-games-exe
     , hashable
     , hashmap
     , haskeline
+    , hevm
     , lens
     , monad-bayes
     , mtl
     , mwc-random
     , open-games-hs
+    , optics-core
+    , optics-extra
     , parsec
     , poly
     , probability

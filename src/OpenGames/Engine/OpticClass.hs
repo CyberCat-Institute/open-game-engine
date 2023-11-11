@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -12,6 +13,9 @@ module OpenGames.Engine.OpticClass
     StochasticOptic (..),
     StochasticContext (..),
     MonadOptic (..),
+    MonadOpticM (..),
+    MonadContextM (..),
+    MonadOpticState (..),
     MonadContext (..),
     Optic (..),
     Precontext (..),
@@ -181,6 +185,35 @@ data MonadOptic s t a b where
     (z -> b -> StateT Vector IO t) ->
     MonadOptic s t a b
 
+data MonadOpticM m s t a b where
+  MonadOpticM ::
+    (s -> m (z, a)) ->
+    (z -> b -> StateT Vector m t) ->
+    MonadOpticM m s t a b
+
+data MonadOpticState st s t a b where
+  MonadOpticState ::
+    (s -> IO (z, a)) ->
+    (z -> b -> StateT (Vector, st) IO t) ->
+    MonadOpticState st s t a b
+
+instance Monad m => Optic (MonadOpticM m) where
+  lens v u = MonadOpticM (\s -> return (s, v s)) (\s b -> return (u s b))
+  (>>>>) (MonadOpticM v1 u1) (MonadOpticM v2 u2) = MonadOpticM v u
+    where
+      v s = do (z1, a) <- v1 s; (z2, p) <- v2 a; return ((z1, z2), p)
+      u (z1, z2) q = do b <- u2 z2 q; u1 z1 b
+  (&&&&) (MonadOpticM v1 u1) (MonadOpticM v2 u2) = MonadOpticM v u
+    where
+      v (s1, s2) = do (z1, a1) <- v1 s1; (z2, a2) <- v2 s2; return ((z1, z2), (a1, a2))
+      u (z1, z2) (b1, b2) = do t1 <- u1 z1 b1; t2 <- u2 z2 b2; return (t1, t2)
+  (++++) (MonadOpticM v1 u1) (MonadOpticM v2 u2) = MonadOpticM v u
+    where
+      v (Left s1) = do (z1, a1) <- v1 s1; return (Left z1, Left a1)
+      v (Right s2) = do (z2, a2) <- v2 s2; return (Right z2, Right a2)
+      u (Left z1) b = u1 z1 b
+      u (Right z2) b = u2 z2 b
+
 instance Optic MonadOptic where
   lens v u = MonadOptic (\s -> return (s, v s)) (\s b -> return (u s b))
   (>>>>) (MonadOptic v1 u1) (MonadOptic v2 u2) = MonadOptic v u
@@ -201,8 +234,14 @@ instance Optic MonadOptic where
 data MonadContext s t a b where
   MonadContext :: (Show z) => IO (z, s) -> (z -> a -> StateT Vector IO b) -> MonadContext s t a b
 
+data MonadContextM m s t a b where
+  MonadContextM :: (Show z) => m (z, s) -> (z -> a -> StateT Vector m b) -> MonadContextM m s t a b
+
 instance Precontext MonadContext where
   void = MonadContext (return ((), ())) (\() () -> return ())
+
+instance Monad m => Precontext (MonadContextM m) where
+  void = MonadContextM (return ((), ())) (\() () -> return ())
 
 instance Context MonadContext MonadOptic where
   cmap (MonadOptic v1 u1) (MonadOptic v2 u2) (MonadContext h k) =
@@ -217,3 +256,19 @@ instance Context MonadContext MonadOptic where
     let h' = do (z, (s1, s2)) <- h; return ((z, s2), s1)
         k' (z, s2) a1 = do (_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1
      in MonadContext h' k'
+
+instance Monad m => Context (MonadContextM m) (MonadOpticM m) where
+  cmap (MonadOpticM v1 u1) (MonadOpticM v2 u2) (MonadContextM h k) =
+    let h' = do (z, s) <- h; (_, s') <- v1 s; return (z, s')
+        k' z a = do (z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'
+     in MonadContextM h' k'
+  (//) (MonadOpticM v u) (MonadContextM h k) =
+    let h' = do (z, (s1, s2)) <- h; return ((z, s1), s2)
+        k' (z, s1) a2 = do (_, a1) <- lift (v s1); (_, b2) <- k z (a1, a2); return b2
+     in MonadContextM h' k'
+  (\\) (MonadOpticM v u) (MonadContextM h k) =
+    let h' = do (z, (s1, s2)) <- h; return ((z, s2), s1)
+        k' (z, s2) a1 = do (_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1
+     in MonadContextM h' k'
+
+-- maybe `fromFunctions` should live here
