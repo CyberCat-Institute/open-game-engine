@@ -5,7 +5,7 @@ module OpenGames.Engine.Copy where
 
 
 import Control.Monad.ST
-import Control.Monad.State
+import Control.Monad.Trans.State.Strict (StateT, put, get, modify)
 import Data.Kind
 import EVM.Types
 import Data.Vector.Unboxed.Mutable

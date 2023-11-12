@@ -5,7 +5,8 @@
 
 module OpenGames.Engine.HEVMGames where
 
-import Control.Monad.State hiding (state)
+import Control.Monad.Trans.State.Strict (StateT, execStateT, modify)
+import Control.Monad.Trans (lift)
 import Control.Monad.ST
 import Data.Foldable (maximumBy)
 import Data.HashMap as HM hiding (map, mapMaybe, null)

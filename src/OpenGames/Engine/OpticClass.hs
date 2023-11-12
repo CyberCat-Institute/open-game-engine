@@ -25,7 +25,8 @@ module OpenGames.Engine.OpticClass
   )
 where
 
-import Control.Monad.State hiding (state)
+import Control.Monad.Trans.State.Strict hiding (state)
+import Control.Monad.Trans (lift)
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Numeric.Probability.Distribution hiding (lift)
 

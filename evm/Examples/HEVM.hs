@@ -29,12 +29,6 @@ import OpenGames.Preprocessor
 import Optics.Core (view, (%))
 
 import Control.Monad.ST
--- State EVM a
--- State EVM a
-
--- ST s2 EVM
--- ST s1 EVM
-
 
 -- send and run a transaction on the EVM state
 sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
@@ -45,8 +39,9 @@ sendAndRun' tx = do
 -- exectute the EVM state in IO
 sendAndRun :: EthTransaction
             -> VM RealWorld -> HEVMState (VM RealWorld)
-sendAndRun tx st = let g = (execStateT (sendAndRun' tx) st)
-                    in undefined
+sendAndRun tx st = do put st
+                      sendAndRun' tx
+                      get
 
 deposit amt =
   EthTransaction
@@ -107,7 +102,7 @@ append = (++)
 --   outputs : finalState ;
 
 -- | ]
-playerAutomatic globalState =
+playerManual globalState =
   [opengame|
   inputs   : ;
   feedback : ;
@@ -132,13 +127,38 @@ playerAutomatic globalState =
   returns : ;
 |]
 
+-- playerAutomatic =
+--   [opengame|
+--   inputs   : ;
+--   feedback : ;
+--   :-------:
+--
+--   inputs    : ;
+--   operation : fromLensM (const (sendAndRun' (deposit 100))) (const pure) ;
+--   outputs   : ;
+--
+--   operation : hevmDecision "AllPlayers" (transactionList 2) ;
+--   outputs   : transactions ;
+--   returns   : balance finalState "a";
+--
+--   inputs    : transactions;
+--   feedback  : ;
+--   operation : fromLensM (sendAndRun') (const pure) ;
+--   outputs   : finalState ;
+--   returns   : ;
+--
+--   :-------:
+--   outputs: ;
+--   returns : ;
+-- |]
+
 initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solitidy/Withdraw.sol")]
 
-outcome = do
-  i <- stToIO initial
-  -- let term :- Nil =  evaluate (playerAutomatic i) ((pure undefined) :- Nil) void
-  undefined
+-- outcome = do
+--   i <- stToIO initial
+--   let term :- Nil =  evaluate (playerAutomatic ) ((pure undefined) :- Nil) void
+--   undefined
 
 testExec = do
   evm $ makeTxCall (deposit 100)
