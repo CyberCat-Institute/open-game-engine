@@ -45,9 +45,6 @@ import GHC.ST
 -- TODO implement printout
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
-
-type IOOpenGameM m a b x s y r = OpenGame (MonadOpticM m) (MonadContextM m) a b x s y r
-type HEVMState = StateT (VM RealWorld) (ST RealWorld)
 type Agent = String
 
 data DiagnosticsMC y = DiagnosticsMC
