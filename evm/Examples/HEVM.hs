@@ -27,6 +27,19 @@ import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
 import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor
 import Optics.Core (view, (%))
+--
+--  primary goals:
+--  - import lido
+--  - run transactions
+--    - staking
+--    - unstaking
+--  - import curve contract
+--    - convert stEth to Eth
+--  - Extracting payoffs (???)
+--  - final goal: combine curve + lido in OG
+--
+--  Follow up goals:
+--  - Ergonomics around modeling contracts
 
 import Control.Monad.ST
 
