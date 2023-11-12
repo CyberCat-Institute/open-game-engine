@@ -57,8 +57,6 @@ makeCallData :: EthTransaction -> Expr Buf
 makeCallData (EthTransaction _ caller method args _ _) =
   ConcreteBuf $ abiMethod method (AbiTuple (Vector.fromList args))
 
--- type EVM s = ST s (VM s)
-
 makeTxCall :: EthTransaction -> EVM s ()
 makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   resetState
@@ -68,12 +66,6 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   assign (#state % #calldata) (makeCallData tx)
   assign (#state % #caller) (caller)
   assign (#state % #gas) gas
-  -- origin <-
-  --     initialContract (RuntimeCode (ConcreteRuntimeCode ""))
-  -- let insufficientBal = maybe False
-  --   (\b -> b < params.gasprice * (into params.gasCall))
-  --   (maybeLitWord origin.balance)
-  -- when insufficientBal $ internalError "insufficient balance for gas cost"
   vm <- get
   put $ initTx vm
 
@@ -172,7 +164,7 @@ loadContracts arg = unsafePerformIO $ loadEVM arg
 
 -- TODO: use foundry
 thatOneMethod =
-  let st = loadContracts [("Neg", "solitidy/Simple.sol")]
+  let st = loadContracts [("Neg", "solidity/Simple.sol")]
       ourTransaction =
         EthTransaction
           (LitAddr 0xabcd)
@@ -185,31 +177,4 @@ thatOneMethod =
         evm (makeTxCall ourTransaction)
         runFully
    in interpret (zero 0 (Just 0)) undefined steps
-
--- cloneMemory :: Memory s -> StateT st (ST s) (Memory s)
--- cloneMemory (ConcreteMemory s) = ConcreteMemory <$> clone s
--- cloneMemory (SymbolicMemory b) = pure $ SymbolicMemory b
---
---
--- cloneFrameState :: FrameState s -> StateT st (ST s) (FrameState s)
--- cloneFrameState fs = do
---   copiedMemory = view #memory fs
---   mem' <- cloneFrameState copiedMemory
---   pure $ update #memory mem'
---
--- cloneFrame :: Frame s -> StateT st (ST s) (Frame s)
--- cloneFrame fs = undefined
-
-copy :: StateT (VM s) (ST s) (VM s)
-copy = do -- vmState <- get
-          -- let internalState = view #state vmState
-          -- let frames = view #frames vmState
-          -- copiedState <- cloneFrameState internalState
-          -- copiedFrames <- traverse cloneFrame frames
-          undefined
-
-restore :: VM s -> StateT (VM s) (ST s) ()
-restore = undefined
---   assign (#state % #calldata) (makeCallData tx)
---   assign (#state % #caller) (caller)
 

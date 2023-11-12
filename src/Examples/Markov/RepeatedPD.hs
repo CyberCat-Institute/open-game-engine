@@ -6,8 +6,8 @@
 
 module Examples.Markov.RepeatedPD where
 
-import Control.Monad.State hiding (lift, state, void)
-import qualified Control.Monad.State as ST
+import Control.Monad.Trans.State.Strict
+import qualified Control.Monad.Trans as ST (lift)
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
 import OpenGames
 import OpenGames.Preprocessor

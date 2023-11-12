@@ -11,8 +11,9 @@ module Examples.Markov.TestSimpleMonteCarlo.Continuation
   )
 where
 
-import Control.Monad.State hiding (lift, state, void)
-import qualified Control.Monad.State as ST
+import Control.Monad.Trans.State.Strict as ST
+import qualified Control.Monad.Trans as ST (lift)
+import qualified Control.Monad as ST (replicateM_)
 import Data.Utils
 import qualified Data.Vector as V
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)
@@ -98,13 +99,13 @@ transformStratTuple (x :- y :- Nil) =
 
 -- extract continuation
 extractContinuation :: MonadOptic s () a () -> s -> StateT Vector IO ()
-extractContinuation (MonadOptic v u) x = do
+extractContinuation (MonadOpticM v u) x = do
   (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
 extractNextState :: MonadOptic s () a () -> s -> IO a
-extractNextState (MonadOptic v _) x = do
+extractNextState (MonadOpticM v _) x = do
   (z, a) <- v x
   pure a
 
@@ -142,7 +143,7 @@ sampleDetermineContinuationPayoffs ::
   (ActionPD, ActionPD) ->
   StateT Vector IO ()
 sampleDetermineContinuationPayoffs sampleSize iterator strat initialValue = do
-  replicateM_ sampleSize (determineContinuationPayoffs iterator strat initialValue)
+  ST.replicateM_ sampleSize (determineContinuationPayoffs iterator strat initialValue)
   v <- ST.get
   ST.put (average sampleSize v)
 
@@ -188,7 +189,7 @@ determineContinuationPayoffsIO iterator strat action = do
     executeStrat = play prisonersDilemmaCont strat
 
 -- fix context used for the evaluation
-contextCont iterator strat initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffsIO iterator strat action)
+contextCont iterator strat initialAction = MonadContextM (pure ((), initialAction)) (\_ action -> determineContinuationPayoffsIO iterator strat action)
 
 repeatedPDEq iterator strat initialAction = evaluate prisonersDilemmaCont strat context
   where

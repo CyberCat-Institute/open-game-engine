@@ -8,7 +8,7 @@
 
 module Examples.Staking.AndGateMarkovMC where
 
-import Control.Monad.State hiding (lift, state, void)
+import Control.Monad.Trans.State.Strict hiding (lift, state, void)
 import qualified Control.Monad.State as ST
 import qualified Data.Vector as V
 import Numeric.Probability.Distribution hiding (filter, lift, map)
@@ -322,24 +322,24 @@ andGateGame (AndGateMarkovParams {..}) =
 
 -- extract continuation
 extractContinuation :: MonadOptic s () s () -> s -> StateT Vector IO ()
-extractContinuation (MonadOptic v u) x = do
+extractContinuation (MonadOpticM v u) x = do
   (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
 extractNextState :: MonadOptic s () s () -> s -> IO s
-extractNextState (MonadOptic v _) x = do
+extractNextState (MonadOpticM v _) x = do
   (z, a) <- v x
   pure a
 
 extractContinuation2 :: MonadOptic Double () ([Double], Bool) () -> Double -> StateT Vector IO ()
-extractContinuation2 (MonadOptic v u) x = do
+extractContinuation2 (MonadOpticM v u) x = do
   (z, a) <- ST.lift (v x)
   u z ()
 
 -- extract next state (action)
 extractNextState2 :: MonadOptic Double () ([Double], Bool) () -> Double -> IO ([Double], Bool)
-extractNextState2 (MonadOptic v _) x = do
+extractNextState2 (MonadOpticM v _) x = do
   (z, a) <- v x
   pure a
 
@@ -373,11 +373,11 @@ determineContinuationPayoffs3 iterator initialAction = do
     executeStrat = play (andGateGame andGateMarkovTestParams) strategyTuple
 
 -- fix context used for the evaluation
-contextCont parameters iterator strat initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
+contextCont parameters iterator strat initialAction = MonadContextM (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs parameters iterator strat action)
 
-contextCont' parameters iterator strat initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
+contextCont' parameters iterator strat initialAction = MonadContextM (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs' parameters iterator strat action)
 
-contextCont3 iterator initialAction = MonadContext (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
+contextCont3 iterator initialAction = MonadContextM (pure ((), initialAction)) (\_ action -> determineContinuationPayoffs3 iterator action)
 
 -----------
 -- Strategy

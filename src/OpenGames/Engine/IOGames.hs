@@ -16,6 +16,10 @@ module OpenGames.Engine.IOGames
     Agent (..),
     DiagnosticsMC (..),
     dependentDecisionIO,
+    MonadOptic,
+    MonadOpticM(..),
+    MonadContext,
+    MonadContextM(..),
     fromLens,
     fromLensM,
     fromFunctions,
@@ -25,7 +29,9 @@ module OpenGames.Engine.IOGames
 where
 
 import Control.Arrow hiding ((+:+))
-import Control.Monad.State hiding (state)
+import Control.Monad.Trans.State.Strict hiding (state)
+import Control.Monad.Trans (lift)
+import Control.Monad (replicateM)
 import Control.Monad.ST
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
@@ -71,9 +77,9 @@ dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
             action <- genFromTable (runKleisli strat x) gS
             return ((), action)
           u () r = modify (adjustOrAdd (+ r) r name)
-       in MonadOptic v u
+       in MonadOpticM v u
 
-    evaluate (strat :- Nil) (MonadContext h k) = output :- Nil
+    evaluate (strat :- Nil) (MonadContextM h k) = output :- Nil
       where
         output = do
           zippedLs <- samplePayoffs
@@ -122,7 +128,7 @@ dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
 fromLens :: (x -> y) -> (x -> r -> s) -> IOOpenGame '[] '[] x s y r
 fromLens v u =
   OpenGame
-    { play = \Nil -> MonadOptic (\x -> return (x, v x)) (\x r -> return (u x r)),
+    { play = \Nil -> MonadOpticM (\x -> return (x, v x)) (\x r -> return (u x r)),
       evaluate = \Nil _ -> Nil
     }
 
@@ -132,7 +138,7 @@ fromFunctions f g = fromLens f (const g)
 fromLensM :: (x -> IO y) -> (x -> r -> IO s) -> IOOpenGame '[] '[] x s y r
 fromLensM f g =
   OpenGame
-    { play = \Nil -> MonadOptic (\x ->  (x,) <$> f x) (\x r -> lift $ g x r),
+    { play = \Nil -> MonadOpticM (\x ->  (x,) <$> f x) (\x r -> lift $ g x r),
       evaluate = \Nil _ -> Nil
     }
 
@@ -140,7 +146,7 @@ nature :: CondensedTableV x -> IOOpenGame '[] '[] () () x ()
 nature table = OpenGame {play, evaluate}
   where
     play _ =
-      MonadOptic v u
+      MonadOpticM v u
       where
         v () = do
           g <- newStdGen
@@ -158,6 +164,6 @@ discount name f =
     { play = \_ ->
         let v () = return ((), ())
             u () () = modify (adjustOrAdd f (f 0) name)
-         in MonadOptic v u,
+         in MonadOpticM v u,
       evaluate = \_ _ -> Nil
     }

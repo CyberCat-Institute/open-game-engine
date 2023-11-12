@@ -14,8 +14,8 @@
 
 module Examples.Auctions.DutchAuction where
 
-import Control.Monad.State hiding (lift, state, void)
-import qualified Control.Monad.State as ST
+import Control.Monad.Trans.State.Strict
+import qualified Control.Monad.Trans as ST (lift)
 import OpenGames
 import OpenGames.Preprocessor
 

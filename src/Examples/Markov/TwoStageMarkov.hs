@@ -6,7 +6,7 @@
 
 module Examples.Markov.TwoStageMarkov where
 
-import Control.Monad.State hiding (lift, state, void)
+import Control.Monad.Trans.State.Strict
 import qualified Control.Monad.State as ST
 import Data.Tuple.Extra (uncurry3)
 import Examples.SimultaneousMoves (ActionPD (..), Location (..))

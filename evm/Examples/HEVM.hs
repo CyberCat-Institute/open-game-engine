@@ -153,7 +153,7 @@ playerManual globalState =
 -- |]
 
 initial :: ST s (VM s)
-initial = loadContracts [("Piggybank", "solitidy/Withdraw.sol")]
+initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
 
 -- outcome = do
 --   i <- stToIO initial
