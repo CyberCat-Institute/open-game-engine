@@ -5,7 +5,7 @@
 
 module OpenGames.Engine.HEVMGames where
 
-import Control.Monad.Trans.State.Strict (StateT, execStateT, modify)
+import Control.Monad.Trans.State.Strict (StateT, execStateT, modify, evalStateT)
 import Control.Monad.Trans (lift)
 import Control.Monad.ST
 import Data.Foldable (maximumBy)
@@ -17,7 +17,8 @@ import OpenGames.Engine.OpticClass
 import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.TLL
 import OpenGames.Engine.Copy
-import EVM.Types
+import OpenGames.Engine.Diagnostics
+import EVM.Types (VM)
 import GHC.ST
 
 type OpenGameM m a b x s y r = OpenGame (MonadOpticM m) (MonadContextM m) a b x s y r
@@ -41,14 +42,24 @@ hevmDecision name ys = OpenGame play eval
         output :: HEVMState (DiagnosticInfoBayesian x y)
         output = do (residual, observation) <- h
                     let u y = do saveState <- copy
-                                 payoff <- execStateT (k residual y) HM.empty
+                                 payoff <- evalStateT (k residual y) HM.empty
                                  restore saveState
                                  pure payoff
                     let actualMove = strat observation
                     actualPayoff <- u actualMove
                     allResults <- traverse (\move -> (move,) <$> u move) ys
                     let (optimalMove, optimalPayoff) = maximumBy (comparing snd) allResults
-                    return $ undefined
+                    return $ DiagnosticInfoBayesian
+                           { equilibrium = actualPayoff == optimalPayoff,
+                             player = name,
+                             optimalMove = optimalMove,
+                             strategy = pure (strat observation),
+                             optimalPayoff = optimalPayoff,
+                             context = error "impossible to implement",
+                             payoff = actualPayoff,
+                             state = observation,
+                             unobservedState = "()"
+                           }
 
 fromLens :: (x -> y) -> (x -> r -> s) -> HEVMGame '[] '[] x s y r
 fromLens v u =

@@ -101,7 +101,7 @@ emptyVM contracts = do
           maxCodeSize = 0,
           gaslimit = 0,
           baseFee = 0,
-          schedule = undefined -- specifically this, what is it suppsoed to be?
+          schedule = feeSchedule -- specifically this, what is it suppsoed to be?
         }
     emptyTransaction :: TxState
     emptyTransaction =

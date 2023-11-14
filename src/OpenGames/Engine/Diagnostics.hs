@@ -11,8 +11,10 @@
 
 module OpenGames.Engine.Diagnostics
   ( DiagnosticInfoBayesian (..),
+    PrintOutput(..),
     generateOutput,
     generateIsEq,
+    showDiagnosticInfoL
   )
 where
 

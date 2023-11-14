@@ -25,6 +25,7 @@ import EVM.TH
 import EVM.Types
 import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
 import OpenGames.Engine.HEVMGames
+import OpenGames.Engine.Diagnostics
 import OpenGames.Preprocessor
 import Optics.Core (view, (%))
 --
@@ -168,10 +169,20 @@ playerManual globalState =
 initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
 
--- outcome = do
---   i <- stToIO initial
---   let term :- Nil =  evaluate (playerAutomatic ) ((pure undefined) :- Nil) void
---   undefined
+instance (Apply OpenGames.Engine.Diagnostics.PrintOutput
+                (DiagnosticInfoBayesian () EthTransaction)
+                [Char]) where
+   apply a b = showDiagnosticInfoL [b]
+
+
+outcome = do
+  i <- stToIO initial
+  let term :- Nil =  evaluate (playerManual i) ((pure (dummyTx 1)) :- Nil) void
+  let t' = evalStateT term i
+  tevaluated <- stToIO t'
+  generateOutput (tevaluated :- Nil)
+  -- let tio = stToIO t'
+  -- let g = generateOutput term
 
 testExec = do
   evm $ makeTxCall (deposit 100)
