@@ -21,12 +21,14 @@ import OpenGames.Engine.Diagnostics
 import EVM.Types (VM)
 import GHC.ST
 
+import Debug.Trace
+
 type OpenGameM m a b x s y r = OpenGame (MonadOpticM m) (MonadContextM m) a b x s y r
 
 type HEVMState = StateT (VM RealWorld) (ST RealWorld)
 type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
 
-hevmDecision :: forall x y . String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y Double
+hevmDecision :: forall x y . Show y => String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y Double
 hevmDecision name ys = OpenGame play eval
   where
     play :: List '[x -> y] -> MonadOpticM HEVMState x () y Double
@@ -48,6 +50,7 @@ hevmDecision name ys = OpenGame play eval
                     let actualMove = strat observation
                     actualPayoff <- u actualMove
                     allResults <- traverse (\move -> (move,) <$> u move) ys
+                    trace ("all results: " ++ unlines (fmap (\(mv, pf) -> show mv ++ ": " ++ show pf) allResults)) (pure ())
                     let (optimalMove, optimalPayoff) = maximumBy (comparing snd) allResults
                     return $ DiagnosticInfoBayesian
                            { equilibrium = actualPayoff == optimalPayoff,

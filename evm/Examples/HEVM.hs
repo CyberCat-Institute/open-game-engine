@@ -80,7 +80,9 @@ transactionList :: Int256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
 balance :: VM s -> String -> Double
-balance st name = trace ("memory size: " ++ show (view (#state % #memorySize) st) ++ "memory: " ++ show (view (#state % #memory) st)) 0
+balance st name = 0
+
+-- balance' :: String -> EVM Double
 
 -- actDecision1 :: String -> [Tx] -> OG .....
 actDecision name strategies =
@@ -141,30 +143,32 @@ playerManual globalState =
   returns : ;
 |]
 
--- playerAutomatic =
---   [opengame|
---   inputs   : ;
---   feedback : ;
---   :-------:
---
---   inputs    : ;
---   operation : fromLensM (const (sendAndRun' (deposit 100))) (const pure) ;
---   outputs   : ;
---
---   operation : hevmDecision "AllPlayers" (transactionList 2) ;
---   outputs   : transactions ;
---   returns   : balance finalState "a";
---
---   inputs    : transactions;
---   feedback  : ;
---   operation : fromLensM (sendAndRun') (const pure) ;
---   outputs   : finalState ;
---   returns   : ;
---
---   :-------:
---   outputs: ;
---   returns : ;
--- |]
+unit = ()
+
+playerAutomatic =
+  [opengame|
+  inputs   : ;
+  feedback : ;
+  :-------:
+
+  inputs    : unit ;
+  operation : fromLensM (const (sendAndRun' (deposit 100))) (const pure) ;
+  outputs   : dummy ;
+
+  operation : hevmDecision "AllPlayers" (transactionList 2) ;
+  outputs   : transactions ;
+  returns   : balance finalState "a";
+
+  inputs    : transactions;
+  feedback  : ;
+  operation : fromLensM (sendAndRun') (const pure) ;
+  outputs   : finalState ;
+  returns   : ;
+
+  :-------:
+  outputs: ;
+  returns : ;
+|]
 
 initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
@@ -181,8 +185,13 @@ outcome = do
   let t' = evalStateT term i
   tevaluated <- stToIO t'
   generateOutput (tevaluated :- Nil)
-  -- let tio = stToIO t'
-  -- let g = generateOutput term
+
+outcomeAutomatic = do
+  i <- stToIO initial
+  let term :- Nil =  evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
+  let t' = evalStateT term i
+  tevaluated <- stToIO t'
+  generateOutput (tevaluated :- Nil)
 
 testExec = do
   evm $ makeTxCall (deposit 100)
