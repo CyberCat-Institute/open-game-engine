@@ -1,4 +1,9 @@
+{-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLabels #-}
@@ -23,11 +28,14 @@ import EVM.Fetch (zero)
 import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
 import EVM.Types
+import EVM (emptyContract, exec1)
 import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
 import OpenGames.Engine.HEVMGames
 import OpenGames.Engine.Diagnostics
-import OpenGames.Preprocessor
-import Optics.Core (view, (%))
+import OpenGames.Preprocessor hiding (Lit)
+import Optics.Core (view, (%?), (.~), (%), (&), over, at, set, preview)
+
+import GHC.Float
 --
 --  primary goals:
 --  - import lido
@@ -44,11 +52,22 @@ import Optics.Core (view, (%))
 
 import Control.Monad.ST
 
+run' :: EVM s (VM s)
+run' = do
+  vm <- get
+  case vm.result of
+    Nothing -> exec1 >> run'
+    Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) -> cont (Case (c > 0)) >> run'
+    Just _ -> pure vm
+
 -- send and run a transaction on the EVM state
 sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
 sendAndRun' tx = do
   EVM.TH.makeTxCall tx
-  run
+  vm <- run'
+  traceM (show vm.result)
+  pure vm
+
 
 -- exectute the EVM state in IO
 sendAndRun :: EthTransaction
@@ -57,20 +76,24 @@ sendAndRun tx st = do put st
                       sendAndRun' tx
                       get
 
-deposit amt =
+userContractAddress = LitAddr 0x1234
+withdrawContractAddress = LitAddr 0xabcd
+
+deposit :: EthTransaction
+deposit =
   EthTransaction
-    (LitAddr 0xabcd)
-    (LitAddr 0x1234)
+    withdrawContractAddress
+    userContractAddress
     "deposit()"
     []
-    amt
-    100000000
+    1_000
+    10_000_000
 
 dummyTx :: Int256 -> EthTransaction
 dummyTx amt =
   EthTransaction
-    (LitAddr 0xabcd)
-    (LitAddr 0x1234)
+    withdrawContractAddress
+    userContractAddress
     "retrieve(uint256)"
     [AbiInt 256 amt]
     0
@@ -80,7 +103,13 @@ transactionList :: Int256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
 balance :: VM s -> String -> Double
-balance st name = trace ("memory size: " ++ show (view (#state % #memorySize) st) ++ "memory: " ++ show (view (#state % #memory) st)) 0
+balance st name =
+  let contract = Map.lookup userContractAddress st.env.contracts
+      Just balance = fmap (view #balance) contract
+      Just int = maybeLitWord balance >>= toInt
+      out = int2Double int
+  in -- trace ("balance: " ++ show out ++ "\ncontracts: " ++ show (Map.keys st.env.contracts))
+     out
 
 -- actDecision1 :: String -> [Tx] -> OG .....
 actDecision name strategies =
@@ -122,15 +151,11 @@ playerManual globalState =
   feedback : ;
   :-------:
 
-  inputs    : globalState ;
-  operation : fromLensM (sendAndRun (deposit 100)) (const pure) ;
-  outputs   : withFunds ;
-
   operation : hevmDecision "AllPlayers" (transactionList 2) ;
   outputs   : transactions ;
   returns   : balance finalState "a";
 
-  inputs    : transactions, withFunds;
+  inputs    : transactions, globalState;
   feedback  : ;
   operation : fromLensM (uncurry sendAndRun) (const pure) ;
   outputs   : finalState ;
@@ -141,53 +166,65 @@ playerManual globalState =
   returns : ;
 |]
 
--- playerAutomatic =
---   [opengame|
---   inputs   : ;
---   feedback : ;
---   :-------:
---
---   inputs    : ;
---   operation : fromLensM (const (sendAndRun' (deposit 100))) (const pure) ;
---   outputs   : ;
---
---   operation : hevmDecision "AllPlayers" (transactionList 2) ;
---   outputs   : transactions ;
---   returns   : balance finalState "a";
---
---   inputs    : transactions;
---   feedback  : ;
---   operation : fromLensM (sendAndRun') (const pure) ;
---   outputs   : finalState ;
---   returns   : ;
---
---   :-------:
---   outputs: ;
---   returns : ;
--- |]
+playerAutomatic =
+  [opengame|
+  inputs   : ;
+  feedback : ;
+  :-------:
+
+  operation : hevmDecision "AllPlayers" (transactionList 2) ;
+  outputs   : transactions ;
+  returns   : balance finalState "a";
+
+  inputs    : transactions;
+  feedback  : ;
+  operation : fromLensM (sendAndRun') (const pure) ;
+  outputs   : finalState ;
+  returns   : ;
+
+  :-------:
+  outputs: ;
+  returns : ;
+|]
 
 initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
+
+setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
+setupAddresses amounts vm =
+  -- generate all the contracts with the given amounts
+  let userContracts = fmap (\(addr, amount) -> (addr, set #balance amount emptyContract)) amounts
+  -- update the VM state by adding each contract at the corresponding address
+  in foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
 
 instance (Apply OpenGames.Engine.Diagnostics.PrintOutput
                 (DiagnosticInfoBayesian () EthTransaction)
                 [Char]) where
    apply a b = showDiagnosticInfoL [b]
 
-
 outcome = do
   i <- stToIO initial
-  let term :- Nil =  evaluate (playerManual i) ((pure (dummyTx 1)) :- Nil) void
-  let t' = evalStateT term i
+  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
+  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  let term :- Nil =  evaluate (playerManual newI) ((pure (dummyTx 1)) :- Nil) void
+  let t' = evalStateT term newI
   tevaluated <- stToIO t'
   generateOutput (tevaluated :- Nil)
   -- let tio = stToIO t'
   -- let g = generateOutput term
 
+outcome' = do
+  i <- stToIO initial
+  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
+  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  let term :- Nil =  evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
+  let t' = evalStateT term newI
+  tevaluated <- stToIO t'
+  generateOutput (tevaluated :- Nil)
+
 testExec = do
-  evm $ makeTxCall (deposit 100)
-  runFully
-  evm $ makeTxCall (dummyTx 20)
+  evm $ makeTxCall deposit
+  -- evm $ makeTxCall (dummyTx 2)
   runFully
 
 showVM :: VM s -> Text
@@ -204,6 +241,12 @@ showContract c = T.unlines
   [ "balance: " <> (T.pack $ show c.balance)
   ]
 
--- interp = do
---   vm <- interpret (zero 0 (Just 0)) initial (testExec)
---   T.putStrLn (showVM vm)
+interp = do
+  i <- stToIO initial
+  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
+  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  let storage = preview (#env % #contracts % at withdrawContractAddress %? #storage) newI
+  let orig = preview (#env % #contracts % at withdrawContractAddress %? #origStorage) newI
+  traceM ("storage: " <> show storage)
+  traceM ("origStorage: " <> show orig)
+  T.putStrLn (showVM newI)
