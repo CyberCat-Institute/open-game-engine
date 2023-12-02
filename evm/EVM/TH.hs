@@ -19,7 +19,6 @@ import Data.Text (Text, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
-import Data.Vector.Mutable
 import EVM (blankState, initialContract, loadContract, resetState)
 import EVM.ABI
 import EVM.Exec (exec, run)
@@ -49,6 +48,8 @@ import Optics.State.Operators
 import Control.Monad.Trans.State.Strict
 
 
+import Debug.Trace
+
 -- put this in sttate.callData
 -- run it to execute the transaction
 -- put more for subsequent calls
@@ -61,13 +62,12 @@ makeTxCall :: EthTransaction -> EVM s ()
 makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   resetState
   assign (#tx % #isCreate) False
-  execState (loadContract addr) <$> get >>= put
+  modify (execState (loadContract addr))
   assign (#state % #callvalue) (Lit amt)
   assign (#state % #calldata) (makeCallData tx)
   assign (#state % #caller) (caller)
   assign (#state % #gas) gas
-  vm <- get
-  put $ initTx vm
+  modify initTx
 
 emptyVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
 emptyVM contracts = do
@@ -85,9 +85,11 @@ emptyVM contracts = do
       burned = 0,
       iterations = mempty,
       constraints = [],
-      keccakEqs = []
-      -- allowFFI = True,
-      -- overrideCaller = Nothing
+      keccakEqs = [],
+      config = RuntimeConfig
+                True
+                Nothing
+                EmptyBase
     }
   where
     -- question: Is that a reasonable empty first block?
@@ -101,7 +103,7 @@ emptyVM contracts = do
           maxCodeSize = 0,
           gaslimit = 0,
           baseFee = 0,
-          schedule = feeSchedule -- specifically this, what is it suppsoed to be?
+          schedule = feeSchedule
         }
     emptyTransaction :: TxState
     emptyTransaction =
