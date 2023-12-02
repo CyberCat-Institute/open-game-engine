@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -10,7 +9,6 @@
 
 module EVM.TH where
 
-import EVM.Prelude (EthTransaction (..))
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
 import Data.ByteString (ByteString)
@@ -19,19 +17,18 @@ import Data.Text (Text, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
+import Debug.Trace
 import EVM (blankState, initialContract, loadContract, resetState)
 import EVM.ABI
 import EVM.Exec (exec, run)
 import EVM.Expr
 import EVM.FeeSchedule
 import EVM.Fetch
+import EVM.Prelude (EthTransaction (..))
 import EVM.Solidity (solcRuntime)
 import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
-import EVM.Expr
-import EVM.Exec (exec, run)
-import EVM.Transaction (initTx)
 import GHC.IO.Unsafe
 import GHC.ST
 import Language.Haskell.TH.Syntax as TH
@@ -39,16 +36,6 @@ import Optics.Core
 import Optics.State
 import Optics.State.Operators
 import Prelude hiding (FilePath, readFile)
-import EVM.Stepper
-
-import Optics.Core
-import Optics.State
-import Optics.State.Operators
-
-import Control.Monad.Trans.State.Strict
-
-
-import Debug.Trace
 
 -- put this in sttate.callData
 -- run it to execute the transaction
@@ -72,25 +59,27 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
 emptyVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
 emptyVM contracts = do
   blankSt <- blankState
-  pure $ VM
-    { result = Nothing,
-      state = blankSt,
-      frames = [],
-      env = envForContracts contracts,
-      block = emptyBlock,
-      tx = emptyTransaction,
-      logs = [],
-      traces = Zipper.fromForest mempty,
-      cache = Cache mempty mempty,
-      burned = 0,
-      iterations = mempty,
-      constraints = [],
-      keccakEqs = [],
-      config = RuntimeConfig
-                True
-                Nothing
-                EmptyBase
-    }
+  pure $
+    VM
+      { result = Nothing,
+        state = blankSt,
+        frames = [],
+        env = envForContracts contracts,
+        block = emptyBlock,
+        tx = emptyTransaction,
+        logs = [],
+        traces = Zipper.fromForest mempty,
+        cache = Cache mempty mempty,
+        burned = 0,
+        iterations = mempty,
+        constraints = [],
+        keccakEqs = [],
+        config =
+          RuntimeConfig
+            True
+            Nothing
+            EmptyBase
+      }
   where
     -- question: Is that a reasonable empty first block?
     emptyBlock :: Block
@@ -179,4 +168,3 @@ thatOneMethod =
         evm (makeTxCall ourTransaction)
         runFully
    in interpret (zero 0 (Just 0)) undefined steps
-

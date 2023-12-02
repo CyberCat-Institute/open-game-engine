@@ -16,4 +16,3 @@ data Transaction = Transaction
     arguments :: [AbiValue]
   }
   deriving (Eq, Show, Ord)
-

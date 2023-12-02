@@ -1,5 +1,5 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
@@ -8,7 +8,7 @@ module EVM.Prelude (Word256, EthTransaction (..), AbiType (..), AbiValue (..)) w
 import Data.DoubleWord (Word256)
 import Data.Text
 import EVM.ABI (AbiType (..), AbiValue (..))
-import EVM.Types (Addr, W256, Expr(..), EType(..))
+import EVM.Types (Addr, EType (..), Expr (..), W256)
 import GHC.Word
 
 data EthTransaction = EthTransaction

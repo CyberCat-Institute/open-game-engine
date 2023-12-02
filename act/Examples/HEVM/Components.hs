@@ -2,21 +2,18 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Examples.HEVM.Components
-  where
+module Examples.HEVM.Components where
 
-
+import OpenGames.Engine.BayesianGames (addPayoffsReturns)
 import OpenGames.Engine.Engine
 import OpenGames.Preprocessor
-import OpenGames.Engine.BayesianGames (addPayoffsReturns)
 
 {-
 WORK IN PROGRESS
 Basic Components needed to model different txs
 NOTE We assume that the type of contract functionality used by the player is provided by the modeller
-NOTE For instance, in a case of a swap, the modeller invokes the right transaction type, say a deposit or swap. 
+NOTE For instance, in a case of a swap, the modeller invokes the right transaction type, say a deposit or swap.
 -}
-
 
 -----------------------------
 -- 1. Single player decisions
@@ -25,7 +22,8 @@ NOTE For instance, in a case of a swap, the modeller invokes the right transacti
 -- The structure should cover different kinds of transactions
 -- Only the account difference affects payoffs here
 -- NOTE In so far as there are multiple parameters to choose, we will model this step by step.
-singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff  = [opengame|
+singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff =
+  [opengame|
 
     inputs    :  state, privateValue ;
     feedback  :   ;
@@ -56,7 +54,8 @@ singlePlayerTransactionChoice name actionSpace replaceMeWithAccountDiff  = [open
 
 -- Account for additional value directly derived from action
 -- NOTE value given exogenously
-addPrivateValueDirectExogenous name payoffFunctionDirect privateValueDirect = [opengame|
+addPrivateValueDirectExogenous name payoffFunctionDirect privateValueDirect =
+  [opengame|
 
     inputs    : dec ;
     feedback  :     ;
@@ -85,7 +84,8 @@ addPrivateValueDirectExogenous name payoffFunctionDirect privateValueDirect = [o
 
 -- Account for additional value directly derived from action
 -- NOTE value given endogenously
-addPrivateValueDirectEndogenous name payoffFunctionDirect = [opengame|
+addPrivateValueDirectEndogenous name payoffFunctionDirect =
+  [opengame|
 
     inputs    : dec, privateValueDirect ;
     feedback  :     ;
@@ -112,7 +112,6 @@ addPrivateValueDirectEndogenous name payoffFunctionDirect = [opengame|
     returns   :   ;
   |]
 
-
 {--
 -- Account for additional value indirectly derived from state
 -- NOTE value given exogenously
@@ -123,7 +122,7 @@ addPrivateValueStateExogenously name payoffFunctionState privateValueState = [op
 
     :---------------------------:
 
-    // Book-keeping: Assign the private "state" payoff to the player. 
+    // Book-keeping: Assign the private "state" payoff to the player.
     inputs    :   ;
     feedback  :   ;
     operation :  addPayoffsReturns name;
@@ -152,7 +151,7 @@ addPrivateValueStateEndogenously name payoffFunctionState = [opengame|
 
     :---------------------------:
 
-    // Book-keeping: Assign the private "state" payoff to the player. 
+    // Book-keeping: Assign the private "state" payoff to the player.
     inputs    :   ;
     feedback  :   ;
     operation :  addPayoffsReturns name;
@@ -171,8 +170,6 @@ addPrivateValueStateEndogenously name payoffFunctionState = [opengame|
     outputs   :   ;
     returns   :  stateNew ;
   |]
-
-
 
 -------------------------------------------------------
 -- FIXME ONLY FOR TESTING PURPOSE; ERASE ONCE CLARIFIED
@@ -218,13 +215,14 @@ strategyTest = (pureAction 1.5) :- Nil
 outputTest con f = generateOutput $ (testGame f) strategyTest con
 
 --------------------------------------------------------
--}  
+-}
 
 -------------------------
 -- 3. Advancing the state
 
 -- Given the state and contract specific parameters, advance to a new state
-advancingState contractFunctionality = [opengame|
+advancingState contractFunctionality =
+  [opengame|
 
     inputs    :  state, parameters  ;
     feedback  :   ;
@@ -243,12 +241,12 @@ advancingState contractFunctionality = [opengame|
     returns   :  ;
   |]
 
-
 ----------------------
 -- 4. Composed modules
 
 -- Player observes private information, chooses a transaction, account balances are update and receives (possibly) additional utility from his action
-playerWithAdditionalValue name probDistribution actionSpace replaceMeWithAccountDiff contractFunctionality payoffFunctionDirect = [opengame|
+playerWithAdditionalValue name probDistribution actionSpace replaceMeWithAccountDiff contractFunctionality payoffFunctionDirect =
+  [opengame|
 
     inputs    :  state, parameters ;
     feedback  :  ;

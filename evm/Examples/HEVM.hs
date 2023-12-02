@@ -1,41 +1,19 @@
-{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Examples.HEVM where
 
-import EVM.Prelude
-import Control.Monad.Trans.State.Strict
-import Data.DoubleWord
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import qualified Data.Map as Map
-import Debug.Trace
-import EVM.Exec
-import EVM.Format
-import EVM.Fetch (zero)
-import EVM.Stepper (evm, interpret, runFully)
-import EVM.TH
-import EVM.Types
-import EVM (emptyContract, exec1)
-import OpenGames hiding (fromFunctions, dependentDecision, fromLens)
-import OpenGames.Engine.HEVMGames
-import OpenGames.Engine.Diagnostics
-import OpenGames.Preprocessor hiding (Lit)
-import Optics.Core (view, (%?), (.~), (%), (&), over, at, set, preview)
-
-import GHC.Float
 --
 --  primary goals:
 --  - import lido
@@ -51,6 +29,27 @@ import GHC.Float
 --  - Ergonomics around modeling contracts
 
 import Control.Monad.ST
+import Control.Monad.Trans.State.Strict
+import Data.DoubleWord
+import qualified Data.Map as Map
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import Debug.Trace
+import EVM (emptyContract, exec1)
+import EVM.Exec
+import EVM.Fetch (zero)
+import EVM.Format
+import EVM.Prelude
+import EVM.Stepper (evm, interpret, runFully)
+import EVM.TH
+import EVM.Types
+import GHC.Float
+import OpenGames hiding (dependentDecision, fromFunctions, fromLens)
+import OpenGames.Engine.Diagnostics
+import OpenGames.Engine.HEVMGames
+import OpenGames.Preprocessor hiding (Lit)
+import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
 run' :: EVM s (VM s)
 run' = do
@@ -68,15 +67,18 @@ sendAndRun' tx = do
   traceM (show vm.result)
   pure vm
 
-
 -- exectute the EVM state in IO
-sendAndRun :: EthTransaction
-            -> VM RealWorld -> HEVMState (VM RealWorld)
-sendAndRun tx st = do put st
-                      sendAndRun' tx
-                      get
+sendAndRun ::
+  EthTransaction ->
+  VM RealWorld ->
+  HEVMState (VM RealWorld)
+sendAndRun tx st = do
+  put st
+  sendAndRun' tx
+  get
 
 userContractAddress = LitAddr 0x1234
+
 withdrawContractAddress = LitAddr 0xabcd
 
 deposit :: EthTransaction
@@ -108,8 +110,8 @@ balance st name =
       Just balance = fmap (view #balance) contract
       Just int = maybeLitWord balance >>= toInt
       out = int2Double int
-  in -- trace ("balance: " ++ show out ++ "\ncontracts: " ++ show (Map.keys st.env.contracts))
-     out
+   in -- trace ("balance: " ++ show out ++ "\ncontracts: " ++ show (Map.keys st.env.contracts))
+      out
 
 -- actDecision1 :: String -> [Tx] -> OG .....
 actDecision name strategies =
@@ -194,19 +196,23 @@ setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
 setupAddresses amounts vm =
   -- generate all the contracts with the given amounts
   let userContracts = fmap (\(addr, amount) -> (addr, set #balance amount emptyContract)) amounts
-  -- update the VM state by adding each contract at the corresponding address
-  in foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
+   in -- update the VM state by adding each contract at the corresponding address
+      foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
 
-instance (Apply OpenGames.Engine.Diagnostics.PrintOutput
-                (DiagnosticInfoBayesian () EthTransaction)
-                [Char]) where
-   apply a b = showDiagnosticInfoL [b]
+instance
+  ( Apply
+      OpenGames.Engine.Diagnostics.PrintOutput
+      (DiagnosticInfoBayesian () EthTransaction)
+      [Char]
+  )
+  where
+  apply a b = showDiagnosticInfoL [b]
 
 outcome = do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
   newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
-  let term :- Nil =  evaluate (playerManual newI) ((pure (dummyTx 1)) :- Nil) void
+  let term :- Nil = evaluate (playerManual newI) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   tevaluated <- stToIO t'
   generateOutput (tevaluated :- Nil)
@@ -215,7 +221,7 @@ outcomeAutomatic = do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
   newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
-  let term :- Nil =  evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
+  let term :- Nil = evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   tevaluated <- stToIO t'
   generateOutput (tevaluated :- Nil)
@@ -226,18 +232,20 @@ testExec = do
   runFully
 
 showVM :: VM s -> Text
-showVM vm = T.unlines
-  [ "Contracts:"
-  , indent 2 . T.unlines . Map.elems $ Map.mapWithKey (\a c -> T.pack (show a) <> " :\n  " <> showContract c) vm.env.contracts
-  -- , "Storage: " <> (formatExpr vm.env.storage)
-  , "CallValue: " <> (formatExpr vm.state.callvalue)
-  , "Result: " <> (T.pack $ show vm.result)
-  ]
+showVM vm =
+  T.unlines
+    [ "Contracts:",
+      indent 2 . T.unlines . Map.elems $ Map.mapWithKey (\a c -> T.pack (show a) <> " :\n  " <> showContract c) vm.env.contracts,
+      -- , "Storage: " <> (formatExpr vm.env.storage)
+      "CallValue: " <> (formatExpr vm.state.callvalue),
+      "Result: " <> (T.pack $ show vm.result)
+    ]
 
 showContract :: Contract -> Text
-showContract c = T.unlines
-  [ "balance: " <> (T.pack $ show c.balance)
-  ]
+showContract c =
+  T.unlines
+    [ "balance: " <> (T.pack $ show c.balance)
+    ]
 
 interp = do
   i <- stToIO initial

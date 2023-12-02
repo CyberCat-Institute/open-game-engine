@@ -1,27 +1,29 @@
-
-module Examples.Lido
-
+module Examples.Lido where
 
 contract :: Transaction -> VM -> VM
-contract = loadContract("lido.sol")
-
+contract = loadContract ("lido.sol")
 
 tokenExchange ::
-  (buyer: Address,
-  sold_id: Int128,
-  tokens_sold: UInt256,
-  bought_id: Int128,
-  tokens_bought: UInt256) -> Transaction
+  ( buyer : Address,
+    sold_id : Int128,
+    tokens_sold : UInt256,
+    bought_id : Int128,
+    tokens_bought : UInt256
+  ) ->
+  Transaction
 tokenExchange = undefined
 
 stake ::
-  (buyer: Address,
-  sold_id: Int128,
-  tokens_sold: UInt256,
-  bought_id: Int128,
-  tokens_bought: UInt256) -> State VM UInt256
+  ( buyer : Address,
+    sold_id : Int128,
+    tokens_sold : UInt256,
+    bought_id : Int128,
+    tokens_bought : UInt256
+  ) ->
+  State VM UInt256
 
-stakingGame = [opengame|
+stakingGame =
+  [opengame|
   inputs : ;
   feedback : ;
   :----:
