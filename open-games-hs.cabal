@@ -140,6 +140,7 @@ executable hevm-exec
       EVM.Prelude
       EVM.TH
       Examples.HEVM
+      Examples.Lido
       Paths_open_games_hs
   hs-source-dirs:
       evm

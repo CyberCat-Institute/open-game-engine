@@ -3,11 +3,11 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
-module EVM.Prelude (Word256, EthTransaction (..), AbiType (..), AbiValue (..)) where
+module EVM.Prelude (Word256, EthTransaction (..), AbiType (..), AbiValue (..), abiMethod) where
 
 import Data.DoubleWord (Word256)
 import Data.Text
-import EVM.ABI (AbiType (..), AbiValue (..))
+import EVM.ABI (AbiType (..), AbiValue (..), abiMethod)
 import EVM.Types (Addr, EType (..), Expr (..), W256)
 import GHC.Word
 

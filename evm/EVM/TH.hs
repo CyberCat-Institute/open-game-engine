@@ -13,19 +13,18 @@ import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
 import Data.ByteString (ByteString)
 import Data.Map as Map
-import Data.Text (Text, unpack)
+import Data.Text (Text, pack, unpack, intercalate, toLower)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import Debug.Trace
 import EVM (blankState, initialContract, loadContract, resetState)
-import EVM.ABI
 import EVM.Exec (exec, run)
 import EVM.Expr
 import EVM.FeeSchedule
 import EVM.Fetch
-import EVM.Prelude (EthTransaction (..))
-import EVM.Solidity (solcRuntime)
+import EVM.Prelude
+import EVM.Solidity (solcRuntime, readStdJSON, solidity', Contracts(..), SolcContract(..), Method(..))
 import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
@@ -56,8 +55,8 @@ makeTxCall tx@(EthTransaction addr caller meth args amt gas) = do
   assign (#state % #gas) gas
   modify initTx
 
-emptyVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
-emptyVM contracts = do
+loadIntoVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
+loadIntoVM contracts = do
   blankSt <- blankState
   pure $
     VM
@@ -129,10 +128,6 @@ emptyVM contracts = do
     bytecodeToContract :: ByteString -> Contract
     bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
--- setup a new VM state from the list of contracts we are using
-loadIntoVM :: [(Expr EAddr, ByteString)] -> ST s (VM s)
-loadIntoVM contracts = (emptyVM contracts)
-
 -- import a list of contracts as an open game
 -- - first we read off all the files and translate them into solidity bytecode
 -- - Then we associate each contract to a contract name which
@@ -150,8 +145,56 @@ loadEVM contracts = do
   let newVM = loadIntoVM bytecodeMap
   pure newVM
 
+int :: Int -> Exp
+int = LitE . IntegerL . toInteger
+
+constructorExprForType :: AbiType -> Name -> Exp
+constructorExprForType (AbiUIntType w) = ((ConE (mkName "AbiUInt") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiIntType w) = ((ConE (mkName "AbiInt") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiAddressType) = (ConE (mkName "AbiAddress") `AppE`) . VarE
+constructorExprForType (AbiBoolType) = (ConE (mkName "AbiBool") `AppE`) . VarE
+constructorExprForType (AbiBytesType w) = ((ConE (mkName "AbiBytes") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiBytesDynamicType) = (ConE (mkName "AbiBytesDynamic") `AppE`) . VarE
+constructorExprForType (AbiStringType) = (ConE (mkName "AbiString") `AppE`) . VarE
+constructorExprForType (AbiArrayDynamicType ty) = error "arrays unsupported"
+constructorExprForType (AbiArrayType size ty) = error "arrays unsuppported"
+constructorExprForType (AbiTupleType types) = error "tuples unsupported" -- ConE (mkName "AbiTuple") [] [VarP (mkName name)]
+constructorExprForType (AbiFunctionType) = error "functions unsupported"
+
 loadContracts :: [(Text, Text)] -> ST s (VM s)
 loadContracts arg = unsafePerformIO $ loadEVM arg
+
+loadABI :: Text -> Text -> Q [Dec]
+loadABI contractFilename contractName = do
+  file <- runIO $ readFile (unpack contractFilename)
+  (json, path) <- runIO $ solidity' file
+  case readStdJSON json of
+    Nothing -> error ("could not read json file: " <> show json)
+    Just (Contracts sol, a, b) ->
+        case Map.lookup (path <> ":" <> contractName) sol of
+          Nothing -> error "failed looking up contract"
+          Just contract -> let methods = Map.elems $ contract.abiMap
+                            in traverse generateTxFactory methods
+  where
+  printArg :: (Text, AbiType) -> Text
+  printArg (n, ty) = n <> ": " <> pack (show ty)
+
+  pat = VarP . mkName
+
+  generateTxFactory :: Method -> Q Dec
+  generateTxFactory (Method _ args name sig _) = do
+    runIO $ print ("arguments for method " <> name <> ":" <> pack (show args))
+    let signatureString :: Q Exp = pure $ LitE $ StringL $ unpack sig
+    let argExp :: Q Exp = pure $ ListE $ fmap (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
+    let patterns :: [Pat] = fmap (VarP . mkName . unpack . fst) args
+    body <- [e| EthTransaction src tgt
+                  $(signatureString)
+                  $(argExp)
+                  amt gas|]
+    pure $ FunD (mkName (unpack (toLower contractName <> "_" <> name)))
+                [Clause ([pat "src", pat "tgt", pat "amt", pat "gas"]
+                        ++ patterns)
+                        (NormalB body) []]
 
 -- TODO: use foundry
 thatOneMethod =

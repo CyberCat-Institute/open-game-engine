@@ -99,7 +99,7 @@ dummyTx amt =
     "retrieve(uint256)"
     [AbiInt 256 amt]
     0
-    100000000
+    100_000_000
 
 transactionList :: Int256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
@@ -191,6 +191,8 @@ playerAutomatic =
 
 initial :: ST s (VM s)
 initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
+
+$(loadABI "solidity/Withdraw.sol" "Piggybank")
 
 setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
 setupAddresses amounts vm =
