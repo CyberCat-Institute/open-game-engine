@@ -151,7 +151,6 @@ playerAutomatic =
   returns : ;
 |]
 
-
 setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
 setupAddresses amounts vm =
   -- generate all the contracts with the given amounts

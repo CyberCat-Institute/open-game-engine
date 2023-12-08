@@ -63,6 +63,7 @@ class ContextAdd c where
 --- replicate the old implementation of a stochastic context
 type Stochastic = T Double
 
+type VectorI = HM.Map String
 type Vector = HM.Map String Double
 
 data StochasticStatefulOptic s t a b where
@@ -176,13 +177,13 @@ instance ContextAdd StochasticContext where
           then Nothing
           else Just (StochasticContext (fromFreqs fs) (\z a2 -> k z (Right a2)))
 
-data MonadOpticM m s t a b where
+data MonadOpticM m i s t a b where
   MonadOpticM ::
     (s -> m (z, a)) ->
-    (z -> b -> StateT Vector m t) ->
-    MonadOpticM m s t a b
+    (z -> b -> StateT (VectorI i) m t) ->
+    MonadOpticM m i s t a b
 
-instance Monad m => Optic (MonadOpticM m) where
+instance Monad m => Optic (MonadOpticM m i) where
   lens v u = MonadOpticM (\s -> return (s, v s)) (\s b -> return (u s b))
   (>>>>) (MonadOpticM v1 u1) (MonadOpticM v2 u2) = MonadOpticM v u
     where
@@ -199,13 +200,13 @@ instance Monad m => Optic (MonadOpticM m) where
       u (Left z1) b = u1 z1 b
       u (Right z2) b = u2 z2 b
 
-data MonadContextM m s t a b where
-  MonadContextM :: (Show z) => m (z, s) -> (z -> a -> StateT Vector m b) -> MonadContextM m s t a b
+data MonadContextM m i s t a b where
+  MonadContextM :: (Show z) => m (z, s) -> (z -> a -> StateT (VectorI i) m b) -> MonadContextM m i s t a b
 
-instance Monad m => Precontext (MonadContextM m) where
+instance Monad m => Precontext (MonadContextM m i) where
   void = MonadContextM (return ((), ())) (\() () -> return ())
 
-instance Monad m => Context (MonadContextM m) (MonadOpticM m) where
+instance Monad m => Context (MonadContextM m i) (MonadOpticM m i) where
   cmap (MonadOpticM v1 u1) (MonadOpticM v2 u2) (MonadContextM h k) =
     let h' = do (z, s) <- h; (_, s') <- v1 s; return (z, s')
         k' z a = do (z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'
@@ -219,6 +220,6 @@ instance Monad m => Context (MonadContextM m) (MonadOpticM m) where
         k' (z, s2) a1 = do (_, a2) <- lift (v s2); (b1, _) <- k z (a1, a2); return b1
      in MonadContextM h' k'
 
-type MonadOptic = MonadOpticM IO
-type MonadContext = MonadContextM IO
+type MonadOptic = MonadOpticM IO Double
+type MonadContext = MonadContextM IO Double
 -- maybe `fromFunctions` should live here

@@ -1,33 +1,33 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module EVM.TH where
 
+import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
-import Control.Monad.ST
 import Data.ByteString (ByteString)
 import Data.Map as Map
-import Data.Text (Text, pack, unpack, intercalate, toLower)
+import Data.Text (Text, intercalate, pack, toLower, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import Debug.Trace
-import EVM (blankState, initialContract, loadContract, resetState, exec1)
+import EVM (blankState, exec1, initialContract, loadContract, resetState)
 import EVM.Exec (exec, run)
 import EVM.Expr
 import EVM.FeeSchedule
 import EVM.Fetch
 import EVM.Prelude
-import EVM.Solidity (solcRuntime, readStdJSON, solidity', Contracts(..), SolcContract(..), Method(..))
+import EVM.Solidity (Contracts (..), Method (..), SolcContract (..), readStdJSON, solcRuntime, solidity')
 import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
@@ -131,7 +131,6 @@ loadIntoVM contracts = do
     bytecodeToContract :: ByteString -> Contract
     bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
-
 int :: Int -> Exp
 int = LitE . IntegerL . toInteger
 
@@ -149,10 +148,10 @@ constructorExprForType (AbiTupleType types) = error "tuples unsupported" -- ConE
 constructorExprForType (AbiFunctionType) = error "functions unsupported"
 
 data ContractInfo = ContractInfo
-    { file :: Text
-    , name :: Text
-    , boundName :: Text
-    }
+  { file :: Text,
+    name :: Text,
+    boundName :: Text
+  }
 
 -- loadContracts :: [ContractInfo] -> ST s (VM s)
 -- loadContracts arg = unsafePerformIO $ loadEVM arg
@@ -187,22 +186,32 @@ generateTxFactory (Method _ args name sig _) addr boundName = do
   let argExp :: Q Exp = pure $ ListE $ fmap (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
   let patterns :: [Pat] = fmap (VarP . mkName . unpack . fst) args
   let contractAddress :: Q Exp = pure $ AppE (ConE (mkName "LitAddr")) (LitE (IntegerL addr))
-  body <- [e| EthTransaction
-                $(contractAddress)
-                src
-                $(signatureString)
-                $(argExp)
-                amt gas|]
-  pure $ FunD (mkName (unpack (toLower boundName <> "_" <> name)))
-              [Clause ([pat "src", pat "amt", pat "gas"]
-                      ++ patterns)
-                      (NormalB body) []]
+  body <-
+    [e|
+      EthTransaction
+        $(contractAddress)
+        src
+        $(signatureString)
+        $(argExp)
+        amt
+        gas
+      |]
+  pure $
+    FunD
+      (mkName (unpack (toLower boundName <> "_" <> name)))
+      [ Clause
+          ( [pat "src", pat "amt", pat "gas"]
+              ++ patterns
+          )
+          (NormalB body)
+          []
+      ]
 
 instance Lift (Addr) where
-  lift (Addr word) = let v = toInteger word in [e| fromInteger v |]
+  lift (Addr word) = let v = toInteger word in [e|fromInteger v|]
 
 instance Lift (Expr 'EAddr) where
-  lift (LitAddr a) = [e| LitAddr (fromInteger a) |]
+  lift (LitAddr a) = [e|LitAddr (fromInteger a)|]
 
 loadAll :: [ContractInfo] -> Q [Dec]
 loadAll contracts = do
@@ -211,10 +220,11 @@ loadAll contracts = do
   methods <- traverse (\(ix, (_, bn, _, m)) -> traverse (\m' -> generateTxFactory m' ix bn) m) indexed
   let allMethods = concat methods
   let contractMap = fmap (\(ix, (_, _, b, _)) -> (LitAddr (fromInteger ix), b)) indexed
-  init <- [d|
+  init <-
+    [d|
       initial :: ST s (VM s)
       initial = loadIntoVM contractMap
-       |]
+      |]
   pure (init ++ allMethods)
 
 loadSolcInfo :: ContractInfo -> IO (Text, Text, ByteString, [Method])
@@ -224,15 +234,15 @@ loadSolcInfo (ContractInfo contractFilename contractName boundName) = do
   let (bytecode, methods) = getSolcResults solRes
   pure (contractName, boundName, bytecode, methods)
   where
-
-  getSolcResults :: (Text, Text) -> (ByteString, [Method])
-  getSolcResults (json, path) = case readStdJSON json of
-    Nothing -> error ("could not read json file: " <> show json)
-    Just (Contracts sol, a, b) ->
+    getSolcResults :: (Text, Text) -> (ByteString, [Method])
+    getSolcResults (json, path) = case readStdJSON json of
+      Nothing -> error ("could not read json file: " <> show json)
+      Just (Contracts sol, a, b) ->
         case Map.lookup (path <> ":" <> contractName) sol of
           Nothing -> error "failed looking up contract"
-          Just contract -> let methods = Map.elems $ contract.abiMap
-                            in (contract.runtimeCode, methods)
+          Just contract ->
+            let methods = Map.elems $ contract.abiMap
+             in (contract.runtimeCode, methods)
 
 run' :: EVM s (VM s)
 run' = do
@@ -259,8 +269,6 @@ sendAndRun tx st = do
   put st
   sendAndRun' tx
   get
-
-
 
 -- TODO: use foundry
 -- thatOneMethod =

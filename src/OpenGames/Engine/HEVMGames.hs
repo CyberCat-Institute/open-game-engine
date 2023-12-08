@@ -23,7 +23,7 @@ import GHC.ST
 
 import Debug.Trace
 
-type OpenGameM m a b x s y r = OpenGame (MonadOpticM m) (MonadContextM m) a b x s y r
+type OpenGameM m a b x s y r = OpenGame (MonadOpticM m Double) (MonadContextM m Double) a b x s y r
 
 type HEVMState = StateT (VM RealWorld) (ST RealWorld)
 type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
@@ -31,13 +31,13 @@ type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
 hevmDecision :: forall x y . Show y => String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y Double
 hevmDecision name ys = OpenGame play eval
   where
-    play :: List '[x -> y] -> MonadOpticM HEVMState x () y Double
+    play :: List '[x -> y] -> MonadOpticM HEVMState Double x () y Double
     play (strat :- Nil) = MonadOpticM (\input -> pure ((), strat input))
                                       (\() payoff -> modify (adjustOrAdd (+ payoff) payoff name))
 
 
     eval :: List '[x -> y]
-         -> MonadContextM (HEVMState) x () y Double -> List '[HEVMState (DiagnosticInfoBayesian x y)]
+         -> MonadContextM HEVMState Double x () y Double -> List '[HEVMState (DiagnosticInfoBayesian x y)]
     eval (strat :- Nil) (MonadContextM h k) = output :- Nil
       where
 
