@@ -18,26 +18,32 @@ import OpenGames.Engine.Diagnostics
 import OpenGames.Engine.TLL
 import OpenGames.Engine.Copy
 import OpenGames.Engine.Diagnostics
-import EVM.Types (VM)
+import EVM.Types (VM, W256, toInt)
 import GHC.ST
+import GHC.Float (int2Double)
+import Data.Maybe (fromJust)
 
 import Debug.Trace
 
-type OpenGameM m a b x s y r = OpenGame (MonadOpticM m Double) (MonadContextM m Double) a b x s y r
+type OpenGameM m a b x s y r = OpenGame (MonadOpticM m W256) (MonadContextM m W256) a b x s y r
 
 type HEVMState = StateT (VM RealWorld) (ST RealWorld)
 type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
 
-hevmDecision :: forall x y . Show y => String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y Double
+-- converting words to double for diagnostic reasons
+word2Double :: W256 -> Double
+word2Double x = int2Double (fromJust $ toInt x)
+
+hevmDecision :: forall x y . Show y => String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y W256
 hevmDecision name ys = OpenGame play eval
   where
-    play :: List '[x -> y] -> MonadOpticM HEVMState Double x () y Double
+    play :: List '[x -> y] -> MonadOpticM HEVMState W256 x () y W256
     play (strat :- Nil) = MonadOpticM (\input -> pure ((), strat input))
                                       (\() payoff -> modify (adjustOrAdd (+ payoff) payoff name))
 
 
     eval :: List '[x -> y]
-         -> MonadContextM HEVMState Double x () y Double -> List '[HEVMState (DiagnosticInfoBayesian x y)]
+         -> MonadContextM HEVMState W256 x () y W256 -> List '[HEVMState (DiagnosticInfoBayesian x y)]
     eval (strat :- Nil) (MonadContextM h k) = output :- Nil
       where
 
@@ -57,9 +63,9 @@ hevmDecision name ys = OpenGame play eval
                              player = name,
                              optimalMove = optimalMove,
                              strategy = pure (strat observation),
-                             optimalPayoff = optimalPayoff,
+                             optimalPayoff = word2Double optimalPayoff,
                              context = error "impossible to implement",
-                             payoff = actualPayoff,
+                             payoff = word2Double actualPayoff,
                              state = observation,
                              unobservedState = "()"
                            }

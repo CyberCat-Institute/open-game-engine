@@ -66,14 +66,13 @@ dummyTx = store_retrieve userContractAddress 0 100000000
 transactionList :: Word256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
-balance :: VM s -> String -> Double
+balance :: VM s -> String -> W256
 balance st name =
   let contract = Map.lookup userContractAddress st.env.contracts
       Just balance = fmap (view #balance) contract
-      Just int = maybeLitWord balance >>= toInt
-      out = int2Double int
+      Just int = maybeLitWord balance
    in -- trace ("balance: " ++ show out ++ "\ncontracts: " ++ show (Map.keys st.env.contracts))
-      out
+      int
 
 -- actDecision1 :: String -> [Tx] -> OG .....
 actDecision name strategies =
