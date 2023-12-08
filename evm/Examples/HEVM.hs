@@ -159,15 +159,6 @@ setupAddresses amounts vm =
    in -- update the VM state by adding each contract at the corresponding address
       foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
 
-instance
-  ( Apply
-      OpenGames.Engine.Diagnostics.PrintOutput
-      (DiagnosticInfoBayesian () EthTransaction)
-      [Char]
-  )
-  where
-  apply a b = showDiagnosticInfoL [b]
-
 outcome = do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
@@ -175,7 +166,7 @@ outcome = do
   let term :- Nil = evaluate (playerManual newI) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   tevaluated <- stToIO t'
-  generateOutput (tevaluated :- Nil)
+  generateOutput ([tevaluated] :- Nil)
 
 outcomeAutomatic = do
   i <- stToIO initial
