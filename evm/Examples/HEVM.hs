@@ -51,57 +51,19 @@ import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
 import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
-run' :: EVM s (VM s)
-run' = do
-  vm <- get
-  case vm.result of
-    Nothing -> exec1 >> run'
-    Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) -> cont (Case (c > 0)) >> run'
-    Just _ -> pure vm
+$(loadAll [ContractInfo "solidity/Withdraw.sol" "Piggybank" "store"])
 
--- send and run a transaction on the EVM state
-sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
-sendAndRun' tx = do
-  EVM.TH.makeTxCall tx
-  vm <- run'
-  traceM (show vm.result)
-  pure vm
-
--- exectute the EVM state in IO
-sendAndRun ::
-  EthTransaction ->
-  VM RealWorld ->
-  HEVMState (VM RealWorld)
-sendAndRun tx st = do
-  put st
-  sendAndRun' tx
-  get
+deposit :: EthTransaction
+deposit = store_deposit userContractAddress 1000 10000000
 
 userContractAddress = LitAddr 0x1234
 
-withdrawContractAddress = LitAddr 0xabcd
+withdrawContractAddress = LitAddr 0x1000
 
-deposit :: EthTransaction
-deposit =
-  EthTransaction
-    withdrawContractAddress
-    userContractAddress
-    "deposit()"
-    []
-    1_000
-    10_000_000
+dummyTx :: Word256 -> EthTransaction
+dummyTx = store_retrieve userContractAddress 0 100000000
 
-dummyTx :: Int256 -> EthTransaction
-dummyTx amt =
-  EthTransaction
-    withdrawContractAddress
-    userContractAddress
-    "retrieve(uint256)"
-    [AbiInt 256 amt]
-    0
-    100_000_000
-
-transactionList :: Int256 -> [EthTransaction]
+transactionList :: Word256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
 balance :: VM s -> String -> Double
@@ -189,10 +151,6 @@ playerAutomatic =
   returns : ;
 |]
 
-initial :: ST s (VM s)
-initial = loadContracts [("Piggybank", "solidity/Withdraw.sol")]
-
-$(loadABI "solidity/Withdraw.sol" "Piggybank")
 
 setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
 setupAddresses amounts vm =

@@ -1,16 +1,19 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TupleSections #-}
 
 module EVM.TH where
 
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.State.Strict (State, put)
+import Control.Monad.ST
 import Data.ByteString (ByteString)
 import Data.Map as Map
 import Data.Text (Text, pack, unpack, intercalate, toLower)
@@ -18,7 +21,7 @@ import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import Debug.Trace
-import EVM (blankState, initialContract, loadContract, resetState)
+import EVM (blankState, initialContract, loadContract, resetState, exec1)
 import EVM.Exec (exec, run)
 import EVM.Expr
 import EVM.FeeSchedule
@@ -128,22 +131,6 @@ loadIntoVM contracts = do
     bytecodeToContract :: ByteString -> Contract
     bytecodeToContract = initialContract . RuntimeCode . ConcreteRuntimeCode
 
--- import a list of contracts as an open game
--- - first we read off all the files and translate them into solidity bytecode
--- - Then we associate each contract to a contract name which
-loadEVM :: [(Text, Text)] -> IO (ST s (VM s))
-loadEVM contracts = do
-  files :: [(Text, Text)] <- traverse (\(name, filename) -> (name,) <$> readFile (unpack filename)) (contracts)
-  contracts :: [ByteString] <-
-    traverse
-      ( \(nm, body) -> do
-          bytecode <- solcRuntime nm body
-          maybe (error "solc failed") pure bytecode
-      )
-      files
-  let bytecodeMap :: [(Expr EAddr, ByteString)] = zip (fmap LitAddr [0xabcd ..]) contracts
-  let newVM = loadIntoVM bytecodeMap
-  pure newVM
 
 int :: Int -> Exp
 int = LitE . IntegerL . toInteger
@@ -161,53 +148,132 @@ constructorExprForType (AbiArrayType size ty) = error "arrays unsuppported"
 constructorExprForType (AbiTupleType types) = error "tuples unsupported" -- ConE (mkName "AbiTuple") [] [VarP (mkName name)]
 constructorExprForType (AbiFunctionType) = error "functions unsupported"
 
-loadContracts :: [(Text, Text)] -> ST s (VM s)
-loadContracts arg = unsafePerformIO $ loadEVM arg
+data ContractInfo = ContractInfo
+    { file :: Text
+    , name :: Text
+    , boundName :: Text
+    }
 
-loadABI :: Text -> Text -> Q [Dec]
-loadABI contractFilename contractName = do
-  file <- runIO $ readFile (unpack contractFilename)
-  (json, path) <- runIO $ solidity' file
-  case readStdJSON json of
+-- loadContracts :: [ContractInfo] -> ST s (VM s)
+-- loadContracts arg = unsafePerformIO $ loadEVM arg
+
+-- import a list of contracts as an open game
+-- - first we read off all the files and translate them into solidity bytecode
+-- - Then we associate each contract to a contract name which
+-- loadEVM :: [ContractInfo] -> IO (ST s (VM s))
+-- loadEVM contracts = do
+--   files :: [ContractInfo] <-
+--       traverse (\(ContractInfo filename name bound) ->
+--                   ContractInfo <$> readFile (unpack filename)
+--                                <*> pure name
+--                                <*> pure bound) contracts
+--   contracts :: [(Text, Text, ByteString)] <-
+--     traverse
+--       ( \(ContractInfo fileBody nm bound) -> do
+--           bytecode <- solcRuntime nm body
+--           maybe (error "solc failed") (pure . (nm, bound,)) bytecode
+--       )
+--       files
+--   let bytecodeMap :: [(Expr EAddr, ByteString)] = zip (fmap LitAddr [0xabcd ..]) contracts
+--   let newVM = loadIntoVM bytecodeMap
+--   pure newVM
+
+pat = VarP . mkName
+
+generateTxFactory :: Method -> Integer -> Text -> Q Dec
+generateTxFactory (Method _ args name sig _) addr boundName = do
+  runIO $ print ("arguments for method " <> name <> ":" <> pack (show args))
+  let signatureString :: Q Exp = pure $ LitE $ StringL $ unpack sig
+  let argExp :: Q Exp = pure $ ListE $ fmap (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
+  let patterns :: [Pat] = fmap (VarP . mkName . unpack . fst) args
+  let contractAddress :: Q Exp = pure $ AppE (ConE (mkName "LitAddr")) (LitE (IntegerL addr))
+  body <- [e| EthTransaction
+                $(contractAddress)
+                src
+                $(signatureString)
+                $(argExp)
+                amt gas|]
+  pure $ FunD (mkName (unpack (toLower boundName <> "_" <> name)))
+              [Clause ([pat "src", pat "amt", pat "gas"]
+                      ++ patterns)
+                      (NormalB body) []]
+
+instance Lift (Addr) where
+  lift (Addr word) = let v = toInteger word in [e| fromInteger v |]
+
+instance Lift (Expr 'EAddr) where
+  lift (LitAddr a) = [e| LitAddr (fromInteger a) |]
+
+loadAll :: [ContractInfo] -> Q [Dec]
+loadAll contracts = do
+  cs <- runIO $ traverse loadSolcInfo contracts
+  let indexed = zip [0x1000 ..] cs
+  methods <- traverse (\(ix, (_, bn, _, m)) -> traverse (\m' -> generateTxFactory m' ix bn) m) indexed
+  let allMethods = concat methods
+  let contractMap = fmap (\(ix, (_, _, b, _)) -> (LitAddr (fromInteger ix), b)) indexed
+  init <- [d|
+      initial :: ST s (VM s)
+      initial = loadIntoVM contractMap
+       |]
+  pure (init ++ allMethods)
+
+loadSolcInfo :: ContractInfo -> IO (Text, Text, ByteString, [Method])
+loadSolcInfo (ContractInfo contractFilename contractName boundName) = do
+  file <- readFile (unpack contractFilename)
+  solRes <- solidity' file
+  let (bytecode, methods) = getSolcResults solRes
+  pure (contractName, boundName, bytecode, methods)
+  where
+
+  getSolcResults :: (Text, Text) -> (ByteString, [Method])
+  getSolcResults (json, path) = case readStdJSON json of
     Nothing -> error ("could not read json file: " <> show json)
     Just (Contracts sol, a, b) ->
         case Map.lookup (path <> ":" <> contractName) sol of
           Nothing -> error "failed looking up contract"
           Just contract -> let methods = Map.elems $ contract.abiMap
-                            in traverse generateTxFactory methods
-  where
-  printArg :: (Text, AbiType) -> Text
-  printArg (n, ty) = n <> ": " <> pack (show ty)
+                            in (contract.runtimeCode, methods)
 
-  pat = VarP . mkName
+run' :: EVM s (VM s)
+run' = do
+  vm <- get
+  case vm.result of
+    Nothing -> exec1 >> run'
+    Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) -> cont (Case (c > 0)) >> run'
+    Just _ -> pure vm
 
-  generateTxFactory :: Method -> Q Dec
-  generateTxFactory (Method _ args name sig _) = do
-    runIO $ print ("arguments for method " <> name <> ":" <> pack (show args))
-    let signatureString :: Q Exp = pure $ LitE $ StringL $ unpack sig
-    let argExp :: Q Exp = pure $ ListE $ fmap (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
-    let patterns :: [Pat] = fmap (VarP . mkName . unpack . fst) args
-    body <- [e| EthTransaction src tgt
-                  $(signatureString)
-                  $(argExp)
-                  amt gas|]
-    pure $ FunD (mkName (unpack (toLower contractName <> "_" <> name)))
-                [Clause ([pat "src", pat "tgt", pat "amt", pat "gas"]
-                        ++ patterns)
-                        (NormalB body) []]
+-- send and run a transaction on the EVM state
+sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
+sendAndRun' tx = do
+  EVM.TH.makeTxCall tx
+  vm <- run'
+  traceM (show vm.result)
+  pure vm
+
+-- exectute the EVM state in IO
+sendAndRun ::
+  EthTransaction ->
+  VM RealWorld ->
+  EVM RealWorld (VM RealWorld)
+sendAndRun tx st = do
+  put st
+  sendAndRun' tx
+  get
+
+
 
 -- TODO: use foundry
-thatOneMethod =
-  let st = loadContracts [("Neg", "solidity/Simple.sol")]
-      ourTransaction =
-        EthTransaction
-          (LitAddr 0xabcd)
-          (LitAddr 0x1234)
-          "negate(int256)"
-          [AbiInt 256 3]
-          100000000
-          100000000
-      steps = do
-        evm (makeTxCall ourTransaction)
-        runFully
-   in interpret (zero 0 (Just 0)) undefined steps
+-- thatOneMethod =
+--   let st = loadContracts [ContractInfo "solidity/Simple.sol" "Neg" "test"]
+--       ourTransaction =
+--         EthTransaction
+--           (LitAddr 0xabcd)
+--           (LitAddr 0x1234)
+--           "negate(int256)"
+--           [AbiInt 256 3]
+--           100000000
+--           100000000
+--       steps = do
+--         evm (makeTxCall ourTransaction)
+--         runFully
+--    in interpret (zero 0 (Just 0)) undefined steps
