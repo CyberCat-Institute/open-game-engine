@@ -14,20 +14,6 @@
 
 module Examples.HEVM where
 
---
---  primary goals:
---  - import lido
---  - run transactions
---    - staking
---    - unstaking
---  - import curve contract
---    - convert stEth to Eth
---  - Extracting payoffs (???)
---  - final goal: combine curve + lido in OG
---
---  Follow up goals:
---  - Ergonomics around modeling contracts
-
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
 import Data.DoubleWord
@@ -53,26 +39,6 @@ import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
 $(loadAll [ContractInfo "solidity/Withdraw.sol" "Piggybank" "store"])
 
--- next step:
--- - write simple contracts <- prisonner's dilema?
---
--- options for future grants:
---
--- - Usability focus:
---   - Foundry
---   - RPC
---   - Read geth database
---
--- - Performance focus:
---   - Make it fast with fuzzing
---   - More monte-carlo things?
---   - Symbolic exec?
---
--- todo:
--- - [ ] Practical example (Act + HEVM), answer question about staking
--- - [ ] Documentation
--- - [ ] make it usable
-
 deposit :: EthTransaction
 deposit = store_deposit userContractAddress 1000 10_000_000
 
@@ -86,47 +52,6 @@ withdrawContractAddress = LitAddr 0x1000
 transactionList :: Word256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
 
-balance :: VM s -> String -> W256
-balance st name =
-  let contract = Map.lookup userContractAddress st.env.contracts
-      Just balance = fmap (view #balance) contract
-      Just int = maybeLitWord balance
-   in int
-
--- actDecision1 :: String -> [Tx] -> OG .....
-actDecision name strategies =
-  [opengame| inputs : observedInput ;
-  :---:
-
-  inputs : observedInput ;
-  operation : hevmDecision name (strategies) ;
-  outputs   : tx ;
-  returns  : balance finalState name ;
-
-  :---:
-  outputs : tx ;
-  returns : finalState;
-|]
-
-append = (++)
-
--- runBlockchain = [opengame|
---   inputs : initialState ;
---   :---:
---
---   operation : actDecision "Alice" [Tx 1, Tx 2] ;
---   outputs : aliceTx ;
---   returns : finalState ;
---
---   operation : actDecision "Bob" [Tx 3, Tx 4] ;
---   outputs : bobTx ;
---   returns : finalState ;
---
---   inputs : (append (pure aliceTx) (pure bobTx)), initialState ;
---   operation : fromFunctions (uncurry sendAndRun) id ;
---   outputs : finalState ;
-
--- | ]
 playerManual globalState =
   [opengame|
   inputs   : ;
@@ -135,7 +60,7 @@ playerManual globalState =
 
   operation : hevmDecision "AllPlayers" (transactionList 2) ;
   outputs   : transactions ;
-  returns   : balance finalState "a";
+  returns   : balance finalState userContractAddress;
 
   inputs    : transactions, globalState;
   feedback  : ;
@@ -156,7 +81,7 @@ playerAutomatic =
 
   operation : hevmDecision "AllPlayers" (transactionList 2) ;
   outputs   : transactions ;
-  returns   : balance finalState "a";
+  returns   : balance finalState userContractAddress;
 
   inputs    : transactions;
   feedback  : ;
@@ -169,12 +94,6 @@ playerAutomatic =
   returns : ;
 |]
 
-setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
-setupAddresses amounts vm =
-  -- generate all the contracts with the given amounts
-  let userContracts = fmap (\(addr, amount) -> (addr, set #balance amount emptyContract)) amounts
-   in -- update the VM state by adding each contract at the corresponding address
-      foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
 
 outcome = do
   i <- stToIO initial

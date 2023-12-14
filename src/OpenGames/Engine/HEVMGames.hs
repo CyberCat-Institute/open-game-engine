@@ -34,7 +34,8 @@ type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
 word2Double :: W256 -> Double
 word2Double x = int2Double (fromJust $ toInt x)
 
-hevmDecision :: forall x y . Show y => String -> [y] -> OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y W256
+hevmDecision :: forall x y . Show y => String -> [y] ->
+    OpenGameM HEVMState '[x -> y] '[HEVMState (DiagnosticInfoBayesian x y)] x () y W256
 hevmDecision name ys = OpenGame play eval
   where
     play :: List '[x -> y] -> MonadOpticM HEVMState W256 x () y W256

@@ -9,7 +9,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module EVM.TH where
+module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo(..), AbiValue(..), Expr(..), stToIO, setupAddresses) where
 
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
@@ -31,6 +31,7 @@ import EVM.Solidity (Contracts (..), Method (..), SolcContract (..), readStdJSON
 import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
+import EVM (emptyContract)
 import GHC.IO.Unsafe
 import GHC.ST
 import Language.Haskell.TH.Syntax as TH
@@ -258,6 +259,13 @@ sendAndRun' tx = do
   EVM.TH.makeTxCall tx
   vm <- run'
   pure vm
+sendAndRunAll ::  [EthTransaction] -> EVM RealWorld (VM RealWorld)
+sendAndRunAll [transaction] = sendAndRun' transaction
+sendAndRunAll (tx : ts) = do
+  EVM.TH.makeTxCall tx
+  _ <- run'
+  sendAndRunAll ts
+
 
 -- exectute the EVM state in IO
 sendAndRun ::
@@ -269,6 +277,19 @@ sendAndRun tx st = do
   sendAndRun' tx
   get
 
+setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
+setupAddresses amounts vm =
+  -- generate all the contracts with the given amounts
+  let userContracts = fmap (\(addr, amount) -> (addr, set #balance amount emptyContract)) amounts
+   in -- update the VM state by adding each contract at the corresponding address
+      Prelude.foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
+
+balance :: VM s -> Expr EAddr -> W256
+balance st addr =
+  let contract = Map.lookup addr st.env.contracts
+      Just balance = fmap (view #balance) contract
+      Just int = maybeLitWord balance
+   in int
 -- TODO: use foundry
 -- thatOneMethod =
 --   let st = loadContracts [ContractInfo "solidity/Simple.sol" "Neg" "test"]
