@@ -53,15 +53,35 @@ import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
 $(loadAll [ContractInfo "solidity/Withdraw.sol" "Piggybank" "store"])
 
+-- next step:
+-- - write simple contracts <- prisonner's dilema?
+--
+-- options for future grants:
+--
+-- - Usability focus:
+--   - Foundry
+--   - RPC
+--   - Read geth database
+--
+-- - Performance focus:
+--   - Make it fast with fuzzing
+--   - More monte-carlo things?
+--   - Symbolic exec?
+--
+-- todo:
+-- - [ ] Practical example (Act + HEVM), answer question about staking
+-- - [ ] Documentation
+-- - [ ] make it usable
+
 deposit :: EthTransaction
-deposit = store_deposit userContractAddress 1000 10000000
+deposit = store_deposit userContractAddress 1000 10_000_000
+
+dummyTx :: Word256 -> EthTransaction
+dummyTx = store_retrieve userContractAddress 0 100000000
 
 userContractAddress = LitAddr 0x1234
 
 withdrawContractAddress = LitAddr 0x1000
-
-dummyTx :: Word256 -> EthTransaction
-dummyTx = store_retrieve userContractAddress 0 100000000
 
 transactionList :: Word256 -> [EthTransaction]
 transactionList max = [dummyTx n | n <- [1 .. max]]
@@ -71,8 +91,7 @@ balance st name =
   let contract = Map.lookup userContractAddress st.env.contracts
       Just balance = fmap (view #balance) contract
       Just int = maybeLitWord balance
-   in -- trace ("balance: " ++ show out ++ "\ncontracts: " ++ show (Map.keys st.env.contracts))
-      int
+   in int
 
 -- actDecision1 :: String -> [Tx] -> OG .....
 actDecision name strategies =
@@ -141,7 +160,7 @@ playerAutomatic =
 
   inputs    : transactions;
   feedback  : ;
-  operation : fromLensM (sendAndRun') (const pure) ;
+  operation : fromLensM sendAndRun' (const pure) ;
   outputs   : finalState ;
   returns   : ;
 
@@ -173,7 +192,7 @@ outcomeAutomatic = do
   let term :- Nil = evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   tevaluated <- stToIO t'
-  generateOutput (tevaluated :- Nil)
+  generateOutput ([tevaluated] :- Nil)
 
 testExec = do
   evm $ makeTxCall deposit

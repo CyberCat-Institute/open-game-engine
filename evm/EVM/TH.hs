@@ -257,7 +257,6 @@ sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
 sendAndRun' tx = do
   EVM.TH.makeTxCall tx
   vm <- run'
-  traceM (show vm.result)
   pure vm
 
 -- exectute the EVM state in IO
