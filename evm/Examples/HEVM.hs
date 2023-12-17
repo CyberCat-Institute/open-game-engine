@@ -94,7 +94,6 @@ playerAutomatic =
   returns : ;
 |]
 
-
 outcome = do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i

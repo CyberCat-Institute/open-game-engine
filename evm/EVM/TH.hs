@@ -9,7 +9,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo(..), AbiValue(..), Expr(..), stToIO, setupAddresses) where
+module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses) where
 
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
@@ -21,7 +21,7 @@ import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import Debug.Trace
-import EVM (blankState, exec1, initialContract, loadContract, resetState)
+import EVM (blankState, emptyContract, exec1, initialContract, loadContract, resetState)
 import EVM.Exec (exec, run)
 import EVM.Expr
 import EVM.FeeSchedule
@@ -31,7 +31,6 @@ import EVM.Solidity (Contracts (..), Method (..), SolcContract (..), readStdJSON
 import EVM.Stepper
 import EVM.Transaction (initTx)
 import EVM.Types
-import EVM (emptyContract)
 import GHC.IO.Unsafe
 import GHC.ST
 import Language.Haskell.TH.Syntax as TH
@@ -259,13 +258,13 @@ sendAndRun' tx = do
   EVM.TH.makeTxCall tx
   vm <- run'
   pure vm
-sendAndRunAll ::  [EthTransaction] -> EVM RealWorld (VM RealWorld)
+
+sendAndRunAll :: [EthTransaction] -> EVM RealWorld (VM RealWorld)
 sendAndRunAll [transaction] = sendAndRun' transaction
 sendAndRunAll (tx : ts) = do
   EVM.TH.makeTxCall tx
   _ <- run'
   sendAndRunAll ts
-
 
 -- exectute the EVM state in IO
 sendAndRun ::
@@ -290,6 +289,7 @@ balance st addr =
       Just balance = fmap (view #balance) contract
       Just int = maybeLitWord balance
    in int
+
 -- TODO: use foundry
 -- thatOneMethod =
 --   let st = loadContracts [ContractInfo "solidity/Simple.sol" "Neg" "test"]
