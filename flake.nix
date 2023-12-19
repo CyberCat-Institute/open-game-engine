@@ -13,8 +13,8 @@
             solc.overlay
           ];
         };
-              
-        hPkgs = pkgs.haskell.packages."ghc927"; # need to match Stackage LTS version from stack.yaml resolver
+
+        hPkgs = pkgs.haskell.packages."ghc945"; # need to match Stackage LTS version from stack.yaml resolver
 
         minimalDevTools = [
           hPkgs.ghc # GHC compiler in the desired version (will be available on PATH)
@@ -22,7 +22,7 @@
           stack-wrapped
           pkgs.solc_0_8_2
         ];
-        
+
         extraDevTools = with hPkgs; [
           haskell-language-server # LSP server for editor
           implicit-hie # auto generate LSP hie.yaml file from cabal
