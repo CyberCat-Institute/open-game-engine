@@ -9,7 +9,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses) where
+module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses, solidity') where
 
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
@@ -153,30 +153,6 @@ data ContractInfo = ContractInfo
     boundName :: Text
   }
 
--- loadContracts :: [ContractInfo] -> ST s (VM s)
--- loadContracts arg = unsafePerformIO $ loadEVM arg
-
--- import a list of contracts as an open game
--- - first we read off all the files and translate them into solidity bytecode
--- - Then we associate each contract to a contract name which
--- loadEVM :: [ContractInfo] -> IO (ST s (VM s))
--- loadEVM contracts = do
---   files :: [ContractInfo] <-
---       traverse (\(ContractInfo filename name bound) ->
---                   ContractInfo <$> readFile (unpack filename)
---                                <*> pure name
---                                <*> pure bound) contracts
---   contracts :: [(Text, Text, ByteString)] <-
---     traverse
---       ( \(ContractInfo fileBody nm bound) -> do
---           bytecode <- solcRuntime nm body
---           maybe (error "solc failed") (pure . (nm, bound,)) bytecode
---       )
---       files
---   let bytecodeMap :: [(Expr EAddr, ByteString)] = zip (fmap LitAddr [0xabcd ..]) contracts
---   let newVM = loadIntoVM bytecodeMap
---   pure newVM
-
 pat = VarP . mkName
 
 generateTxFactory :: Method -> Integer -> Text -> Q Dec
@@ -247,10 +223,13 @@ loadSolcInfo (ContractInfo contractFilename contractName boundName) = do
 run' :: EVM s (VM s)
 run' = do
   vm <- get
+  traceM (show vm.result)
   case vm.result of
-    Nothing -> exec1 >> run'
-    Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) -> cont (Case (c > 0)) >> run'
-    Just _ -> pure vm
+    Nothing -> trace "continue" (exec1 >> run')
+    Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) ->
+      trace "continue" $ cont (Case (c > 0)) >> run'
+    Just (VMFailure y) -> trace ("failure: " ++ show y) $ pure vm
+    Just (VMSuccess y) -> trace "success" $ pure vm
 
 -- send and run a transaction on the EVM state
 sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)
@@ -263,7 +242,7 @@ sendAndRunAll :: [EthTransaction] -> EVM RealWorld (VM RealWorld)
 sendAndRunAll [transaction] = sendAndRun' transaction
 sendAndRunAll (tx : ts) = do
   EVM.TH.makeTxCall tx
-  _ <- run'
+  vm <- run'
   sendAndRunAll ts
 
 -- exectute the EVM state in IO
