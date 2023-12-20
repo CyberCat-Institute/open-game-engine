@@ -105,10 +105,17 @@ outcome = do
 
 outcomeAutomatic = do
   i <- stToIO initial
-  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
+  putStrLn "initial contracts:"
+  print $ getAllContracts i
+  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000),
+                             (LitAddr 0x1000, Lit 1000)] i
+  putStrLn "setup contracts:"
+  print $ getAllContracts newI
   newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
   let term :- Nil = evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
+  putStrLn "end contracts:"
+  print $ getAllContracts newI
   tevaluated <- stToIO t'
   generateOutput ([tevaluated] :- Nil)
 
@@ -123,6 +130,7 @@ showVM vm =
     [ "Contracts:",
       indent 2 . T.unlines . Map.elems $ Map.mapWithKey (\a c -> T.pack (show a) <> " :\n  " <> showContract c) vm.env.contracts,
       -- , "Storage: " <> (formatExpr vm.env.storage)
+      --
       "CallValue: " <> (formatExpr vm.state.callvalue),
       "Result: " <> (T.pack $ show vm.result)
     ]

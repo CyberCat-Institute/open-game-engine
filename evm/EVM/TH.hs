@@ -9,7 +9,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses, solidity') where
+module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll, ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses, getAllContracts) where
 
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
@@ -223,11 +223,10 @@ loadSolcInfo (ContractInfo contractFilename contractName boundName) = do
 run' :: EVM s (VM s)
 run' = do
   vm <- get
-  traceM (show vm.result)
   case vm.result of
-    Nothing -> trace "continue" (exec1 >> run')
+    Nothing -> exec1 >> run'
     Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) ->
-      trace "continue" $ cont (Case (c > 0)) >> run'
+      cont (Case (c > 0)) >> run'
     Just (VMFailure y) -> trace ("failure: " ++ show y) $ pure vm
     Just (VMSuccess y) -> trace "success" $ pure vm
 
@@ -255,12 +254,35 @@ sendAndRun tx st = do
   sendAndRun' tx
   get
 
+adjustOrAdd :: (Ord k) => (v -> v) -> v -> k -> Map.Map k v -> Map.Map k v
+adjustOrAdd f def = alter (Just . maybe def f)
+
 setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
 setupAddresses amounts vm =
+  -- over (#env % #contracts) (updateContractMap amounts)
   -- generate all the contracts with the given amounts
-  let userContracts = fmap (\(addr, amount) -> (addr, set #balance amount emptyContract)) amounts
+  let userContracts = fmap createNew amounts
    in -- update the VM state by adding each contract at the corresponding address
-      Prelude.foldr (\(addr, contract) -> set (#env % #contracts % at addr) (Just contract)) vm userContracts
+      Prelude.foldr updateContractState vm userContracts
+  where
+    updateContractMap :: [(Expr EAddr, Expr EWord)]
+                      -> Map.Map (Expr EAddr) Contract
+                      -> Map.Map (Expr EAddr) Contract
+    updateContractMap [] x = x
+    updateContractMap ((addr, amount) : cs) map =
+      adjustOrAdd (set #balance amount) (set #balance amount emptyContract) addr map
+
+    createNew (addr, amount) = (addr, set #balance amount emptyContract)
+
+    updateContractState :: (Expr EAddr, Contract) -> VM s -> VM s
+    updateContractState (addr, contract) = set (#env % #contracts % at addr) (Just contract)
+
+getAllContracts :: VM s -> [(Expr EAddr, Expr EWord)]
+getAllContracts vm =
+  let contracts = Map.toList $ view (#env % #contracts) vm
+      contractsAmounts = fmap (fmap (view #balance)) contracts
+  in contractsAmounts
+
 
 balance :: VM s -> Expr EAddr -> W256
 balance st addr =

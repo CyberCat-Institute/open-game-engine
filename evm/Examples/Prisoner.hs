@@ -29,6 +29,8 @@ player1 = LitAddr 0x1234
 
 player2 = LitAddr 0x1235
 
+bank = LitAddr 0x1236
+
 p1defect = prison_defect player1  0 10_000_000
 
 p2defect = prison_defect player2  0 10_000_000
@@ -37,7 +39,7 @@ p1coop = prison_cooperate player1 0 10_000_000
 
 p2coop = prison_cooperate player2 0 10_000_000
 
-donate1 = prison_donate player1 0 10_000_000
+contractFail = EthTransaction (LitAddr 0x1000) bank "deposit()" [] 10000 10_000_000
 
 -- each player can either cooperate or defect
 optionsPlayer1 =
@@ -81,10 +83,12 @@ outcomeAutomatic = do
   let addresses =
         [ (player1, Lit 1_000_000_000),
           (player2, Lit 1_000_000_000),
-          (LitAddr 0x1000, Lit 1_000_000_000)
+          (bank, Lit 1_000_000_000)
+          -- (LitAddr 0x1000, Lit 1_000_000_000)
         ]
   i <- setupAddresses addresses <$> stToIO initial
-  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2coop :- Nil) void
+  i <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
+  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p1coop :- Nil) void
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
   generateOutput (evaluated1 :- evaluated2 :- Nil)
@@ -94,12 +98,20 @@ execManually = do
 
   let addresses =
         [ (player1, Lit 1_000_000_000),
-          (player2, Lit 1_000_000_000),
-          (LitAddr 0x1000, Lit 2_000_000_000)
+          (player2, Lit 1_000_000_000)
+          -- (LitAddr 0x1000, Lit 2_000_000_000)
         ]
-  i <- setupAddresses addresses <$> stToIO initial
-  -- out <- stToIO $ evalStateT (sendAndRun' donate1) i
-  out <- stToIO $ evalStateT (sendAndRunAll [p1defect, p2defect, p1coop, p2coop]) i
+  init <- stToIO initial
+  putStrLn "initial contracts:"
+  print $ getAllContracts init
+  let i = setupAddresses addresses init
+  -- out <- stToIO $ evalStateT (sendAndRun' contractFail) i
+  -- out <- stToIO $ evalStateT (sendAndRunAll [p1defect, p2defect, p1coop, p2coop]) i
+  putStrLn "setup contracts:"
+  print $ getAllContracts i
+  out <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
+  putStrLn "end contracts:"
+  print $ getAllContracts out
   -- out <- interpret (zero 0 (Just 0)) i
   --   (  evm (makeTxCall (EthTransaction (LitAddr 0x1000) player1 "defect()" [] 0 10_000_000))
   --   >> runFully
