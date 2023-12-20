@@ -88,7 +88,7 @@ outcomeAutomatic = do
         ]
   i <- setupAddresses addresses <$> stToIO initial
   i <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
-  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p1coop :- Nil) void
+  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2coop :- Nil) void
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
   generateOutput (evaluated1 :- evaluated2 :- Nil)

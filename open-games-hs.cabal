@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -141,6 +141,7 @@ executable hevm-exec
       EVM.TH
       Examples.HEVM
       Examples.Lido
+      Examples.Prisoner
       Paths_open_games_hs
   hs-source-dirs:
       evm
