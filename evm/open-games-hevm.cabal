@@ -1,0 +1,74 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           open-games-hevm
+version:        0.1.0.0
+synopsis:       HEVM intgration of open games
+category:       Math
+author:         Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer:     philipp.zahn@protonmail
+copyright:      Jules Hedges, André Videla, Philipp Zahn & other contributors
+license:        AGPL
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      EVM.Prelude
+      EVM.TH
+      Examples.HEVM
+      Examples.Lido
+      Examples.Prisoner
+  other-modules:
+      Paths_open_games_hevm
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , data-dword
+    , hevm
+    , open-games-hs
+    , optics
+    , optics-core
+    , optics-extra
+    , rosezipper
+    , tasty
+    , tasty-golden
+    , template-haskell
+    , text
+    , transformers
+    , vector
+  default-language: Haskell2010
+
+test-suite hevm-tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_open_games_hevm
+  hs-source-dirs:
+      tests
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , data-dword
+    , hevm
+    , open-games-hevm
+    , open-games-hs
+    , optics
+    , optics-core
+    , optics-extra
+    , rosezipper
+    , tasty
+    , tasty-golden
+    , template-haskell
+    , text
+    , transformers
+    , vector
+  default-language: Haskell2010

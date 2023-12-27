@@ -107,19 +107,6 @@ executables:
       #     - hevm >= 0.51.0
       #     - containers
       #     - text
-  hevm-exec:
-    main: Main.hs
-    source-dirs: evm
-    dependencies:
-      - data-dword
-      - open-games-hs
-      - hevm
-      - text
-      - optics-core
-      - optics-extra
-      - bytestring
-      - containers
-      - rosezipper
   graphics:
     main:                Main.hs
     source-dirs:         graphics
@@ -128,13 +115,4 @@ executables:
       - graphviz
       - template-haskell
       - criterion
-
-tests:
-  hevm-tests:
-    main: Spec.hs
-    source-dirs: tests
-    dependencies:
-      - open-games-hs
-      - hspec
-  # main: Spec.hs
 

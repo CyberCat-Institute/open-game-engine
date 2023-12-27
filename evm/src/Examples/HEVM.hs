@@ -116,7 +116,7 @@ outcomeAutomatic = do
   putStrLn "end contracts:"
   print $ getAllContracts newI
   tevaluated <- stToIO t'
-  generateOutput ([tevaluated] :- Nil)
+  pure $ generateOutputStr ([tevaluated] :- Nil)
 
 testExec = do
   evm $ makeTxCall deposit

@@ -13,6 +13,7 @@ module OpenGames.Engine.Diagnostics
   ( DiagnosticInfoBayesian (..),
     PrintOutput(..),
     generateOutput,
+    generateOutputStr,
     generateIsEq,
     showDiagnosticInfoL
   )
@@ -116,6 +117,16 @@ instance Apply Concat String (String -> String) where
 -- main functionality
 
 -- all information for all players
+generateOutputStr ::
+  forall xs.
+  ( MapL PrintOutput xs (ConstMap String xs),
+    FoldrL Concat String (ConstMap String xs)
+  ) =>
+  List xs ->
+  String
+generateOutputStr hlist =
+    "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+
 generateOutput ::
   forall xs.
   ( MapL PrintOutput xs (ConstMap String xs),
@@ -124,8 +135,7 @@ generateOutput ::
   List xs ->
   IO ()
 generateOutput hlist =
-  putStrLn $
-    "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+  putStrLn $ generateOutputStr hlist
 
 -- output equilibrium relevant information
 generateIsEq ::
