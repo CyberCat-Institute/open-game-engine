@@ -9,12 +9,6 @@ contract Prison {
     bool prisoner2Defect;
     bool prisoner1Played;
     bool prisoner2Played;
-    uint256 _balance;
-
-    function deposit() public payable {
-
-        _balance = _balance + msg.value;
-    }
 
     function check() public {
         if (prisoner1Played && prisoner2Played) {

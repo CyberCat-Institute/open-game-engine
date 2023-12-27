@@ -257,12 +257,8 @@ adjustOrAdd :: (Ord k) => (v -> v) -> v -> k -> Map.Map k v -> Map.Map k v
 adjustOrAdd f def = alter (Just . maybe def f)
 
 setupAddresses :: [(Expr EAddr, Expr EWord)] -> VM s -> VM s
-setupAddresses amounts vm =
-  -- over (#env % #contracts) (updateContractMap amounts)
-  -- generate all the contracts with the given amounts
-  let userContracts = fmap createNew amounts
-   in -- update the VM state by adding each contract at the corresponding address
-      Prelude.foldr updateContractState vm userContracts
+setupAddresses amounts =
+  over (#env % #contracts) (updateContractMap amounts)
   where
     updateContractMap ::
       [(Expr EAddr, Expr EWord)] ->
@@ -270,7 +266,8 @@ setupAddresses amounts vm =
       Map.Map (Expr EAddr) Contract
     updateContractMap [] x = x
     updateContractMap ((addr, amount) : cs) map =
-      adjustOrAdd (set #balance amount) (set #balance amount emptyContract) addr map
+      let map' = adjustOrAdd (set #balance amount) (set #balance amount emptyContract) addr map
+      in updateContractMap cs map'
 
     createNew (addr, amount) = (addr, set #balance amount emptyContract)
 

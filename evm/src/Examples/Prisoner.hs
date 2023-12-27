@@ -29,8 +29,6 @@ player1 = LitAddr 0x1234
 
 player2 = LitAddr 0x1235
 
-bank = LitAddr 0x1236
-
 p1defect = prison_defect player1 0 10_000_000
 
 p2defect = prison_defect player2 0 10_000_000
@@ -38,8 +36,6 @@ p2defect = prison_defect player2 0 10_000_000
 p1coop = prison_cooperate player1 0 10_000_000
 
 p2coop = prison_cooperate player2 0 10_000_000
-
-contractFail = EthTransaction (LitAddr 0x1000) bank "deposit()" [] 10000 10_000_000
 
 -- each player can either cooperate or defect
 optionsPlayer1 =
@@ -83,11 +79,9 @@ outcomeAutomatic = do
   let addresses =
         [ (player1, Lit 1_000_000_000),
           (player2, Lit 1_000_000_000),
-          (bank, Lit 1_000_000_000)
-          -- (LitAddr 0x1000, Lit 1_000_000_000)
+          (LitAddr 0x1000, Lit 10_000)
         ]
   i <- setupAddresses addresses <$> stToIO initial
-  i <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2coop :- Nil) void
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
@@ -104,27 +98,7 @@ outcomeAutomatic = do
   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2defect :- Nil) void
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
+
   let out4 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
   pure (out1 ++ out2 ++ out3 ++ out4)
 
-execManually = do
-  let addresses =
-        [ (player1, Lit 1_000_000_000),
-          (player2, Lit 1_000_000_000)
-        ]
-  init <- stToIO initial
-  putStrLn "initial contracts:"
-  print $ getAllContracts init
-  let i = setupAddresses addresses init
-  putStrLn "setup contracts:"
-  print $ getAllContracts i
-  out <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
-  putStrLn "end contracts:"
-  print $ getAllContracts out
-  let p1 = balance out player1
-  let p2 = balance out player2
-  let contract = balance out (LitAddr 0x1000)
-  putStrLn $ "player1: " ++ show p1
-  putStrLn $ "player2: " ++ show p2
-  putStrLn $ "contract: " ++ show contract
-  pure ()

@@ -118,11 +118,6 @@ outcomeAutomatic = do
   tevaluated <- stToIO t'
   pure $ generateOutputStr ([tevaluated] :- Nil)
 
-testExec = do
-  evm $ makeTxCall deposit
-  -- evm $ makeTxCall (dummyTx 2)
-  runFully
-
 showVM :: VM s -> Text
 showVM vm =
   T.unlines
