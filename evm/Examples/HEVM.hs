@@ -107,8 +107,7 @@ outcomeAutomatic = do
   i <- stToIO initial
   putStrLn "initial contracts:"
   print $ getAllContracts i
-  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000),
-                             (LitAddr 0x1000, Lit 1000)] i
+  let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
   putStrLn "setup contracts:"
   print $ getAllContracts newI
   newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)

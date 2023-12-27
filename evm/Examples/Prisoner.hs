@@ -15,10 +15,10 @@
 module Examples.Prisoner where
 
 import Control.Monad.Trans.State.Strict (evalStateT)
-import EVM.TH
+import EVM.Fetch (zero)
 import EVM.Prelude
 import EVM.Stepper (evm, interpret, runFully)
-import EVM.Fetch (zero)
+import EVM.TH
 import OpenGames hiding (dependentDecision, fromFunctions, fromLens)
 import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
@@ -31,9 +31,9 @@ player2 = LitAddr 0x1235
 
 bank = LitAddr 0x1236
 
-p1defect = prison_defect player1  0 10_000_000
+p1defect = prison_defect player1 0 10_000_000
 
-p2defect = prison_defect player2  0 10_000_000
+p2defect = prison_defect player2 0 10_000_000
 
 p1coop = prison_cooperate player1 0 10_000_000
 
@@ -92,6 +92,7 @@ outcomeAutomatic = do
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
   generateOutput (evaluated1 :- evaluated2 :- Nil)
+
 --   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2coop :- Nil) void
 --   evaluated1 <- stToIO (evalStateT aaa i)
 --   evaluated2 <- stToIO (evalStateT bbb i)
@@ -105,9 +106,7 @@ outcomeAutomatic = do
 --   evaluated2 <- stToIO (evalStateT bbb i)
 --   generateOutput (evaluated1 :- evaluated2 :- Nil)
 
-
 execManually = do
-
   let addresses =
         [ (player1, Lit 1_000_000_000),
           (player2, Lit 1_000_000_000)
@@ -128,4 +127,3 @@ execManually = do
   putStrLn $ "player2: " ++ show p2
   putStrLn $ "contract: " ++ show contract
   pure ()
-

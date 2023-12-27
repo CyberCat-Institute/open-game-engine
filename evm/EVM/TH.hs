@@ -265,9 +265,10 @@ setupAddresses amounts vm =
    in -- update the VM state by adding each contract at the corresponding address
       Prelude.foldr updateContractState vm userContracts
   where
-    updateContractMap :: [(Expr EAddr, Expr EWord)]
-                      -> Map.Map (Expr EAddr) Contract
-                      -> Map.Map (Expr EAddr) Contract
+    updateContractMap ::
+      [(Expr EAddr, Expr EWord)] ->
+      Map.Map (Expr EAddr) Contract ->
+      Map.Map (Expr EAddr) Contract
     updateContractMap [] x = x
     updateContractMap ((addr, amount) : cs) map =
       adjustOrAdd (set #balance amount) (set #balance amount emptyContract) addr map
@@ -281,8 +282,7 @@ getAllContracts :: VM s -> [(Expr EAddr, Expr EWord)]
 getAllContracts vm =
   let contracts = Map.toList $ view (#env % #contracts) vm
       contractsAmounts = fmap (fmap (view #balance)) contracts
-  in contractsAmounts
-
+   in contractsAmounts
 
 balance :: VM s -> Expr EAddr -> W256
 balance st addr =
