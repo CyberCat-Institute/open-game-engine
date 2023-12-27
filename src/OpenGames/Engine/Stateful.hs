@@ -7,15 +7,16 @@
 module OpenGames.Engine.Stateful where
 
 import OpenGames
-import OpenGames.Preprocessor
 import OpenGames.Engine.Engine
+import OpenGames.Preprocessor
+
 -- import Control.Monad.State
 
 data Transaction = Tx Int
   deriving (Eq, Ord, Show)
 
-data State = State { contracts :: [Int]}
-  deriving Show
+data State = State {contracts :: [Int]}
+  deriving (Show)
 
 sendAndRun :: [Transaction] -> State -> State
 sendAndRun = undefined
@@ -27,10 +28,11 @@ strategy :: [Transaction]
 strategy = undefined
 
 balance :: State -> String -> Double
-balance st name = undefined --balance (lookup "marx" st)
+balance st name = undefined -- balance (lookup "marx" st)
 
 -- actDecision1 :: String -> [Tx] -> OG .....
-actDecision name strategies = [opengame| inputs : observedInput ;
+actDecision name strategies =
+  [opengame| inputs : observedInput ;
   :---:
 
   inputs : observedInput ;
@@ -45,8 +47,8 @@ actDecision name strategies = [opengame| inputs : observedInput ;
 
 append = (++)
 
-
-runBlockchain = [opengame|
+runBlockchain =
+  [opengame|
   inputs : initialState ;
   :---:
 
@@ -83,5 +85,5 @@ runBlockchain = [opengame|
 --   :-------:
 --   outputs: ;
 --   returns : ;
--- |]
---
+
+-- | ]

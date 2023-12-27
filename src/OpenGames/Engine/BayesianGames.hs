@@ -36,8 +36,8 @@ module OpenGames.Engine.BayesianGames
 where
 
 import Control.Arrow hiding ((+++), (+:+))
-import Control.Monad.Trans.State.Strict hiding (state)
 import Control.Monad.Trans (lift)
+import Control.Monad.Trans.State.Strict hiding (state)
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 -- temporary lol

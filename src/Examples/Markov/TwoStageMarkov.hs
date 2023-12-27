@@ -6,8 +6,8 @@
 
 module Examples.Markov.TwoStageMarkov where
 
-import Control.Monad.Trans.State.Strict
 import qualified Control.Monad.State as ST
+import Control.Monad.Trans.State.Strict
 import Data.Tuple.Extra (uncurry3)
 import Examples.SimultaneousMoves (ActionPD (..), Location (..))
 import Numeric.Probability.Distribution hiding (filter, lift, map)

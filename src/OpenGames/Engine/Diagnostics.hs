@@ -11,11 +11,11 @@
 
 module OpenGames.Engine.Diagnostics
   ( DiagnosticInfoBayesian (..),
-    PrintOutput(..),
+    PrintOutput (..),
     generateOutput,
     generateOutputStr,
     generateIsEq,
-    showDiagnosticInfoL
+    showDiagnosticInfoL,
   )
 where
 
@@ -125,7 +125,7 @@ generateOutputStr ::
   List xs ->
   String
 generateOutputStr hlist =
-    "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+  "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
 
 generateOutput ::
   forall xs.
@@ -148,4 +148,3 @@ generateIsEq ::
 generateIsEq hlist =
   putStrLn $
     "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
-

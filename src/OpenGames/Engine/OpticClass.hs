@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TupleSections #-}
 
 module OpenGames.Engine.OpticClass
   ( Stochastic (..),
@@ -24,8 +24,8 @@ module OpenGames.Engine.OpticClass
   )
 where
 
-import Control.Monad.Trans.State.Strict hiding (state)
 import Control.Monad.Trans (lift)
+import Control.Monad.Trans.State.Strict hiding (state)
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Numeric.Probability.Distribution hiding (lift)
 
@@ -64,6 +64,7 @@ class ContextAdd c where
 type Stochastic = T Double
 
 type VectorI = HM.Map String
+
 type Vector = HM.Map String Double
 
 data StochasticStatefulOptic s t a b where
@@ -183,7 +184,7 @@ data MonadOpticM m i s t a b where
     (z -> b -> StateT (VectorI i) m t) ->
     MonadOpticM m i s t a b
 
-instance Monad m => Optic (MonadOpticM m i) where
+instance (Monad m) => Optic (MonadOpticM m i) where
   lens v u = MonadOpticM (\s -> return (s, v s)) (\s b -> return (u s b))
   (>>>>) (MonadOpticM v1 u1) (MonadOpticM v2 u2) = MonadOpticM v u
     where
@@ -203,10 +204,10 @@ instance Monad m => Optic (MonadOpticM m i) where
 data MonadContextM m i s t a b where
   MonadContextM :: (Show z) => m (z, s) -> (z -> a -> StateT (VectorI i) m b) -> MonadContextM m i s t a b
 
-instance Monad m => Precontext (MonadContextM m i) where
+instance (Monad m) => Precontext (MonadContextM m i) where
   void = MonadContextM (return ((), ())) (\() () -> return ())
 
-instance Monad m => Context (MonadContextM m i) (MonadOpticM m i) where
+instance (Monad m) => Context (MonadContextM m i) (MonadOpticM m i) where
   cmap (MonadOpticM v1 u1) (MonadOpticM v2 u2) (MonadContextM h k) =
     let h' = do (z, s) <- h; (_, s') <- v1 s; return (z, s')
         k' z a = do (z', a') <- lift (v2 a); b' <- k z a'; u2 z' b'
@@ -221,5 +222,7 @@ instance Monad m => Context (MonadContextM m i) (MonadOpticM m i) where
      in MonadContextM h' k'
 
 type MonadOptic = MonadOpticM IO Double
+
 type MonadContext = MonadContextM IO Double
+
 -- maybe `fromFunctions` should live here

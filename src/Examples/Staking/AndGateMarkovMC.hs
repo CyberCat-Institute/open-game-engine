@@ -8,8 +8,8 @@
 
 module Examples.Staking.AndGateMarkovMC where
 
-import Control.Monad.Trans.State.Strict hiding (lift, state, void)
 import qualified Control.Monad.State as ST
+import Control.Monad.Trans.State.Strict hiding (lift, state, void)
 import qualified Data.Vector as V
 import Numeric.Probability.Distribution hiding (filter, lift, map)
 import OpenGames hiding (Agent, discount, fromFunctions, fromLens, nature)

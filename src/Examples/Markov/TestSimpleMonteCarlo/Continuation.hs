@@ -11,9 +11,9 @@ module Examples.Markov.TestSimpleMonteCarlo.Continuation
   )
 where
 
-import Control.Monad.Trans.State.Strict as ST
-import qualified Control.Monad.Trans as ST (lift)
 import qualified Control.Monad as ST (replicateM_)
+import qualified Control.Monad.Trans as ST (lift)
+import Control.Monad.Trans.State.Strict as ST
 import Data.Utils
 import qualified Data.Vector as V
 import Examples.SimultaneousMoves (ActionPD (..), prisonersDilemmaMatrix)

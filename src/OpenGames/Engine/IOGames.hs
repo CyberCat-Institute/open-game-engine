@@ -6,8 +6,8 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -17,9 +17,9 @@ module OpenGames.Engine.IOGames
     DiagnosticsMC (..),
     dependentDecisionIO,
     MonadOptic,
-    MonadOpticM(..),
+    MonadOpticM (..),
     MonadContext,
-    MonadContextM(..),
+    MonadContextM (..),
     fromLens,
     fromLensM,
     fromFunctions,
@@ -29,43 +29,48 @@ module OpenGames.Engine.IOGames
 where
 
 import Control.Arrow hiding ((+:+))
-import Control.Monad.Trans.State.Strict hiding (state)
-import Control.Monad.Trans (lift)
 import Control.Monad (replicateM)
 import Control.Monad.ST
+import Control.Monad.Trans (lift)
+import Control.Monad.Trans.State.Strict hiding (state)
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Data.Ord (comparing)
 import Data.Utils
+import EVM.Types
+import GHC.ST
+import OpenGames.Engine.Copy
 import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
-import OpenGames.Engine.Copy
 import System.Random
 import System.Random.MWC.CondensedTable
 import System.Random.Stateful
-import EVM.Types
-
-import GHC.ST
 
 -- TODO implement printout
 
 type IOOpenGame a b x s y r = OpenGame MonadOptic MonadContext a b x s y r
+
 type Agent = String
 
 data DiagnosticsMC y = DiagnosticsMC
-  { playerNameMC :: String
-  , averageUtilStrategyMC :: Double
-  , samplePayoffsMC :: [Double]
-  , optimalMoveMC :: y
-  , optimalPayoffMC :: Double
+  { playerNameMC :: String,
+    averageUtilStrategyMC :: Double,
+    samplePayoffsMC :: [Double],
+    optimalMoveMC :: y,
+    optimalPayoffMC :: Double
   }
   deriving (Show)
+
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y)
-    => String -> Int -> [y]
-    -> IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
+dependentDecisionIO ::
+  (Eq x, Show x, Ord y, Show y) =>
+  String ->
+  Int ->
+  [y] ->
+  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
 -- s t  a b
+
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
 dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
   where
@@ -138,7 +143,7 @@ fromFunctions f g = fromLens f (const g)
 fromLensM :: (x -> IO y) -> (x -> r -> IO s) -> IOOpenGame '[] '[] x s y r
 fromLensM f g =
   OpenGame
-    { play = \Nil -> MonadOpticM (\x ->  (x,) <$> f x) (\x r -> lift $ g x r),
+    { play = \Nil -> MonadOpticM (\x -> (x,) <$> f x) (\x r -> lift $ g x r),
       evaluate = \Nil _ -> Nil
     }
 
