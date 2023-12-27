@@ -91,20 +91,21 @@ outcomeAutomatic = do
   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2coop :- Nil) void
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
-  generateOutput (evaluated1 :- evaluated2 :- Nil)
+  let out1 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
 
---   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2coop :- Nil) void
---   evaluated1 <- stToIO (evalStateT aaa i)
---   evaluated2 <- stToIO (evalStateT bbb i)
---   generateOutput (evaluated1 :- evaluated2 :- Nil)
---   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2defect :- Nil) void
---   evaluated1 <- stToIO (evalStateT aaa i)
---   evaluated2 <- stToIO (evalStateT bbb i)
---   generateOutput (evaluated1 :- evaluated2 :- Nil)
---   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2defect :- Nil) void
---   evaluated1 <- stToIO (evalStateT aaa i)
---   evaluated2 <- stToIO (evalStateT bbb i)
---   generateOutput (evaluated1 :- evaluated2 :- Nil)
+  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2coop :- Nil) void
+  evaluated1 <- stToIO (evalStateT aaa i)
+  evaluated2 <- stToIO (evalStateT bbb i)
+  let out2 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
+  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2defect :- Nil) void
+  evaluated1 <- stToIO (evalStateT aaa i)
+  evaluated2 <- stToIO (evalStateT bbb i)
+  let out3 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
+  let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2defect :- Nil) void
+  evaluated1 <- stToIO (evalStateT aaa i)
+  evaluated2 <- stToIO (evalStateT bbb i)
+  let out4 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
+  pure (out1 ++ out2 ++ out3 ++ out4)
 
 execManually = do
   let addresses =

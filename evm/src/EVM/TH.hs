@@ -20,7 +20,6 @@ import Data.Text (Text, intercalate, pack, toLower, unpack)
 import Data.Text.IO (readFile)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
-import Debug.Trace
 import EVM (blankState, emptyContract, exec1, initialContract, loadContract, resetState)
 import EVM.Exec (exec, run)
 import EVM.Expr
@@ -227,8 +226,8 @@ run' = do
     Nothing -> exec1 >> run'
     Just (HandleEffect (Query (PleaseAskSMT (Lit c) _ cont))) ->
       cont (Case (c > 0)) >> run'
-    Just (VMFailure y) -> trace ("failure: " ++ show y) $ pure vm
-    Just (VMSuccess y) -> trace "success" $ pure vm
+    Just (VMFailure y) -> pure vm
+    Just (VMSuccess y) -> pure vm
 
 -- send and run a transaction on the EVM state
 sendAndRun' :: EthTransaction -> EVM RealWorld (VM RealWorld)

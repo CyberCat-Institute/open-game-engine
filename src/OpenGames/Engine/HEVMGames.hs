@@ -23,8 +23,6 @@ import GHC.ST
 import GHC.Float (int2Double)
 import Data.Maybe (fromJust)
 
-import Debug.Trace
-
 type OpenGameM m a b x s y r = OpenGame (MonadOpticM m W256) (MonadContextM m W256) a b x s y r
 
 type HEVMState = StateT (VM RealWorld) (ST RealWorld)
@@ -57,7 +55,6 @@ hevmDecision name ys = OpenGame play eval
                     let actualMove = strat observation
                     actualPayoff <- u actualMove
                     allResults <- traverse (\move -> (move,) <$> u move) ys
-                    trace ("all results: " ++ unlines (fmap (\(mv, pf) -> show mv ++ ": " ++ show pf) allResults)) (pure ())
                     let (optimalMove, optimalPayoff) = maximumBy (comparing snd) allResults
                     return $ DiagnosticInfoBayesian
                            { equilibrium = actualPayoff == optimalPayoff,
