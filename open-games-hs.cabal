@@ -220,3 +220,43 @@ executable open-games-exe
     , typed-process
     , vector
   default-language: Haskell2010
+
+test-suite hevm-tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_open_games_hs
+  hs-source-dirs:
+      tests
+  build-depends:
+      QuickCheck
+    , ad
+    , base >=4.7 && <5
+    , comonad
+    , criterion
+    , extra
+    , fgl
+    , ghc
+    , graphviz
+    , hashable
+    , hashmap
+    , haskeline
+    , hevm
+    , hspec
+    , lens
+    , monad-bayes
+    , mtl
+    , mwc-random
+    , open-games-hs
+    , optics-core
+    , optics-extra
+    , parsec
+    , poly
+    , probability
+    , profunctors
+    , random
+    , template-haskell
+    , transformers
+    , typed-process
+    , vector
+  default-language: Haskell2010

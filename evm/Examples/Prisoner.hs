@@ -92,6 +92,18 @@ outcomeAutomatic = do
   evaluated1 <- stToIO (evalStateT aaa i)
   evaluated2 <- stToIO (evalStateT bbb i)
   generateOutput (evaluated1 :- evaluated2 :- Nil)
+--   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2coop :- Nil) void
+--   evaluated1 <- stToIO (evalStateT aaa i)
+--   evaluated2 <- stToIO (evalStateT bbb i)
+--   generateOutput (evaluated1 :- evaluated2 :- Nil)
+--   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2defect :- Nil) void
+--   evaluated1 <- stToIO (evalStateT aaa i)
+--   evaluated2 <- stToIO (evalStateT bbb i)
+--   generateOutput (evaluated1 :- evaluated2 :- Nil)
+--   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1defect :- const p2defect :- Nil) void
+--   evaluated1 <- stToIO (evalStateT aaa i)
+--   evaluated2 <- stToIO (evalStateT bbb i)
+--   generateOutput (evaluated1 :- evaluated2 :- Nil)
 
 
 execManually = do
@@ -99,24 +111,16 @@ execManually = do
   let addresses =
         [ (player1, Lit 1_000_000_000),
           (player2, Lit 1_000_000_000)
-          -- (LitAddr 0x1000, Lit 2_000_000_000)
         ]
   init <- stToIO initial
   putStrLn "initial contracts:"
   print $ getAllContracts init
   let i = setupAddresses addresses init
-  -- out <- stToIO $ evalStateT (sendAndRun' contractFail) i
-  -- out <- stToIO $ evalStateT (sendAndRunAll [p1defect, p2defect, p1coop, p2coop]) i
   putStrLn "setup contracts:"
   print $ getAllContracts i
   out <- interpret (zero 0 (Just 0)) i (evm (makeTxCall contractFail) >> runFully)
   putStrLn "end contracts:"
   print $ getAllContracts out
-  -- out <- interpret (zero 0 (Just 0)) i
-  --   (  evm (makeTxCall (EthTransaction (LitAddr 0x1000) player1 "defect()" [] 0 10_000_000))
-  --   >> runFully
-  --   >> evm (makeTxCall (EthTransaction (LitAddr 0x1000) player2 "defect()" [] 0 10_000_000))
-  --   >> runFully)
   let p1 = balance out player1
   let p2 = balance out player2
   let contract = balance out (LitAddr 0x1000)
