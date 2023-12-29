@@ -101,4 +101,3 @@ outcomeAutomatic = do
 
   let out4 = generateOutputStr (evaluated1 :- evaluated2 :- Nil)
   pure (out1 ++ out2 ++ out3 ++ out4)
-

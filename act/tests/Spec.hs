@@ -1,8 +1,8 @@
 import Data.ByteString.Lazy.Char8 (pack)
 import Examples.Player
+import OpenGames.Engine.Diagnostics (generateOutputStr)
 import Test.Tasty
 import Test.Tasty.Golden
-import OpenGames.Engine.Diagnostics (generateOutputStr)
 
 main :: IO ()
 main =

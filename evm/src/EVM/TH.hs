@@ -267,7 +267,7 @@ setupAddresses amounts =
     updateContractMap [] x = x
     updateContractMap ((addr, amount) : cs) map =
       let map' = adjustOrAdd (set #balance amount) (set #balance amount emptyContract) addr map
-      in updateContractMap cs map'
+       in updateContractMap cs map'
 
     createNew (addr, amount) = (addr, set #balance amount emptyContract)
 
