@@ -24,12 +24,9 @@ library
       Act.Execution
       Act.TH.Extractor
       Act.TH.State
-      Examples.AmmGenerated
       Examples.Player
-      Examples.HEVM.Components
   other-modules:
       Act
-      Main
       Paths_open_games_act
   hs-source-dirs:
       src

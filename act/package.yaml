@@ -19,9 +19,7 @@ library:
     - Act.Execution
     - Act.TH.Extractor
     - Act.TH.State
-    - Examples.AmmGenerated
     - Examples.Player
-    - Examples.HEVM.Components
 
 dependencies:
     - base >=4.7 && <5

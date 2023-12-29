@@ -24,6 +24,7 @@ library
       Examples.Lido
       Examples.Prisoner
   other-modules:
+      Examples.Components
       Paths_open_games_hevm
   hs-source-dirs:
       src

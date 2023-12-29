@@ -7,9 +7,10 @@ module Examples.Player where
 
 import Act
 import Data.List
-import Examples.AmmGenerated
 import OpenGames.Engine.Engine
 import OpenGames.Preprocessor
+
+$(act2OG "act-programs/amm.act")
 
 -- This combines two contracts with non-shared state
 twoAmms = combine (unionContracts ("amm1", ammContract) ("amm2", ammContract))
@@ -102,9 +103,6 @@ swapSequence =
   returns   : ;
 |]
 
--- test out 2 erc contracts
--- test out multi-contract calls
-
 initSendAndRun x = twoAmms x (AmmState 50 50, AmmState 50 50)
 
 balance :: (AmmState, AmmState) -> String -> Double
@@ -141,3 +139,17 @@ runBlockchain =
 |]
 
 foo = evaluate runBlockchain (Kleisli (const (pure [swap0 0, swap1 0])) :- Nil) void
+
+ctx =
+  StochasticStatefulContext @()
+    (pure ((), (AmmState 8 10, AmmState 10 8)))
+    (\_ _ -> return ())
+
+ev = evaluate (playerAutomatic 10) ((pureAction 1) :- Nil) ctx
+
+ctx1 =
+  StochasticStatefulContext @()
+    (pure ((), (AmmState 10 10)))
+    (\_ _ -> return ())
+
+ev1 = evaluate swapSequence ((pureAction (reverse (allTransactionSwap))) :- Nil) ctx1
