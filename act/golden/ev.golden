@@ -1,0 +1,12 @@
+----Analytics begin----
+Player: Marx
+Optimal Move: 10
+Current Strategy: fromFreqs [(1,1.0)]
+Optimal Payoff: 1.157920892373162e77
+Current Payoff: 1.157920892373162e77
+Observable State: ()
+Unobservable State: "((),(AmmState {reserve0 = 8, reserve1 = 10},AmmState {reserve0 = 10, reserve1 = 8}))"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----

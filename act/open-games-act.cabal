@@ -1,0 +1,81 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           open-games-act
+version:        0.1.0.0
+synopsis:       Act intgration of open games
+category:       Math
+author:         Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer:     philipp.zahn@protonmail
+copyright:      Jules Hedges, André Videla, Philipp Zahn & other contributors
+license:        AGPL
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      Act.Prelude
+      Act.TH
+      Act.Utils
+      Act.Execution
+      Act.TH.Extractor
+      Act.TH.State
+      Examples.Player
+  other-modules:
+      Act
+      Paths_open_games_act
+  hs-source-dirs:
+      src
+  build-depends:
+      act
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , data-dword
+    , hevm
+    , open-games-hs
+    , optics
+    , optics-core
+    , optics-extra
+    , rosezipper
+    , tasty
+    , tasty-golden
+    , template-haskell
+    , text
+    , transformers
+    , validation
+    , vector
+  default-language: Haskell2010
+
+test-suite hevm-tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_open_games_act
+  hs-source-dirs:
+      tests
+  build-depends:
+      act
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , data-dword
+    , hevm
+    , open-games-act
+    , open-games-hs
+    , optics
+    , optics-core
+    , optics-extra
+    , rosezipper
+    , tasty
+    , tasty-golden
+    , template-haskell
+    , text
+    , transformers
+    , validation
+    , vector
+  default-language: Haskell2010

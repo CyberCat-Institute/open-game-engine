@@ -11,8 +11,11 @@
 
 module OpenGames.Engine.Diagnostics
   ( DiagnosticInfoBayesian (..),
+    PrintOutput (..),
     generateOutput,
+    generateOutputStr,
     generateIsEq,
+    showDiagnosticInfoL,
   )
 where
 
@@ -98,6 +101,10 @@ data PrintOutput = PrintOutput
 instance (Show y, Ord y, Show x) => Apply PrintOutput [DiagnosticInfoBayesian x y] String where
   apply _ x = showDiagnosticInfoL x
 
+-- is this ok?
+instance (Show y, Ord y, Show x) => Apply PrintOutput (DiagnosticInfoBayesian x y) String where
+  apply _ x = showDiagnosticInfoL [x]
+
 instance (Show y, Ord y, Show x) => Apply PrintOutput (Maybe [DiagnosticInfoBayesian x y]) String where
   apply _ x = showDiagnosticInfoL (maybe [] id x)
 
@@ -110,6 +117,16 @@ instance Apply Concat String (String -> String) where
 -- main functionality
 
 -- all information for all players
+generateOutputStr ::
+  forall xs.
+  ( MapL PrintOutput xs (ConstMap String xs),
+    FoldrL Concat String (ConstMap String xs)
+  ) =>
+  List xs ->
+  String
+generateOutputStr hlist =
+  "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+
 generateOutput ::
   forall xs.
   ( MapL PrintOutput xs (ConstMap String xs),
@@ -118,8 +135,7 @@ generateOutput ::
   List xs ->
   IO ()
 generateOutput hlist =
-  putStrLn $
-    "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+  putStrLn $ generateOutputStr hlist
 
 -- output equilibrium relevant information
 generateIsEq ::

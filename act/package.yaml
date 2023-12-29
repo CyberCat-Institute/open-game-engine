@@ -1,0 +1,54 @@
+name: open-games-act
+version: '0.1.0.0'
+synopsis: Act intgration of open games
+category: Math
+author: Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer: philipp.zahn@protonmail
+copyright: Jules Hedges, André Videla, Philipp Zahn & other contributors
+license: AGPL
+extra-source-files:
+- README.md
+
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Act.Prelude
+    - Act.TH
+    - Act.Utils
+    - Act.Execution
+    - Act.TH.Extractor
+    - Act.TH.State
+    - Examples.Player
+
+dependencies:
+    - base >=4.7 && <5
+    - bytestring
+    - containers
+    - open-games-hs
+    - data-dword
+    - text
+    - optics
+    - optics-extra
+    - optics-core
+    - template-haskell
+    - transformers
+    - vector
+    - rosezipper
+    - act
+    - hevm
+    - tasty
+    - tasty-golden
+    - validation
+
+tests:
+  hevm-tests:
+    main: Spec.hs
+    source-dirs: tests
+    dependencies:
+      - open-games-act
+      - tasty
+      - tasty-golden
+      - bytestring
+
+

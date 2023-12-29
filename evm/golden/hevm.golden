@@ -1,0 +1,12 @@
+----Analytics begin----
+Player: AllPlayers
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, CAlLEr = LItAddr 0x1234, METhoD = "REtRIEvE(uiNt256)", ARgUments = [2], ethAmt = 0x0, gas = 100000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, CALLer = LITAdDr 0x1234, METHoD = "retRiEVe(UiNt256)", ARgUments = [1], ethAmt = 0x0, gas = 100000000},1.0)]
+Optimal Payoff: 1.000000002e9
+Current Payoff: 1.000000001e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----

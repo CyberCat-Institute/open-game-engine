@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master, act-amm ]
+    branches: [ master, hevm-transactions ]
   pull_request:
     branches: [ master ]
 
@@ -15,6 +15,40 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  runact:
+    name: run act tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.2.6' # Exact version of ghc to use
+          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
+          enable-stack: true
+          stack-version: 'latest'
+      - run: |
+          cd act
+          stack test
+  runevm:
+    name: run hevm tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.4.5' # Exact version of ghc to use
+          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
+          enable-stack: true
+          stack-version: 'latest'
+      - run: |
+          cd evm
+          stack test
   runhaskell:
     name: run tests
     runs-on: ubuntu-latest # or macOS-latest, or windows-latest
@@ -30,5 +64,4 @@ jobs:
           # cabal-version: 'latest'. Omitted, but defaults to 'latest'
           enable-stack: true
           stack-version: 'latest'
-      - run: stack test
-      - run: stack run act-exec
+      - run: stack build
