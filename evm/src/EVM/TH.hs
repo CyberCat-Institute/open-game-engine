@@ -195,12 +195,20 @@ loadAll contracts = do
   methods <- traverse (\(ix, (_, bn, _, m)) -> traverse (\m' -> generateTxFactory m' ix bn) m) indexed
   let allMethods = concat methods
   let contractMap = fmap (\(ix, (_, _, b, _)) -> (LitAddr (fromInteger ix), b)) indexed
+  contractNames <- traverse (\(ix, ContractInfo _ _ nm) -> contractName nm ix) (zip [0x1000 ..] contracts)
   init <-
     [d|
       initial :: ST s (VM s)
       initial = loadIntoVM contractMap
       |]
-  pure (init ++ allMethods)
+  pure (init ++ allMethods ++ contractNames)
+  where
+    contractName :: Text -> Integer -> Q Dec
+    contractName binder value = do
+      let nm = mkName (unpack (binder <> "_contract"))
+      let value' = LitAddr (fromInteger value)
+      addr <- [e|value'|]
+      pure (ValD (VarP nm) (NormalB addr) [])
 
 loadSolcInfo :: ContractInfo -> IO (Text, Text, ByteString, [Method])
 loadSolcInfo (ContractInfo contractFilename contractName boundName) = do

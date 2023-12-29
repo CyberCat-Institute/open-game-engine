@@ -79,7 +79,7 @@ outcomeAutomatic = do
   let addresses =
         [ (player1, Lit 1_000_000_000),
           (player2, Lit 1_000_000_000),
-          (LitAddr 0x1000, Lit 10_000)
+          (prison_contract, Lit 10_000)
         ]
   i <- setupAddresses addresses <$> stToIO initial
   let aaa :- bbb :- Nil = evaluate hevmDilemma (const p1coop :- const p2coop :- Nil) void
