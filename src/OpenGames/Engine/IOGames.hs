@@ -37,9 +37,7 @@ import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Data.Ord (comparing)
 import Data.Utils
-import EVM.Types
 import GHC.ST
-import OpenGames.Engine.Copy
 import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL

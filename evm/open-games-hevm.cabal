@@ -25,6 +25,8 @@ library
       Examples.Prisoner
   other-modules:
       Examples.Components
+      OpenGames.Engine.Copy
+      OpenGames.Engine.HEVMGames
       Paths_open_games_hevm
   hs-source-dirs:
       src
@@ -33,7 +35,9 @@ library
     , bytestring
     , containers
     , data-dword
+    , hashmap
     , hevm
+    , mtl
     , open-games-hs
     , optics
     , optics-core
@@ -59,7 +63,9 @@ test-suite hevm-tests
     , bytestring
     , containers
     , data-dword
+    , hashmap
     , hevm
+    , mtl
     , open-games-hevm
     , open-games-hs
     , optics

@@ -1,0 +1,11 @@
+
+executables:
+  graphics:
+    main:                Main.hs
+    source-dirs:         graphics
+    dependencies:
+      - open-games-hs
+      - graphviz
+      - template-haskell
+      - criterion
+
