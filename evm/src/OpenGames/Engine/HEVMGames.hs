@@ -13,7 +13,7 @@ import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Data.Maybe (fromJust)
 import Data.Ord (comparing)
 import Data.Utils
-import EVM.Types (VM, W256, toInt)
+import EVM.Types (VM, W256, VMType(..))
 import GHC.Float (int2Double)
 import GHC.ST
 import OpenGames.Engine.Copy
@@ -24,13 +24,13 @@ import OpenGames.Engine.TLL
 
 type OpenGameM m a b x s y r = OpenGame (MonadOpticM m W256) (MonadContextM m W256) a b x s y r
 
-type HEVMState = StateT (VM RealWorld) (ST RealWorld)
+type HEVMState = StateT (VM Concrete RealWorld) (ST RealWorld)
 
 type HEVMGame a b x s y r = OpenGameM HEVMState a b x s y r
 
 -- converting words to double for diagnostic reasons
 word2Double :: W256 -> Double
-word2Double x = int2Double (fromJust $ toInt x)
+word2Double x = fromInteger (fromIntegral x)
 
 hevmDecision ::
   forall x y.

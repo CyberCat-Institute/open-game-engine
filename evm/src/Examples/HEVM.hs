@@ -37,7 +37,7 @@ import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
 import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
-$(loadAll [ContractInfo "solidity/Withdraw.sol" "Piggybank" "store"])
+$(loadAll [ContractFileInfo "solidity/Withdraw.sol" [ContractInfo "Piggybank" "store"]])
 
 deposit :: EthTransaction
 deposit = store_deposit userContractAddress 1000 10_000_000

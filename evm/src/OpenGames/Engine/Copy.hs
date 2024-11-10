@@ -1,6 +1,8 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module OpenGames.Engine.Copy where
 
@@ -18,7 +20,7 @@ class Copy (a :: Type -> Type) where
 class Restore (a :: Type -> Type) where
   restore :: a s -> StateT (a s) (ST s) ()
 
-instance Copy VM where
+instance Copy (VM Concrete) where
   copy = do
     state <- get
     let st = state ^. #state
@@ -28,16 +30,16 @@ instance Copy VM where
     let newState =
           state
             & #state
-              .~ st'
+            .~ st'
             & #frames
-              .~ fr'
+            .~ fr'
             & #result
-              .~ Nothing
+            .~ Nothing
     pure newState
     where
-      copyFrame :: Frame s -> StateT (VM s) (ST s) (Frame s)
+      copyFrame :: Frame Concrete s -> StateT (VM Concrete s) (ST s) (Frame Concrete s)
       copyFrame (Frame ctx state) = Frame ctx <$> copyFrameState state
-      copyFrameState :: FrameState s -> StateT (VM s) (ST s) (FrameState s)
+      copyFrameState :: FrameState Concrete s -> StateT (VM Concrete s) (ST s) (FrameState Concrete s)
       copyFrameState oldFrame = do
         let mem = oldFrame ^. #memory
         mem' <- case mem of
@@ -46,5 +48,5 @@ instance Copy VM where
 
         pure (oldFrame & #memory .~ mem')
 
-instance Restore VM where
+instance Restore (VM Concrete) where
   restore = put

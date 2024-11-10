@@ -19,11 +19,12 @@ import EVM.Fetch (zero)
 import EVM.Prelude
 import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
+import EVM.Types
 import OpenGames hiding (dependentDecision, fromFunctions, fromLens)
 import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
 
-$(loadAll [ContractInfo "solidity/Prisonner.sol" "Prison" "prison"])
+$(loadAll [ContractFileInfo "solidity/Prisonner.sol" [ContractInfo "Prison" "prison"]])
 
 player1 = LitAddr 0x1234
 

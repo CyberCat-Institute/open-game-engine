@@ -12,13 +12,6 @@ packages:
   original:
     hackage: HSH-2.1.3@sha256:71ded11b224f5066373ce985ec63b10c87129850b33916736dd64fa2bea9ea0a,1705
 - completed:
-    hackage: monad-bayes-1.2.0@sha256:bf83cf8e6d163c461b9964dbff48d4476b2a82421962af317b3a3d0d738ea2a2,6456
-    pantry-tree:
-      sha256: ce4a9db9888b589ae56493862ae62f2efb5af8d17d3d55bac0b3f59177881b2b
-      size: 3823
-  original:
-    hackage: monad-bayes-1.2.0@sha256:bf83cf8e6d163c461b9964dbff48d4476b2a82421962af317b3a3d0d738ea2a2,6456
-- completed:
     hackage: poly-0.5.1.0@sha256:8c574f017913982fd70567545bec423823ff5bdf236c19d1443f3af47e0218ba,3418
     pantry-tree:
       sha256: e59a1e3809fee49968cf9505edf849109d733e4e795b49e2d5fdef1a4993c31d
@@ -61,19 +54,26 @@ packages:
   original:
     hackage: vector-sized-1.5.0@sha256:1c85b70dbfe6fbdcc58d2706c626e6e38d1900276bbb6f1ba6cfee83941f45e6,1836
 - completed:
-    commit: c5e40507c35e6f2119aeb5f0740dc3564100ebdc
+    hackage: monad-bayes-1.3.0.3@sha256:c99b035f2c76ef56cb7471126d7e6ef70bd06135ad6882def759289942130850,6635
+    pantry-tree:
+      sha256: b096ffbc426039793134d917a107079a8179c7576969ee06c50fe33a42fcbcdf
+      size: 4852
+  original:
+    hackage: monad-bayes-1.3.0.3@sha256:c99b035f2c76ef56cb7471126d7e6ef70bd06135ad6882def759289942130850,6635
+- completed:
+    commit: 46ca5e37fae75bc9d5f10d7a9242684f8eae2590
     git: https://github.com/ethereum/hevm
     name: hevm
     pantry-tree:
-      sha256: 92c4d9ca0864a6d334f4940b558b61daa7dc67ddfc145a6599a035abc31e8153
-      size: 5802
-    version: 0.51.3
+      sha256: c855c40c933fec1b2f9f1eac366a658be3ad0afda03e930dfdc2d6cb4e1d3788
+      size: 7720
+    version: 0.53.0
   original:
-    commit: c5e40507c35e6f2119aeb5f0740dc3564100ebdc
+    commit: 46ca5e37fae75bc9d5f10d7a9242684f8eae2590
     git: https://github.com/ethereum/hevm
 snapshots:
 - completed:
-    sha256: 1867d84255dff8c87373f5dd03e5a5cb1c10a99587e26c8793e750c54e83ffdc
-    size: 639139
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/0.yaml
-  original: lts-21.0
+    sha256: e176944bc843f740e05242fa7a66ca1f440c127e425254f7f1257f9b19add23f
+    size: 712153
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/0.yaml
+  original: lts-22.0

@@ -88,7 +88,7 @@ addPrivateValueDirectEndogenous name payoffFunctionDirect =
   [opengame|
 
     inputs    : dec, privateValueDirect ;
-    feedback  :     ;
+    feedback  :   ;
 
     :---------------------------:
 
