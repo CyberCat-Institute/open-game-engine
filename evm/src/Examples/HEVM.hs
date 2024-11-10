@@ -30,6 +30,7 @@ import EVM.Prelude
 import EVM.Stepper (evm, interpret, runFully)
 import EVM.TH
 import EVM.Types
+import EVM.Effects
 import GHC.Float
 import OpenGames hiding (dependentDecision, fromFunctions, fromLens)
 import OpenGames.Engine.Diagnostics
@@ -37,7 +38,7 @@ import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
 import Optics.Core (at, over, preview, set, view, (%), (%?), (&), (.~))
 
-$(loadAll [ContractFileInfo "solidity/Withdraw.sol" [ContractInfo "Piggybank" "store"]])
+$(loadAll [mkContractFileInfo "solidity/Withdraw.sol" [mkContractInfo "Piggybank" "store"]])
 
 deposit :: EthTransaction
 deposit = store_deposit userContractAddress 1000 10_000_000
@@ -94,10 +95,10 @@ playerAutomatic =
   returns : ;
 |]
 
-outcome = do
+outcome =  do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
-  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  newI <- runEnv defaultEnv $ interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
   let term :- Nil = evaluate (playerManual newI) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   tevaluated <- stToIO t'
@@ -110,7 +111,7 @@ outcomeAutomatic = do
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
   putStrLn "setup contracts:"
   print $ getAllContracts newI
-  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  newI <- runEnv defaultEnv $ interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
   let term :- Nil = evaluate (playerAutomatic) ((pure (dummyTx 1)) :- Nil) void
   let t' = evalStateT term newI
   putStrLn "end contracts:"
@@ -118,7 +119,7 @@ outcomeAutomatic = do
   tevaluated <- stToIO t'
   pure $ generateOutputStr ([tevaluated] :- Nil)
 
-showVM :: VM s -> Text
+showVM :: VM Concrete s -> Text
 showVM vm =
   T.unlines
     [ "Contracts:",
@@ -138,7 +139,7 @@ showContract c =
 interp = do
   i <- stToIO initial
   let newI = setupAddresses [(userContractAddress, Lit 1_000_000_000)] i
-  newI <- interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
+  newI <- runEnv defaultEnv $ interpret (zero 0 (Just 0)) newI (evm (makeTxCall deposit) >> runFully)
   let storage = preview (#env % #contracts % at withdrawContractAddress %? #storage) newI
   let orig = preview (#env % #contracts % at withdrawContractAddress %? #origStorage) newI
   traceM ("storage: " <> show storage)

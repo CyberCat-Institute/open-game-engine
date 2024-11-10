@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
@@ -10,7 +11,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll
-              , ContractFileInfo(..), ContractInfo (..), AbiValue (..), Expr (..), stToIO, setupAddresses, getAllContracts) where
+              , ContractFileInfo, mkContractFileInfo, ContractInfo, mkContractInfo, AbiValue (..), Expr (..), stToIO, setupAddresses, getAllContracts) where
 
 import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
@@ -148,13 +149,23 @@ constructorExprForType (AbiArrayType size ty) = error "arrays unsuppported"
 constructorExprForType (AbiTupleType types) = error "tuples unsupported" -- ConE (mkName "AbiTuple") [] [VarP (mkName name)]
 constructorExprForType (AbiFunctionType) = error "functions unsupported"
 
-data ContractInfo = ContractInfo { name :: Text, boundName :: Text }
+data ContractInfo' a = ContractInfo' { name :: Text, boundName :: Text, payload :: a}
+  deriving Functor
 
+type ContractInfo = ContractInfo' ()
 
-data ContractFileInfo = ContractFileInfo
+mkContractInfo :: Text -> Text -> ContractInfo
+mkContractInfo name boundName = ContractInfo' name boundName ()
+
+data ContractFileInfo' a = ContractFileInfo'
   { file :: Text,
-    modules :: [ContractInfo]
+    modules :: [ContractInfo' a]
   }
+
+type ContractFileInfo = ContractFileInfo' ()
+
+mkContractFileInfo :: Text -> [ContractInfo] -> ContractFileInfo
+mkContractFileInfo = ContractFileInfo'
 
 pat = VarP . mkName
 
@@ -197,12 +208,11 @@ instance Num (Expr 'EAddr) where
 
 loadAll :: [ContractFileInfo] -> Q [Dec]
 loadAll contracts = do
-  cs <- runIO $ traverse loadSolcInfo contracts
-  let allContracts = Map.unions cs
-  let allContractsHash = zip [ 0x1000.. ] (Map.toList allContracts)
+  allContracts <- runIO $ traverse loadSolcInfo contracts
+  let allContractsHash = zip [ 0x1000.. ] (concat allContracts)
   methods <- generateDefsForMethods allContractsHash
   let contractMap = generateContractMap allContractsHash
-  contractNames <- traverse (\(addr, (nm, (bn, con))) -> contractName bn addr) allContractsHash -- traverse (\(ix, ContractFileInfo _ nm) -> contractName nm ix) (zip [0x1000 ..] contracts)
+  contractNames <- traverse (\(addr, ContractInfo' nm bn con) -> contractName bn addr) allContractsHash -- traverse (\(ix, ContractFileInfo _ nm) -> contractName nm ix) (zip [0x1000 ..] contracts)
   init <-
     [d|
       initial :: ST s (VM Concrete s)
@@ -211,14 +221,14 @@ loadAll contracts = do
   pure (init ++ methods ++ contractNames)
   where
                         -- Address, Contract name, Bound name
-    generateContractMap :: [(Integer, (Text, (Text, SolcContract)))] -> [(Integer, ByteString)]
-    generateContractMap = fmap (\(i, (nm, (bn, con))) -> (i, con.runtimeCode))
+    generateContractMap :: [(Integer, ContractInfo' SolcContract)] -> [(Integer, ByteString)]
+    generateContractMap = fmap (\(i, contract) -> (i, contract.payload.runtimeCode))
                         -- Address, Contract name, Bound name
-    generateDefsForMethods :: [(Integer, (Text, (Text, SolcContract)))] -> Q [Dec]
+    generateDefsForMethods :: [(Integer, ContractInfo' SolcContract)] -> Q [Dec]
     generateDefsForMethods [] = pure []
-    generateDefsForMethods ((hash, (name, (boundName, contract))) : xs) = do
+    generateDefsForMethods ((hash, ContractInfo' name boundName contract) : xs) = do
       let methods = Map.elems contract.abiMap
-      traverse (\x -> generateTxFactory x hash name) methods
+      traverse (\x -> generateTxFactory x hash boundName) methods
 
     contractName :: Text -> Integer -> Q Dec
     contractName binder value = do
@@ -227,19 +237,18 @@ loadAll contracts = do
       addr <- [e|value'|]
       pure (ValD (VarP nm) (NormalB addr) [])
 
-loadSolcInfo :: ContractFileInfo -> IO (Map Text (Text, SolcContract))
-loadSolcInfo (ContractFileInfo contractFilename modules) = do
+loadSolcInfo :: ContractFileInfo -> IO [ContractInfo' SolcContract]
+loadSolcInfo (ContractFileInfo' contractFilename modules) = do
   file <- readFile (unpack contractFilename)
   json <- solc Solidity file
   let (Contracts sol, _, _) = fromJust $ readStdJSON json
-  let retrievedMap = fmap (\mod -> (mod.name, (mod.boundName, Map.lookup ("hevm.sol:" <> mod.name) sol))) (modules)
-  contractmap <- emitMissing retrievedMap
-  pure $ Map.fromList contractmap
+  let retrievedMap = fmap (\mod -> fmap (\() -> Map.lookup ("hevm.sol:" <> mod.name) sol) mod) modules
+  emitMissing retrievedMap
   where
-    emitMissing :: Show a => [(Text, (b, Maybe a))] -> IO [(Text, (b, a))]
+    emitMissing :: Show a => [ContractInfo' (Maybe a)] -> IO [ContractInfo' a]
     emitMissing [] = pure []
-    emitMissing ((t, (s, Nothing)) : xs) = putStrLn ("contract " ++ show t ++ "is missing") >> emitMissing xs
-    emitMissing ((t, (s, Just x)) : xs) = ((t, (s, x)) :) <$> emitMissing xs
+    emitMissing (ContractInfo' t s Nothing : xs) = putStrLn ("contract " ++ show t ++ "is missing") >> emitMissing xs
+    emitMissing (ContractInfo' t s (Just x) : xs) = (ContractInfo' t s x :) <$> emitMissing xs
 
 run' :: EVM Concrete s (VM Concrete s)
 run' = do
