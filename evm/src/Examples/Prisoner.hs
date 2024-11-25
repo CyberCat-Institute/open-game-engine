@@ -24,7 +24,7 @@ import OpenGames hiding (dependentDecision, fromFunctions, fromLens)
 import OpenGames.Engine.HEVMGames
 import OpenGames.Preprocessor hiding (Lit)
 
-$(loadAll [ContractFileInfo "solidity/Prisonner.sol" [ContractInfo "Prison" "prison"]])
+$(loadAll [mkContractFileInfo "solidity/Prisonner.sol" [mkContractInfo "Prison" "prison"]])
 
 player1 = LitAddr 0x1234
 
