@@ -20,7 +20,7 @@ import Data.ByteString (ByteString)
 import Data.Map as Map
 import Data.Text (Text, intercalate, pack, toLower, unpack)
 import Data.Text.IO (readFile)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromMaybe)
 import qualified Data.Tree.Zipper as Zipper
 import Data.Vector as Vector (fromList)
 import EVM (blankState, emptyContract, exec1, initialContract, loadContract, resetState)
@@ -241,7 +241,7 @@ loadSolcInfo :: ContractFileInfo -> IO [ContractInfo' SolcContract]
 loadSolcInfo (ContractFileInfo' contractFilename modules) = do
   file <- readFile (unpack contractFilename)
   json <- solc Solidity file
-  let (Contracts sol, _, _) = fromJust $ readStdJSON json
+  let (Contracts sol, _, _) = fromMaybe (error ("canot read json" ++ show json)) (readStdJSON json)
   let retrievedMap = fmap (\mod -> fmap (\() -> Map.lookup ("hevm.sol:" <> mod.name) sol) mod) modules
   emitMissing retrievedMap
   where
