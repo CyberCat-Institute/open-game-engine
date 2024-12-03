@@ -23,11 +23,6 @@
           pkgs.solc_0_8_2
         ];
 
-        extraDevTools = with hPkgs; [
-          haskell-language-server # LSP server for editor
-          implicit-hie # auto generate LSP hie.yaml file from cabal
-        ];
-
         stack-wrapped = pkgs.symlinkJoin {
           name = "stack"; # will be available as the usual `stack` in terminal
           paths = [ pkgs.stack ];
