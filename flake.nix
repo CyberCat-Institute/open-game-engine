@@ -14,7 +14,7 @@
           ];
         };
 
-        hPkgs = pkgs.haskell.packages."ghc945"; # need to match Stackage LTS version from stack.yaml resolver
+        hPkgs = pkgs.haskell.packages."ghc963"; # need to match Stackage LTS version from stack.yaml resolver
 
         minimalDevTools = [
           hPkgs.ghc # GHC compiler in the desired version (will be available on PATH)
