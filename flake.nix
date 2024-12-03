@@ -37,7 +37,7 @@
         };
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = minimalDevTools ++ extraDevTools;
+          buildInputs = minimalDevTools;
 
           # Make external Nix c libraries like zlib known to GHC, like
           # pkgs.haskell.lib.buildStackProject does
