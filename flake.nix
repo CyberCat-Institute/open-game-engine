@@ -20,7 +20,7 @@
           hPkgs.ghc # GHC compiler in the desired version (will be available on PATH)
           pkgs.zlib # External C library needed by some Haskell packages
           stack-wrapped
-          pkgs.solc_0_8_2
+          pkgs.solc_0_8_26
         ];
 
         stack-wrapped = pkgs.symlinkJoin {
