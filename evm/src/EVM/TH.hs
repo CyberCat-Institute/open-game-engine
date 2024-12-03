@@ -6,9 +6,11 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveLift #-}
 
 module EVM.TH (sendAndRun, sendAndRunAll, sendAndRun', makeTxCall, balance, loadAll
               , ContractFileInfo, mkContractFileInfo, ContractInfo, mkContractInfo, AbiValue (..), Expr (..), stToIO, setupAddresses, getAllContracts) where
@@ -22,7 +24,7 @@ import Data.Text (Text, intercalate, pack, toLower, unpack)
 import Data.Text.IO (readFile)
 import Data.Maybe (fromMaybe)
 import qualified Data.Tree.Zipper as Zipper
-import Data.Vector as Vector (fromList)
+import Data.Vector as Vector (Vector, fromList, toList)
 import EVM (blankState, emptyContract, exec1, initialContract, loadContract, resetState)
 import EVM.Exec (exec, run)
 import EVM.Expr
@@ -136,15 +138,33 @@ loadIntoVM contracts = do
 int :: Int -> Exp
 int = LitE . IntegerL . toInteger
 
-constructorExprForType :: AbiType -> Name -> Exp
-constructorExprForType (AbiUIntType w) = ((ConE (mkName "AbiUInt") `AppE` int w) `AppE`) . VarE
-constructorExprForType (AbiIntType w) = ((ConE (mkName "AbiInt") `AppE` int w) `AppE`) . VarE
-constructorExprForType (AbiAddressType) = (ConE (mkName "AbiAddress") `AppE`) . VarE
-constructorExprForType (AbiBoolType) = (ConE (mkName "AbiBool") `AppE`) . VarE
-constructorExprForType (AbiBytesType w) = ((ConE (mkName "AbiBytes") `AppE` int w) `AppE`) . VarE
-constructorExprForType (AbiBytesDynamicType) = (ConE (mkName "AbiBytesDynamic") `AppE`) . VarE
-constructorExprForType (AbiStringType) = (ConE (mkName "AbiString") `AppE`) . VarE
-constructorExprForType (AbiArrayDynamicType ty) = error "arrays unsupported"
+instance Lift a => Lift (Vector a) where
+  lift vec = do ll <- traverse lift (Vector.toList vec)
+                let gg = ListE ll
+                [| Vector.fromList $( pure gg ) |]
+
+instance Lift AbiType where
+  lift (AbiUIntType n)          = [| AbiUIntType n |]
+  lift (AbiIntType n)           = [| AbiIntType n |]
+  lift AbiAddressType           = [| AbiAddressType |]
+  lift AbiBoolType              = [| AbiBoolType |]
+  lift (AbiBytesType n)         = [| AbiBytesType n |]
+  lift AbiBytesDynamicType      = [| AbiBytesDynamicType |]
+  lift AbiStringType            = [| AbiStringType |]
+  lift (AbiArrayDynamicType ty) = [| AbiArrayDynamicType ty |]
+  lift (AbiArrayType ty arr)    = [| AbiArrayType ty arr |]
+  lift (AbiTupleType tys)       = [| AbiTupleType tys |]
+  lift AbiFunctionType          = [| AbiFunctionType |]
+
+constructorExprForType :: Quote m => AbiType -> Name -> m Exp
+constructorExprForType (AbiUIntType w)  = pure . ((ConE (mkName "AbiUInt") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiIntType w)   = pure . ((ConE (mkName "AbiInt") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiAddressType) = pure . (ConE (mkName "AbiAddress") `AppE`) . VarE
+constructorExprForType (AbiBoolType)    = pure . (ConE (mkName "AbiBool") `AppE`) . VarE
+constructorExprForType (AbiBytesType w) = pure . ((ConE (mkName "AbiBytes") `AppE` int w) `AppE`) . VarE
+constructorExprForType (AbiBytesDynamicType) = pure . (ConE (mkName "AbiBytesDynamic") `AppE`) . VarE
+constructorExprForType (AbiStringType) = pure . (ConE (mkName "AbiString") `AppE`) . VarE
+constructorExprForType (AbiArrayDynamicType ty) = \nm ->  [|AbiArrayDynamic ty $(pure (VarE nm))|]
 constructorExprForType (AbiArrayType size ty) = error "arrays unsuppported"
 constructorExprForType (AbiTupleType types) = error "tuples unsupported" -- ConE (mkName "AbiTuple") [] [VarP (mkName name)]
 constructorExprForType (AbiFunctionType) = error "functions unsupported"
@@ -173,7 +193,7 @@ generateTxFactory :: Method -> Integer -> Text -> Q Dec
 generateTxFactory (Method _ args name sig _) addr contractName = do
   runIO $ print ("arguments for method " <> name <> ":" <> pack (show args))
   let signatureString :: Q Exp = pure $ LitE $ StringL $ unpack sig
-  let argExp :: Q Exp = pure $ ListE $ fmap (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
+  let argExp :: Q Exp = ListE <$> traverse (\(nm, ty) -> constructorExprForType ty (mkName $ unpack nm)) args
   let patterns :: [Pat] = fmap (VarP . mkName . unpack . fst) args
   let contractAddress :: Q Exp = pure $ AppE (ConE (mkName "LitAddr")) (LitE (IntegerL addr))
   body <-
@@ -212,10 +232,10 @@ loadAll contracts = do
   let allContractsHash = zip [ 0x1000.. ] (concat allContracts)
   methods <- generateDefsForMethods allContractsHash
   let contractMap = generateContractMap allContractsHash
-  contractNames <- traverse (\(addr, ContractInfo' nm bn con) -> contractName bn addr) allContractsHash -- traverse (\(ix, ContractFileInfo _ nm) -> contractName nm ix) (zip [0x1000 ..] contracts)
+  contractNames <- traverse (\(addr, ContractInfo' nm bn con) -> contractName bn addr) allContractsHash
+  -- traverse (\(ix, ContractFileInfo _ nm) -> contractName nm ix) (zip [0x1000 ..] contracts)
   init <-
     [d|
-      initial :: ST s (VM Concrete s)
       initial = loadIntoVM contractMap
       |]
   pure (init ++ methods ++ contractNames)
@@ -241,7 +261,7 @@ loadSolcInfo :: ContractFileInfo -> IO [ContractInfo' SolcContract]
 loadSolcInfo (ContractFileInfo' contractFilename modules) = do
   file <- readFile (unpack contractFilename)
   json <- solc Solidity file
-  let (Contracts sol, _, _) = fromMaybe (error ("canot read json" ++ show json)) (readStdJSON json)
+  let (Contracts sol, _, _) = fromMaybe (error ("canot read json:" ++ unpack json)) (readStdJSON json)
   let retrievedMap = fmap (\mod -> fmap (\() -> Map.lookup ("hevm.sol:" <> mod.name) sol) mod) modules
   emitMissing retrievedMap
   where

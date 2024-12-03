@@ -6,7 +6,7 @@ module Examples.Lido where
 
 import EVM.TH
 
-$(loadAll [mkContractFileInfo "solidity/DualGovernance.sol" [mkContractInfo "DualGovernance" "dualgov"]])
+$(loadAll [mkContractFileInfo "DualGovernance.sol" [mkContractInfo "DualGovernance" "dualgov"]])
 -- lido = loadContracts [("EmergencyProtectedTimelockModel", "solidity/EmergencyProtectedTimelockModel.sol")]
 -- lido = [loadContract| file : solidity/LidoReward.sol, contract : LidoExecutionLayerRewardsVault, name : lido]
 
