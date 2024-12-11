@@ -23,6 +23,7 @@
           hPkgs.ghc # GHC compiler in the desired version (will be available on PATH)
           pkgs.zlib # External C library needed by some Haskell packages
           pkgs.libff
+          pkgs.git
           pkgs.secp256k1
           stack-wrapped
           (solc.mkDefault pkgs pkgs.solc_0_8_26)
