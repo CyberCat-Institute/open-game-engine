@@ -1,0 +1,52 @@
+name: open-games-hevm
+version: '0.1.0.0'
+synopsis: HEVM intgration of open games
+category: Math
+author: Jules Hedges, André Videla, Philipp Zahn & other contributors
+maintainer: philipp.zahn@protonmail
+copyright: Jules Hedges, André Videla, Philipp Zahn & other contributors
+license: AGPL
+extra-source-files:
+- README.md
+
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - EVM.Prelude
+    - EVM.TH
+    - Examples.HEVM
+    - Examples.Lido
+    - Examples.Prisoner
+
+dependencies:
+    - base >=4.7 && <5
+    - bytestring
+    - containers
+    - open-games-hs
+    - data-dword
+    - text
+    - optics
+    - optics-extra
+    - optics-core
+    - template-haskell
+    - transformers
+    - vector
+    - rosezipper
+    - hevm
+    - mtl
+    - hashmap
+    - tasty
+    - tasty-golden
+
+tests:
+  hevm-tests:
+    main: Spec.hs
+    source-dirs: tests
+    dependencies:
+      - open-games-hevm
+      - tasty
+      - tasty-golden
+      - bytestring
+
+

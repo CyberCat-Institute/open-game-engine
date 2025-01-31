@@ -6,6 +6,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -15,7 +16,12 @@ module OpenGames.Engine.IOGames
     Agent (..),
     DiagnosticsMC (..),
     dependentDecisionIO,
+    MonadOptic,
+    MonadOpticM (..),
+    MonadContext,
+    MonadContextM (..),
     fromLens,
+    fromLensM,
     fromFunctions,
     nature,
     discount,
@@ -23,11 +29,15 @@ module OpenGames.Engine.IOGames
 where
 
 import Control.Arrow hiding ((+:+))
-import Control.Monad.State hiding (state)
+import Control.Monad (replicateM)
+import Control.Monad.ST
+import Control.Monad.Trans (lift)
+import Control.Monad.Trans.State.Strict hiding (state)
 import Data.Foldable
 import Data.HashMap as HM hiding (map, mapMaybe, null)
 import Data.Ord (comparing)
 import Data.Utils
+import GHC.ST
 import OpenGames.Engine.OpenGames hiding (lift)
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
@@ -51,7 +61,12 @@ data DiagnosticsMC y = DiagnosticsMC
   deriving (Show)
 
 -- NOTE This ignores the state
-dependentDecisionIO :: (Eq x, Show x, Ord y, Show y) => String -> Int -> [y] -> IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
+dependentDecisionIO ::
+  (Eq x, Show x, Ord y, Show y) =>
+  String ->
+  Int ->
+  [y] ->
+  IOOpenGame '[Kleisli CondensedTableV x y] '[IO (DiagnosticsMC y)] x () y Double
 -- s t  a b
 
 -- ^ (average utility of current strategy, [average utility of all possible alternative actions])
@@ -65,9 +80,9 @@ dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
             action <- genFromTable (runKleisli strat x) gS
             return ((), action)
           u () r = modify (adjustOrAdd (+ r) r name)
-       in MonadOptic v u
+       in MonadOpticM v u
 
-    evaluate (strat :- Nil) (MonadContext h k) = output :- Nil
+    evaluate (strat :- Nil) (MonadContextM h k) = output :- Nil
       where
         output = do
           zippedLs <- samplePayoffs
@@ -116,18 +131,25 @@ dependentDecisionIO name sampleSize ys = OpenGame {play, evaluate}
 fromLens :: (x -> y) -> (x -> r -> s) -> IOOpenGame '[] '[] x s y r
 fromLens v u =
   OpenGame
-    { play = \Nil -> MonadOptic (\x -> return (x, v x)) (\x r -> return (u x r)),
+    { play = \Nil -> MonadOpticM (\x -> return (x, v x)) (\x r -> return (u x r)),
       evaluate = \Nil _ -> Nil
     }
 
 fromFunctions :: (x -> y) -> (r -> s) -> IOOpenGame '[] '[] x s y r
 fromFunctions f g = fromLens f (const g)
 
+fromLensM :: (x -> IO y) -> (x -> r -> IO s) -> IOOpenGame '[] '[] x s y r
+fromLensM f g =
+  OpenGame
+    { play = \Nil -> MonadOpticM (\x -> (x,) <$> f x) (\x r -> lift $ g x r),
+      evaluate = \Nil _ -> Nil
+    }
+
 nature :: CondensedTableV x -> IOOpenGame '[] '[] () () x ()
 nature table = OpenGame {play, evaluate}
   where
     play _ =
-      MonadOptic v u
+      MonadOpticM v u
       where
         v () = do
           g <- newStdGen
@@ -145,6 +167,6 @@ discount name f =
     { play = \_ ->
         let v () = return ((), ())
             u () () = modify (adjustOrAdd f (f 0) name)
-         in MonadOptic v u,
+         in MonadOpticM v u,
       evaluate = \_ _ -> Nil
     }

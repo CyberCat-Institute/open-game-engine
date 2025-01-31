@@ -1,0 +1,92 @@
+----Analytics begin----
+Player: player1
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, CALlEr = LItAddR 0x1234, METHOd = "dEfECT()", ArGuMEntS = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, callER = LITADDr 0X1234, MetHOD = "cooperATE()", ArGUmEntS = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000006e9
+Current Payoff: 1.000004e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+
+Player: player2
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, cAlLeR = LiTADdR 0x1235, mEtHOD = "DEfEct()", ARGumeNTs = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, caLLeR = LItAdDr 0x1235, MEthod = "cooPeRatE()", ArgUmENTs = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000006e9
+Current Payoff: 1.000004e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----
+----Analytics begin----
+Player: player1
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, CALlEr = LItAddR 0x1234, METHOd = "dEfECT()", ArGuMEntS = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, caLLEr = LitADDr 0x1234, MethoD = "deFeCt()", aRguMEntS = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000006e9
+Current Payoff: 1.000006e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+
+Player: player2
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, cAlLeR = LiTADdR 0x1235, mEtHOD = "DEfEct()", ARGumeNTs = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, caLLeR = LItAdDr 0x1235, MEthod = "cooPeRatE()", ArgUmENTs = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000002e9
+Current Payoff: 1.0e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----
+----Analytics begin----
+Player: player1
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, CALlEr = LItAddR 0x1234, METHOd = "dEfECT()", ArGuMEntS = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, callER = LITADDr 0X1234, MetHOD = "cooperATE()", ArGUmEntS = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000002e9
+Current Payoff: 1.0e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+
+Player: player2
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, cAlLeR = LiTADdR 0x1235, mEtHOD = "DEfEct()", ARGumeNTs = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, CalleR = LITAddR 0X1235, METhoD = "DefeCT()", ArGuments = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000006e9
+Current Payoff: 1.000006e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----
+----Analytics begin----
+Player: player1
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, CALlEr = LItAddR 0x1234, METHOd = "dEfECT()", ArGuMEntS = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, caLLEr = LitADDr 0x1234, MethoD = "deFeCt()", aRguMEntS = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000002e9
+Current Payoff: 1.000002e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+
+Player: player2
+Optimal Move: EthTransaction {contract = LitAddr 0x1000, cAlLeR = LiTADdR 0x1235, mEtHOD = "DEfEct()", ARGumeNTs = [], ethAmt = 0x0, gas = 10000000}
+Current Strategy: fromFreqs [(EthTransaction {contract = LitAddr 0x1000, CalleR = LITAddR 0X1235, METhoD = "DefeCT()", ArGuments = [], ethAmt = 0x0, gas = 10000000},1.0)]
+Optimal Payoff: 1.000002e9
+Current Payoff: 1.000002e9
+Observable State: ()
+Unobservable State: "()"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----

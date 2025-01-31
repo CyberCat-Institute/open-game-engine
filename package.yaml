@@ -13,7 +13,7 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
-    # - OpenGames.Engine.AtomicGames
+    - Data.Utils
     - OpenGames
     - OpenGames.Engine.BayesianGames
     - OpenGames.Engine.Diagnostics
@@ -21,6 +21,7 @@ library:
     - OpenGames.Engine.OpenGames
     - OpenGames.Engine.OpticClass
     - OpenGames.Engine.TLL
+    - OpenGames.Engine.IOGames
     - OpenGames.Preprocessor
     - OpenGames.Preprocessor.BlockSyntax
     - OpenGames.Preprocessor.Codegen
@@ -46,7 +47,6 @@ library:
 
 dependencies:
     - base >=4.7 && <5
-    - act
     - mtl
     - ghc
     - transformers
@@ -71,6 +71,8 @@ dependencies:
     - vector
     - monad-bayes
     - criterion
+    - optics-core
+    - optics-extra
 
 
 executables:
@@ -84,30 +86,3 @@ executables:
     dependencies:
     - open-games-hs
 
-  act-exec:
-    main:                Main.hs
-    source-dirs:         act
-    ghc-options:
-      - -fwarn-unused-imports
-      - -Wno-partial-type-signatures
-    dependencies:
-      - act
-      - data-dword
-      - open-games-hs
-      - optics-core
-      - optics-extra
-      - rosezipper
-      - file-embed
-      - bytestring
-      - validation
-      - hevm >= 0.51.0
-      - containers
-      - text
-  graphics:
-    main:                Main.hs
-    source-dirs:         graphics
-    dependencies:
-      - open-games-hs
-      - graphviz
-      - template-haskell
-      - criterion

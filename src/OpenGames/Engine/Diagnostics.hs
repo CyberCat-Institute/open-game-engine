@@ -11,13 +11,24 @@
 
 module OpenGames.Engine.Diagnostics
   ( DiagnosticInfoBayesian (..),
+    PrintOutput (..),
     generateOutput,
+    generateOutputStr,
     generateIsEq,
+    showDiagnosticInfoL,
+    nextState,
+    nextContinuation,
+    equilibriumMap,
+    toEquilibrium,
+    generateEquilibrium
   )
 where
 
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
+
+import qualified Control.Monad.Trans.State.Strict as ST hiding (state)
+import qualified Control.Monad.Trans as ST (lift)
 
 --------------------------------------------------------
 -- Diagnosticinformation and processesing of information
@@ -98,6 +109,10 @@ data PrintOutput = PrintOutput
 instance (Show y, Ord y, Show x) => Apply PrintOutput [DiagnosticInfoBayesian x y] String where
   apply _ x = showDiagnosticInfoL x
 
+-- is this ok?
+instance (Show y, Ord y, Show x) => Apply PrintOutput (DiagnosticInfoBayesian x y) String where
+  apply _ x = showDiagnosticInfoL [x]
+
 instance (Show y, Ord y, Show x) => Apply PrintOutput (Maybe [DiagnosticInfoBayesian x y]) String where
   apply _ x = showDiagnosticInfoL (maybe [] id x)
 
@@ -106,10 +121,38 @@ data Concat = Concat
 instance Apply Concat String (String -> String) where
   apply _ x = \y -> x ++ "\n NEWGAME: \n" ++ y
 
+-- for apply output of equilibrium function
+data Equilibrium = Equilibrium 
+
+instance Apply Equilibrium [DiagnosticInfoBayesian x y] Bool where
+  apply _ x = equilibriumMap x
+
+data And = And
+
+instance Apply And Bool (Bool -> Bool) where
+  apply _ x = \y -> y && x
+
+-- map diagnostics to equilibrium
+toEquilibrium :: DiagnosticInfoBayesian x y -> Bool
+toEquilibrium = equilibrium
+
+equilibriumMap :: [DiagnosticInfoBayesian x y] -> Bool
+equilibriumMap = and . fmap toEquilibrium
+
 ---------------------
 -- main functionality
 
 -- all information for all players
+generateOutputStr ::
+  forall xs.
+  ( MapL PrintOutput xs (ConstMap String xs),
+    FoldrL Concat String (ConstMap String xs)
+  ) =>
+  List xs ->
+  String
+generateOutputStr hlist =
+  "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+
 generateOutput ::
   forall xs.
   ( MapL PrintOutput xs (ConstMap String xs),
@@ -118,8 +161,7 @@ generateOutput ::
   List xs ->
   IO ()
 generateOutput hlist =
-  putStrLn $
-    "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintOutput hlist) ++ "----Analytics end----\n"
+  putStrLn $ generateOutputStr hlist
 
 -- output equilibrium relevant information
 generateIsEq ::
@@ -132,3 +174,31 @@ generateIsEq ::
 generateIsEq hlist =
   putStrLn $
     "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
+
+-- give equilibrium value for further use
+generateEquilibrium :: forall xs.
+               ( MapL   Equilibrium xs     (ConstMap Bool xs)
+               , FoldrL And Bool (ConstMap Bool xs)
+               ) => List xs -> Bool
+generateEquilibrium hlist = foldrL And True $ mapL @_ @_ @(ConstMap Bool xs) Equilibrium hlist
+
+
+---------------------------------------
+-- Helper functionality for play output
+
+-- Transform the optic into the next state given some input
+nextState ::
+  StochasticStatefulOptic s t a b ->
+  s ->
+  Stochastic a
+nextState (StochasticStatefulOptic v _) x = do
+  (z, a) <- v x
+  pure a
+
+nextContinuation
+  :: StochasticStatefulOptic s t a ()
+     -> s
+     -> ST.StateT Vector Stochastic t
+nextContinuation (StochasticStatefulOptic v u) x = do
+  (z,a) <- ST.lift (v x)
+  u z ()

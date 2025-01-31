@@ -6,8 +6,8 @@
 
 module Examples.Markov.NStageMarkov where
 
-import Control.Monad.State hiding (lift, state, void)
-import qualified Control.Monad.State as ST
+import qualified Control.Monad.Trans as ST (lift)
+import Control.Monad.Trans.State.Strict
 import Data.Tuple.Extra (uncurry3)
 import Examples.SimultaneousMoves (ActionPD (..))
 import Numeric.Probability.Distribution hiding (filter, lift, map)

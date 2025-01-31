@@ -1,0 +1,12 @@
+----Analytics begin----
+Player: Marx
+Optimal Move: [Transaction {contract = "amm1", method = "swap1", arguments = [5]},Transaction {contract = "amm2", method = "swap0", arguments = [10]}]
+Current Strategy: fromFreqs [([Transaction {contract = "amm2", method = "swap0", arguments = [10]},Transaction {contract = "amm1", method = "swap1", arguments = [5]}],1.0)]
+Optimal Payoff: 4.0
+Current Payoff: 2.0
+Observable State: ()
+Unobservable State: "((),AmmState {reserve0 = 10, reserve1 = 10})"
+ --other game-- 
+ --No more information--
+ NEWGAME: 
+----Analytics end----
