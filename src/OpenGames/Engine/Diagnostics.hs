@@ -16,11 +16,19 @@ module OpenGames.Engine.Diagnostics
     generateOutputStr,
     generateIsEq,
     showDiagnosticInfoL,
+    nextState,
+    nextContinuation,
+    equilibriumMap,
+    toEquilibrium,
+    generateEquilibrium
   )
 where
 
 import OpenGames.Engine.OpticClass
 import OpenGames.Engine.TLL
+
+import qualified Control.Monad.Trans.State.Strict as ST hiding (state)
+import qualified Control.Monad.Trans as ST (lift)
 
 --------------------------------------------------------
 -- Diagnosticinformation and processesing of information
@@ -113,6 +121,24 @@ data Concat = Concat
 instance Apply Concat String (String -> String) where
   apply _ x = \y -> x ++ "\n NEWGAME: \n" ++ y
 
+-- for apply output of equilibrium function
+data Equilibrium = Equilibrium 
+
+instance Apply Equilibrium [DiagnosticInfoBayesian x y] Bool where
+  apply _ x = equilibriumMap x
+
+data And = And
+
+instance Apply And Bool (Bool -> Bool) where
+  apply _ x = \y -> y && x
+
+-- map diagnostics to equilibrium
+toEquilibrium :: DiagnosticInfoBayesian x y -> Bool
+toEquilibrium = equilibrium
+
+equilibriumMap :: [DiagnosticInfoBayesian x y] -> Bool
+equilibriumMap = and . fmap toEquilibrium
+
 ---------------------
 -- main functionality
 
@@ -148,3 +174,31 @@ generateIsEq ::
 generateIsEq hlist =
   putStrLn $
     "----Analytics begin----" ++ (foldrL Concat "" $ mapL @_ @_ @(ConstMap String xs) PrintIsEq hlist) ++ "----Analytics end----\n"
+
+-- give equilibrium value for further use
+generateEquilibrium :: forall xs.
+               ( MapL   Equilibrium xs     (ConstMap Bool xs)
+               , FoldrL And Bool (ConstMap Bool xs)
+               ) => List xs -> Bool
+generateEquilibrium hlist = foldrL And True $ mapL @_ @_ @(ConstMap Bool xs) Equilibrium hlist
+
+
+---------------------------------------
+-- Helper functionality for play output
+
+-- Transform the optic into the next state given some input
+nextState ::
+  StochasticStatefulOptic s t a b ->
+  s ->
+  Stochastic a
+nextState (StochasticStatefulOptic v _) x = do
+  (z, a) <- v x
+  pure a
+
+nextContinuation
+  :: StochasticStatefulOptic s t a ()
+     -> s
+     -> ST.StateT Vector Stochastic t
+nextContinuation (StochasticStatefulOptic v u) x = do
+  (z,a) <- ST.lift (v x)
+  u z ()
